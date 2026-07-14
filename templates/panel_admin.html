@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - Sistema de Tickets Planinfor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #111827;
+            color: #f3f4f6;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #1f2937;
+            border-bottom: 1px solid #374151;
+            padding: 0 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 80px;
+            box-sizing: border-box;
+            overflow: hidden;
+            line-height: 1;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            height: 100%;
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin: 0;
+            color: #ffffff;
+            line-height: 1;
+        }
+
+        .header h1 span {
+            color: #82C341;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            height: 100%;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            height: 100%;
+        }
+
+        .user-info span {
+            color: #f3f4f6;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #1f2937;
+            padding: 25px 20px;
+            border-radius: 12px;
+            border: 1px solid #374151;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card.tickets {
+            border-left: 4px solid #60a5fa;
+        }
+
+        .stat-card.users {
+            border-left: 4px solid #82C341;
+        }
+
+        .stat-card.pending {
+            border-left: 4px solid #fbbf24;
+        }
+
+        .stat-card.closed {
+            border-left: 4px solid #9ca3af;
+        }
+
+        .stat-card .value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            color: #9ca3af;
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sections {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: #1f2937;
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid #374151;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: #ffffff;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #374151;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .users-table th,
+        .users-table td {
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 1px solid #374151;
+        }
+
+        .users-table th {
+            background: rgba(17, 24, 39, 0.5);
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+
+        .users-table tr:hover {
+            background: rgba(55, 65, 81, 0.3);
+        }
+
+        .users-table td {
+            font-size: 0.95rem;
+        }
+
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-admin {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .badge-agente {
+            background: rgba(59, 130, 246, 0.1);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .badge-cliente {
+            background: rgba(130, 195, 65, 0.1);
+            color: #82C341;
+            border: 1px solid rgba(130, 195, 65, 0.2);
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: #82C341;
+            color: #111827;
+        }
+
+        .btn-primary:hover {
+            background: #90d648;
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-secondary {
+            background: #374151;
+            color: #f3f4f6;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #d1d5db;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 14px;
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #ffffff;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .form-group select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #82C341;
+            box-shadow: 0 0 0 3px rgba(130, 195, 65, 0.2);
+            background-color: #1f2937;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #1f2937;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #374151;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #ffffff;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .ticket-item {
+            padding: 15px 10px;
+            border-bottom: 1px solid #374151;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+            border-radius: 6px;
+        }
+
+        .ticket-item:hover {
+            background: rgba(55, 65, 81, 0.3);
+        }
+
+        .ticket-item:last-child {
+            border-bottom: none;
+        }
+
+        .ticket-id {
+            font-weight: 600;
+            color: #f3f4f6;
+        }
+
+        .ticket-status {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #4b5563;
+            color: #d1d5db;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            border-color: #6b7280;
+        }
+
+        /* Flash Messages */
+        .flash {
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+        }
+
+        .flash.success {
+            background-color: rgba(130, 195, 65, 0.1);
+            color: #82C341;
+            border: 1px solid rgba(130, 195, 65, 0.2);
+        }
+
+        .flash.error {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .svg-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-svg {
+            color: #82C341;
+        }
+
+        .actions-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Responsive Panel Admin */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px 10px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-card .value {
+                font-size: 1.8rem;
+            }
+
+            .sections {
+                grid-template-columns: 1fr;
+            }
+
+            .users-table th,
+            .users-table td {
+                padding: 10px 8px;
+                font-size: 0.85rem;
+            }
+
+            .actions-group {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .form-group input,
+            .form-group select,
+            .btn {
+                font-size: 16px !important;
+                padding: 12px;
+            }
+
+            .modal-content {
+                padding: 20px;
+                width: 95%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    {% set vista = 'admin' %}
+    {% include 'header_unificado.html' %}
+
+    <div class="container" style="padding-top: 30px;">
+        <!-- Mensajes Flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <!-- Estadísticas -->
+        <div class="stats-grid">
+            <div class="stat-card tickets">
+                <div class="value">{{ stats.total_tickets }}</div>
+                <div class="label">Total Tickets</div>
+            </div>
+            <div class="stat-card pending">
+                <div class="value">{{ stats.pendientes + stats.recibidos + stats.en_proceso }}</div>
+                <div class="label">Tickets Activos</div>
+            </div>
+            <div class="stat-card closed">
+                <div class="value">{{ stats.cerrados }}</div>
+                <div class="label">Tickets Cerrados</div>
+            </div>
+            <div class="stat-card users">
+                <div class="value">{{ stats.total_usuarios }}</div>
+                <div class="label">Usuarios</div>
+            </div>
+        </div>
+
+        <div class="sections">
+            <!-- Lista de usuarios -->
+            <div class="card" style="overflow-x: auto;">
+                <h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    Gestión de Usuarios
+                </h2>
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usuario in usuarios %}
+                        <tr>
+                            <td style="font-weight: 500;">{{ usuario.nombre }}</td>
+                            <td style="color: #9ca3af;">{{ usuario.email }}</td>
+                            <td><span class="badge badge-{{ usuario.rol }}">{{ usuario.rol.upper() }}</span></td>
+                            <td>
+                                {% if usuario.activo %}
+                                <span class="badge"
+                                    style="background: rgba(130, 195, 65, 0.1); color: #82C341; border: 1px solid rgba(130, 195, 65, 0.2);">Activo</span>
+                                {% else %}
+                                <span class="badge"
+                                    style="background: rgba(156, 163, 175, 0.1); color: #9ca3af; border: 1px solid rgba(156, 163, 175, 0.2);">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if usuario.id != g.usuario.id %}
+                                <div class="actions-group">
+                                    <button
+                                        onclick="openEditModal('{{ usuario.id }}', '{{ usuario.nombre }}', '{{ usuario.email }}', '{{ usuario.rol }}')"
+                                        class="btn btn-secondary btn-sm">Editar</button>
+                                    <button type="button"
+                                        class="btn {% if usuario.activo %}btn-danger{% else %}btn-primary{% endif %} btn-sm"
+                                        onclick="confirmToggle('{{ usuario.id }}', '{{ usuario.nombre }}', {{ 'true' if usuario.activo else 'false' }})">
+                                        {% if usuario.activo %}Desactivar{% else %}Activar{% endif %}
+                                    </button>
+                                </div>
+                                {% else %}
+                                <span style="color: #4b5563; font-size: 0.85rem; font-style: italic;">Sesión
+                                    Actual</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <button onclick="openNewUserModal()" class="btn btn-primary" style="margin-top: 25px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Nuevo Usuario
+                </button>
+            </div>
+
+            <!-- Últimos tickets -->
+            <div class="card">
+                <h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    Últimos Tickets
+                </h2>
+                <div style="margin-top: 15px;">
+                    {% for ticket in ultimos_tickets %}
+                    <div class="ticket-item">
+                        <span class="ticket-id">#{{ ticket.id }}</span>
+                        {% if ticket.estado == 'PENDIENTE' %}
+                        <span class="ticket-status"
+                            style="background: rgba(245, 158, 11, 0.1); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2);">{{
+                            ticket.estado }}</span>
+                        {% elif ticket.estado == 'CERRADO' %}
+                        <span class="ticket-status"
+                            style="background: rgba(156, 163, 175, 0.1); color: #9ca3af; border: 1px solid rgba(156, 163, 175, 0.2);">{{
+                            ticket.estado }}</span>
+                        {% elif ticket.estado == 'ATRASADO' %}
+                        <span class="ticket-status"
+                            style="background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2);">{{
+                            ticket.estado }}</span>
+                        {% elif ticket.estado == 'RECIBIDO' %}
+                        <span class="ticket-status"
+                            style="background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2);">{{
+                            ticket.estado }}</span>
+                        {% else %}
+                        <span class="ticket-status"
+                            style="background: rgba(130, 195, 65, 0.1); color: #82C341; border: 1px solid rgba(130, 195, 65, 0.2);">{{
+                            ticket.estado }}</span>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <p style="color: #9ca3af; padding: 20px 0; text-align: center;">No hay tickets recientes</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal nuevo usuario -->
+    <div class="modal" id="modalNuevoUsuario">
+        <div class="modal-content">
+            <h3>Nuevo Usuario</h3>
+            <form method="POST" action="{{ url_for('crear_usuario') }}">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" name="nombre" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <div style="position: relative;">
+                        <input type="password" name="password" id="newPassword" required style="padding-right: 40px;">
+                        <button type="button" onclick="togglePasswordVisibility('newPassword')"
+                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #9ca3af; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="eye-icon">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Confirmar Contraseña</label>
+                    <div style="position: relative;">
+                        <input type="password" name="confirm_password" id="newConfirmPassword" required
+                            style="padding-right: 40px;">
+                        <button type="button" onclick="togglePasswordVisibility('newConfirmPassword')"
+                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #9ca3af; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="eye-icon">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Rol</label>
+                    <select name="rol">
+                        <option value="cliente">Cliente</option>
+                        <option value="agente">Agente</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 30px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Crear</button>
+                    <button type="button" onclick="closeModal('modalNuevoUsuario')" class="btn btn-secondary"
+                        style="flex: 1;">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal editar usuario -->
+    <div class="modal" id="modalEditarUsuario">
+        <div class="modal-content">
+            <h3>Editar Usuario</h3>
+            <form method="POST" id="formEditarUsuario">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" name="nombre" id="editNombre" required>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña <span style="font-size: 0.8rem; color: #9ca3af; font-weight: 400;"></span></label>
+                    <div style="position: relative;">
+                        <input type="password" name="password" id="editPassword" style="padding-right: 40px;">
+                        <button type="button" onclick="togglePasswordVisibility('editPassword')"
+                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #9ca3af; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="eye-icon">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Confirmar Contraseña <span
+                            style="font-size: 0.8rem; color: #9ca3af; font-weight: 400;">("")</span></label>
+                    <div style="position: relative;">
+                        <input type="password" name="confirm_password" id="editConfirmPassword"
+                            style="padding-right: 40px;">
+                        <button type="button" onclick="togglePasswordVisibility('editConfirmPassword')"
+                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #9ca3af; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="eye-icon">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Rol</label>
+                    <select name="rol" id="editRol">
+                        <option value="cliente">Cliente</option>
+                        <option value="agente">Agente</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 30px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Guardar</button>
+                    <button type="button" onclick="closeModal('modalEditarUsuario')" class="btn btn-secondary"
+                        style="flex: 1;">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Confirmación Estético -->
+    <div class="modal" id="modalConfirm">
+        <div class="modal-content" style="max-width: 450px; text-align: center; border-top: 4px solid #fbbf24;">
+            <div style="margin: 10px 0 20px; color: #fbbf24;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                    </path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+            <h3 id="confirmTitle" style="margin-bottom: 10px;">¿Confirmar Acción?</h3>
+            <p id="confirmMessage" style="color: #9ca3af; margin-bottom: 30px; line-height: 1.6; font-size: 1rem;">
+                Esta acción afectará el acceso del usuario al sistema.
+            </p>
+            <div style="display: flex; gap: 12px;">
+                <button id="confirmBtn" class="btn btn-primary" style="flex: 1; border: none;">Sí, Confirmar</button>
+                <button onclick="closeModal('modalConfirm')" class="btn btn-secondary"
+                    style="flex: 1;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const formNuevoUsuario = document.querySelector('#modalNuevoUsuario form');
+            if (formNuevoUsuario) {
+                formNuevoUsuario.addEventListener('submit', function (e) {
+                    const pwd = document.getElementById('newPassword').value;
+                    const confirm = document.getElementById('newConfirmPassword').value;
+                    if (pwd !== confirm) {
+                        e.preventDefault();
+                        alert('Las contraseñas no coinciden');
+                    }
+                });
+            }
+
+            const formEditarUsuario = document.getElementById('formEditarUsuario');
+            if (formEditarUsuario) {
+                formEditarUsuario.addEventListener('submit', function (e) {
+                    const pwd = document.getElementById('editPassword').value;
+                    const confirm = document.getElementById('editConfirmPassword').value;
+                    if (pwd && pwd !== confirm) {
+                        e.preventDefault();
+                        alert('Las contraseñas no coinciden');
+                    }
+                });
+            }
+        });
+
+        function openNewUserModal() {
+            document.getElementById('modalNuevoUsuario').classList.add('active');
+        }
+
+        function openEditModal(id, nombre, email, rol) {
+            document.getElementById('editNombre').value = nombre;
+            document.getElementById('editRol').value = rol;
+            document.getElementById('formEditarUsuario').action = '/admin/usuario/editar/' + id;
+            document.getElementById('modalEditarUsuario').classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function confirmToggle(id, nombre, isActive) {
+            const title = isActive ? 'Desactivar Usuario' : 'Activar Usuario';
+            const action = isActive ? 'desactivar' : 'activar';
+            const color = isActive ? '#ef4444' : '#82C341';
+
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmMessage').innerHTML = `¿Está seguro de que desea <strong>${action}</strong> al usuario <strong>${nombre}</strong>?<br><br>Esta acción puede ser revertida más adelante.`;
+
+            const btn = document.getElementById('confirmBtn');
+            btn.style.backgroundColor = color;
+            btn.style.color = isActive ? '#ffffff' : '#111827';
+
+            // Usar fetch para no redirigir a otra pestaña
+            btn.onclick = function () {
+                // Deshabilitar botón para evitar doble clic
+                btn.disabled = true;
+                btn.innerText = 'Procesando...';
+
+                fetch('/admin/usuario/toggle/' + id)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // Recargar la misma página para ver los cambios reflejados
+                            window.location.reload();
+                        } else {
+                            alert('Error: ' + data.message);
+                            btn.disabled = false;
+                            btn.innerText = 'Sí, Confirmar';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Ocurrió un error al procesar la solicitud');
+                        btn.disabled = false;
+                        btn.innerText = 'Sí, Confirmar';
+                    });
+            };
+
+            document.getElementById('modalConfirm').style.borderTopColor = color;
+            document.getElementById('modalConfirm').classList.add('active');
+        }
+
+        function togglePasswordVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            const btn = input.nextElementSibling;
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+                btn.style.color = '#82C341';
+            } else {
+                input.type = 'password';
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+                btn.style.color = '#9ca3af';
+            }
+        }
+    </script>
+</body>
+
+</html>

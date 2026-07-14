@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial - {{ equipo.nombre or equipo.codigo }} - Planinfor</title>
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #111827; color: #f3f4f6; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+        
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .page-title { font-size: 1.5rem; font-weight: 600; color: #ffffff; margin: 0; }
+        
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; text-decoration: none; cursor: pointer; transition: all 0.2s; border: none; }
+        .btn-primary { background: #82C341; color: #ffffff; }
+        .btn-primary:hover { background: #6da335; }
+        .btn-secondary { background: #374151; color: #d1d5db; border: 1px solid #4b5563; }
+        .btn-secondary:hover { background: #4b5563; color: #ffffff; }
+
+        /* Ficha del equipo */
+        .equipo-ficha { background: #1f2937; border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid #374151; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .equipo-info { flex: 1; min-width: 200px; }
+        .equipo-nombre { font-size: 1.2rem; font-weight: 700; color: #ffffff; margin: 0 0 4px; }
+        .equipo-detalle { font-size: 0.85rem; color: #9ca3af; }
+        .equipo-detalle span { color: #d1d5db; }
+        .alerta-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 9999px; font-size: 0.85rem; font-weight: 600; }
+        .alerta-verde { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+        .alerta-amarillo { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+        .alerta-rojo { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+        .alerta-gris { background: rgba(107, 114, 128, 0.15); color: #9ca3af; }
+        
+        /* Formulario */
+        .form-card { background: #1f2937; border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid #374151; }
+        .form-card h2 { font-size: 1.1rem; font-weight: 600; color: #ffffff; margin: 0 0 16px; display: flex; align-items: center; gap: 8px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-label { font-size: 0.85rem; color: #9ca3af; font-weight: 500; }
+        .form-control { background: #111827; border: 1px solid #374151; color: #f3f4f6; padding: 10px; border-radius: 8px; font-size: 0.9rem; width: 100%; box-sizing: border-box; }
+        .form-control:focus { outline: none; border-color: #82C341; box-shadow: 0 0 0 2px rgba(130, 195, 65, 0.2); }
+        textarea.form-control { resize: vertical; min-height: 70px; }
+        
+        /* Tabla de historial */
+        .table-container { background: #1f2937; border-radius: 12px; overflow-x: auto; border: 1px solid #374151; }
+        .table-container h2 { font-size: 1.1rem; font-weight: 600; color: #ffffff; margin: 0; padding: 20px 20px 0; display: flex; align-items: center; gap: 8px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; text-align: left; font-size: 0.85rem; border-bottom: 1px solid #374151; }
+        th { background: #111827; color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.75rem; }
+        td { color: #d1d5db; }
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
+        
+        .empty-state { text-align: center; padding: 40px; color: #6b7280; }
+        .empty-state svg { margin-bottom: 12px; opacity: 0.4; }
+        .empty-state p { margin: 0; font-size: 0.9rem; }
+        
+        /* Alertas */
+        .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; }
+        .alert-success { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #34d399; }
+        .alert-error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; }
+    </style>
+</head>
+<body>
+    {% set vista = 'equipos' %}
+    {% include 'header_unificado.html' %}
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+            <h1 class="page-title">Historial de Mantenciones</h1>
+            <div style="display: flex; gap: 10px;">
+                <a href="{{ url_for('descargar_ficha_pdf', id=equipo.id) }}" class="btn btn-primary" target="_blank">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 18 15 15"></polyline></svg>
+                    Descargar Ficha PDF
+                </a>
+                <a href="{{ url_for('lista_equipos') }}" class="btn btn-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    Volver
+                </a>
+            </div>
+        </div>
+
+        <!-- Ficha resumida del equipo -->
+        <div class="equipo-ficha">
+            <div class="equipo-info">
+                <h2 class="equipo-nombre">{{ equipo.nombre or 'Sin nombre' }} <span style="color: #6b7280; font-weight: 400; font-size: 0.85rem;">({{ equipo.codigo or 'S/N' }})</span></h2>
+                <div class="equipo-detalle">
+                    <span>{{ equipo.marca or '-' }}</span> · {{ equipo.modelo or '-' }} · Área: <span>{{ equipo.area or '-' }}</span> · Responsable: <span>{{ equipo.responsable or '-' }}</span>
+                </div>
+                <div class="equipo-detalle" style="margin-top: 6px;">
+                    Última mantención: <span>{{ equipo.ultima_mantencion or 'Sin registro' }}</span> · Próxima: <span>{{ equipo.proxima_mantencion or 'Sin definir' }}</span> · Frecuencia: <span>{{ equipo.frecuencia_mantencion or '-' }}</span>
+                </div>
+            </div>
+            {% set alerta = equipo.estado_alerta %}
+            {% if alerta == 'Verde' %}
+                <div class="alerta-badge alerta-verde">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    Al día
+                </div>
+            {% elif alerta == 'Amarillo' %}
+                <div class="alerta-badge alerta-amarillo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    Próximo a vencer
+                </div>
+            {% elif alerta == 'Rojo' %}
+                <div class="alerta-badge alerta-rojo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    Atrasado
+                </div>
+            {% else %}
+                <div class="alerta-badge alerta-gris">
+                    Sin fecha definida
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Formulario para registrar nueva mantención -->
+        <div class="form-card">
+            <h2>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#82C341" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Registrar Nueva Mantención
+            </h2>
+            <form method="POST">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Fecha Realizada</label>
+                        <input type="date" name="fecha_realizada" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Técnico / Responsable</label>
+                        <input type="text" name="tecnico" class="form-control" placeholder="Nombre del técnico" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tipo de Mantención</label>
+                        <select name="tipo" class="form-control">
+                            <option value="Preventiva">Preventiva</option>
+                            <option value="Correctiva">Correctiva</option>
+                            <option value="Inspección">Inspección</option>
+                            <option value="Calibración">Calibración</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">Observaciones</label>
+                        <textarea name="observaciones" class="form-control" placeholder="Describa el trabajo realizado, repuestos utilizados, etc."></textarea>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
+                    <button type="submit" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                        Registrar Mantención
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tabla de historial -->
+        <div class="table-container">
+            <h2>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#82C341" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                Mantenciones Realizadas ({{ historial|length }})
+            </h2>
+            {% if historial %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Técnico</th>
+                        <th>Observaciones</th>
+                        <th>Registrado por</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for registro in historial %}
+                    <tr>
+                        <td><strong>{{ registro.fecha_realizada.strftime('%d/%m/%Y') if registro.fecha_realizada else '-' }}</strong></td>
+                        <td>
+                            {% if registro.tipo == 'Preventiva' %}
+                                <span style="color: #10b981;">{{ registro.tipo }}</span>
+                            {% elif registro.tipo == 'Correctiva' %}
+                                <span style="color: #f59e0b;">{{ registro.tipo }}</span>
+                            {% else %}
+                                <span style="color: #9ca3af;">{{ registro.tipo or '-' }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ registro.tecnico or '-' }}</td>
+                        <td style="max-width: 350px;">{{ registro.observaciones or '-' }}</td>
+                        <td style="font-size: 0.8rem; color: #6b7280;">{{ registro.registrado_por or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <p>No hay mantenciones registradas para este equipo.<br>Use el formulario de arriba para registrar la primera.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

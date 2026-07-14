@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipos y Mantenciones - Planinfor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --border: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #5b9e3b;
+            --accent-hover: #4a822f;
+        }
+
+        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-main); }
+        .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+        
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .page-title { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.025em; color: #ffffff; margin: 0; }
+        
+        /* Botones Premium */
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 18px; border-radius: 10px; font-weight: 600; font-size: 0.875rem; text-decoration: none; cursor: pointer; transition: all 0.2s ease; border: 1px solid transparent; }
+        .btn-primary { background: linear-gradient(145deg, var(--accent), #76b13b); color: #ffffff; box-shadow: 0 4px 12px rgba(130, 195, 65, 0.25); }
+        .btn-primary:hover { box-shadow: 0 6px 16px rgba(130, 195, 65, 0.35); background: linear-gradient(145deg, #7dc03a, #6ba334); }
+        .btn-primary:active { box-shadow: 0 2px 8px rgba(130, 195, 65, 0.2); }
+        .btn-secondary { background: #334155; color: #e2e8f0; border-color: #475569; }
+        .btn-secondary:hover { background: #475569; color: #ffffff; border-color: #64748b; }
+        
+        /* Filtros */
+        .filters-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border-radius: 16px; padding: 20px 24px; margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+        .filters-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        .form-control { background: #0f172a; border: 1px solid var(--border); color: var(--text-main); padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box; transition: all 0.2s; }
+        .form-control:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(130, 195, 65, 0.15); }
+        
+        /* Tabla Premium */
+        .table-container { background: var(--bg-card); border-radius: 16px; overflow-x: auto; border: 1px solid var(--border); box-shadow: 0 8px 30px rgba(0,0,0,0.2); }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1200px; }
+        th, td { padding: 14px 16px; text-align: left; font-size: 0.875rem; border-bottom: 1px solid var(--border); }
+        th { background: rgba(15, 23, 42, 0.6); color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem; white-space: nowrap; backdrop-filter: blur(4px); }
+        td { color: #cbd5e1; }
+        tbody tr { transition: background 0.15s ease; }
+        tbody tr:hover { background: rgba(255,255,255,0.03); }
+        tbody tr:last-child td { border-bottom: none; }
+        
+        .badge { display: inline-flex; padding: 4px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.025em; }
+        .badge-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .badge-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
+        .badge-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .badge-default { background: rgba(107, 114, 128, 0.15); color: #94a3b8; border: 1px solid rgba(107, 114, 128, 0.2); }
+        
+        .actions-cell { display: flex; gap: 12px; align-items: center; }
+        .action-icon { color: var(--text-muted); transition: all 0.2s; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; }
+        .action-icon:hover { color: #ffffff; background: rgba(255,255,255,0.1); }
+        
+        /* Dashboard Cards Premium */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .dash-card { background: linear-gradient(180deg, var(--bg-card) 0%, rgba(30, 41, 59, 0.8) 100%); border-radius: 16px; padding: 20px; border: 1px solid var(--border); display: flex; align-items: center; gap: 18px; cursor: default; }
+        .dash-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: inset 0 2px 4px rgba(255,255,255,0.1); }
+        .dash-icon-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #ffffff; }
+        .dash-icon-red { background: linear-gradient(135deg, #ef4444, #dc2626); color: #ffffff; }
+        .dash-icon-yellow { background: linear-gradient(135deg, #f59e0b, #d97706); color: #ffffff; }
+        .dash-icon-green { background: linear-gradient(135deg, #22c55e, #16a34a); color: #ffffff; }
+        .dash-number { font-size: 2rem; font-weight: 800; color: #ffffff; line-height: 1; letter-spacing: -0.025em; }
+        .dash-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; margin-top: 4px; }
+        @media (max-width: 900px) { .dashboard-grid { grid-template-columns: repeat(2, 1fr); } }
+        
+        /* Paginación */
+        .pagination { display: flex; justify-content: center; gap: 6px; padding: 24px; }
+        .page-item { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s; }
+        .page-item:hover:not(.disabled) { background: #334155; color: #ffffff; border-color: #475569; }
+        .page-item.active { background: var(--accent); color: #ffffff; border-color: var(--accent); box-shadow: 0 4px 10px rgba(130, 195, 65, 0.3); }
+        .page-item.disabled { opacity: 0.4; cursor: not-allowed; }
+        
+        /* Alertas y Checkboxes */
+        .alert { padding: 16px; border-radius: 12px; margin-bottom: 24px; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 10px; }
+        .alert-success { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #34d399; }
+        .alert-error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; }
+        
+        /* Custom Checkbox */
+        input[type="checkbox"] { appearance: none; -webkit-appearance: none; width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 4px; background-color: var(--bg-main); display: grid; place-content: center; cursor: pointer; transition: all 0.2s; margin: 0; }
+        input[type="checkbox"]::before { content: ""; width: 10px; height: 10px; transform: scale(0); transition: 120ms transform ease-in-out; box-shadow: inset 1em 1em var(--accent); transform-origin: center; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
+        input[type="checkbox"]:checked { border-color: var(--accent); }
+        input[type="checkbox"]:checked::before { transform: scale(1); }
+    </style>
+</head>
+<body>
+    {% set vista = 'equipos' %}
+    {% include 'header_unificado.html' %}
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+            <h1 class="page-title">Inventario de Equipos y Mantenciones</h1>
+            <a href="{{ url_for('nuevo_equipo') }}" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Nuevo Equipo
+            </a>
+        </div>
+
+        <!-- Dashboard Cards -->
+        <div class="dashboard-grid">
+            <div class="dash-card">
+                <div class="dash-icon dash-icon-blue">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                </div>
+                <div>
+                    <div class="dash-number">{{ total_equipos }}</div>
+                    <div class="dash-label">Total Equipos</div>
+                </div>
+            </div>
+            <div class="dash-card">
+                <div class="dash-icon dash-icon-red">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                </div>
+                <div>
+                    <div class="dash-number" style="color: #ef4444;">{{ total_atrasados }}</div>
+                    <div class="dash-label">Atrasados</div>
+                </div>
+            </div>
+            <div class="dash-card">
+                <div class="dash-icon dash-icon-yellow">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </div>
+                <div>
+                    <div class="dash-number" style="color: #f59e0b;">{{ total_proximos }}</div>
+                    <div class="dash-label">Próximos a Vencer</div>
+                </div>
+            </div>
+            <div class="dash-card">
+                <div class="dash-icon dash-icon-green">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+                <div>
+                    <div class="dash-number">{{ total_al_dia }}</div>
+                    <div class="dash-label">Al Día</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filters-card">
+            <form method="GET" action="{{ url_for('lista_equipos') }}" class="filters-form">
+                <div class="form-group">
+                    <label class="form-label">Buscar (Código, Nombre)</label>
+                    <input type="text" name="q" class="form-control" placeholder="Buscar..." value="{{ search_query }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Área</label>
+                    <select name="area" class="form-control">
+                        <option value="">Todas las áreas</option>
+                        {% for area in areas %}
+                        <option value="{{ area }}" {% if area_filter == area %}selected{% endif %}>{{ area }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Responsable</label>
+                    <select name="responsable" class="form-control">
+                        <option value="">Todos</option>
+                        {% for responsable in responsables %}
+                        <option value="{{ responsable }}" {% if responsable_filter == responsable %}selected{% endif %}>{{ responsable }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Marca</label>
+                    <select name="marca" class="form-control">
+                        <option value="">Todas las marcas</option>
+                        {% for marca in marcas %}
+                        <option value="{{ marca }}" {% if marca_filter == marca %}selected{% endif %}>{{ marca }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 10px; justify-content: flex-end;">
+                    <div style="display: grid; grid-template-columns: 1fr 42px; gap: 10px;">
+                        <button type="submit" class="btn btn-primary" style="height: 42px; width: 100%;">Filtrar</button>
+                        <a href="{{ url_for('lista_equipos') }}" class="btn btn-secondary" style="height: 42px; padding: 0; display: flex; justify-content: center;" title="Limpiar Filtros">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><polyline points="21 3 21 8 16 8"></polyline></svg>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <form id="mass-download-form" action="{{ url_for('descargar_fichas_masivo') }}" method="POST">
+            <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 0.9rem; color: var(--text-muted);">
+                    Mostrando <strong style="color: white;">{{ equipos_paginados.items|length }}</strong> equipos en esta página
+                </div>
+                <button type="submit" id="btn-descargar-masivo" class="btn btn-primary" style="display: none; background: linear-gradient(145deg, #3b82f6, #2563eb); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Descargar Seleccionados
+                </button>
+            </div>
+            
+            <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all" onclick="toggleAll(this)"></th>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Marca/Modelo</th>
+                        <th>Área</th>
+                        <th>Responsable</th>
+                        <th>Frec. Mantención</th>
+                        <th>Próxima Mantención</th>
+                        <th style="text-align: center;">Alerta</th>
+                        <th>Estado</th>
+                        <th style="width: 120px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for equipo in equipos_paginados.items %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="equipo_ids" value="{{ equipo.id }}" class="equipo-checkbox" onclick="updateMassDownloadBtn()">
+                        </td>
+                        <td><strong>{{ equipo.codigo or 'S/N' }}</strong></td>
+                        <td>{{ equipo.nombre or '-' }}</td>
+                        <td>
+                            <div>{{ equipo.marca or '-' }}</div>
+                            <div style="font-size: 0.75rem; color: #9ca3af;">{{ equipo.modelo or '-' }}</div>
+                        </td>
+                        <td>{{ equipo.area or '-' }}</td>
+                        <td>{{ equipo.responsable or '-' }}</td>
+                        <td>{{ equipo.frecuencia_mantencion or '-' }}</td>
+                        <td>{{ equipo.proxima_mantencion or '-' }}</td>
+                        <td style="text-align: center;">
+                            {% set alerta = equipo.estado_alerta %}
+                            {% if alerta == 'Rojo' %}
+                                <span title="Atrasado" style="display:inline-block; width:16px; height:16px; border-radius:50%; background-color:#ef4444; border:2px solid #b91c1c;"></span>
+                            {% elif alerta == 'Amarillo' %}
+                                <span title="Próximo a vencer" style="display:inline-block; width:16px; height:16px; border-radius:50%; background-color:#f59e0b; border:2px solid #b45309;"></span>
+                            {% elif alerta == 'Verde' %}
+                                <span title="Al día" style="display:inline-block; width:16px; height:16px; border-radius:50%; background-color:#10b981; border:2px solid #047857;"></span>
+                            {% else %}
+                                <span title="Fecha inválida o sin definir" style="display:inline-block; width:16px; height:16px; border-radius:50%; background-color:#9ca3af; border:2px solid #4b5563;"></span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if equipo.estado and 'Operativo' in equipo.estado %}
+                                <span class="badge badge-success">{{ equipo.estado }}</span>
+                            {% elif equipo.estado and ('mantención' in equipo.estado.lower() or 'reparacion' in equipo.estado.lower()) %}
+                                <span class="badge badge-warning">{{ equipo.estado }}</span>
+                            {% elif equipo.estado and 'Baja' in equipo.estado %}
+                                <span class="badge badge-danger">{{ equipo.estado }}</span>
+                            {% else %}
+                                <span class="badge badge-default">{{ equipo.estado or 'Desconocido' }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="actions-cell">
+                                <a href="{{ url_for('descargar_ficha_pdf', id=equipo.id) }}" class="action-icon" title="Descargar PDF" target="_blank">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 18 15 15"></polyline></svg>
+                                </a>
+                                <a href="{{ url_for('historial_equipo', id=equipo.id) }}" class="action-icon" title="Historial">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                </a>
+                                <a href="{{ url_for('editar_equipo', id=equipo.id) }}" class="action-icon" title="Editar">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                </a>
+                                <form method="POST" action="{{ url_for('eliminar_equipo', id=equipo.id) }}" style="display:inline;" onsubmit="return confirm('¿Está seguro de eliminar este equipo?');">
+                                    <button type="submit" style="background:none; border:none; padding:0; cursor:pointer;" class="action-icon" title="Eliminar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="11" style="text-align: center; padding: 40px; color: #9ca3af;">No se encontraron equipos o mantenciones registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        </form>
+
+        <!-- Paginación -->
+        {% if equipos_paginados.pages > 1 %}
+        <div class="pagination">
+            {% if equipos_paginados.has_prev %}
+                <a href="{{ url_for('lista_equipos', page=equipos_paginados.prev_num, q=search_query, area=area_filter, responsable=responsable_filter, marca=marca_filter) }}" class="page-item">&laquo;</a>
+            {% else %}
+                <span class="page-item disabled">&laquo;</span>
+            {% endif %}
+            
+            {% for page_num in equipos_paginados.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                    {% if equipos_paginados.page == page_num %}
+                        <span class="page-item active">{{ page_num }}</span>
+                    {% else %}
+                        <a href="{{ url_for('lista_equipos', page=page_num, q=search_query, area=area_filter, responsable=responsable_filter, marca=marca_filter) }}" class="page-item">{{ page_num }}</a>
+                    {% endif %}
+                {% else %}
+                    <span class="page-item disabled" style="background:transparent; border:none; padding: 0 5px;">...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if equipos_paginados.has_next %}
+                <a href="{{ url_for('lista_equipos', page=equipos_paginados.next_num, q=search_query, area=area_filter, responsable=responsable_filter, marca=marca_filter) }}" class="page-item">&raquo;</a>
+            {% else %}
+                <span class="page-item disabled">&raquo;</span>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <script>
+        function toggleAll(source) {
+            checkboxes = document.getElementsByClassName('equipo-checkbox');
+            for(var i=0, n=checkboxes.length;i<n;i++) {
+                checkboxes[i].checked = source.checked;
+            }
+            updateMassDownloadBtn();
+        }
+        
+        function updateMassDownloadBtn() {
+            var checkboxes = document.querySelectorAll('.equipo-checkbox:checked');
+            var btn = document.getElementById('btn-descargar-masivo');
+            if (checkboxes.length > 0) {
+                btn.style.display = 'inline-flex';
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Descargar ${checkboxes.length} en ZIP`;
+            } else {
+                btn.style.display = 'none';
+            }
+            
+            // Update select-all checkbox state based on individual checkboxes
+            var allCheckboxes = document.querySelectorAll('.equipo-checkbox');
+            var selectAllCheckbox = document.getElementById('select-all');
+            if (allCheckboxes.length > 0) {
+                selectAllCheckbox.checked = checkboxes.length === allCheckboxes.length;
+            }
+        }
+    </script>
+</body>
+</html>

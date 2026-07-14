@@ -278,6 +278,55 @@ class Notificacion(db.Model):
     fecha_creacion = db.Column(db.DateTime, default=datetime.now)
     fecha_envio = db.Column(db.DateTime, nullable=True)
 
+class EquipoMantencion(db.Model):
+    """Modelo de Equipos y Mantenciones (Inventario)"""
+    id = db.Column(db.Integer, primary_key=True)
+    codigo = db.Column(db.String(50), nullable=True) # ID original del Excel
+    nombre = db.Column(db.String(200), nullable=True)
+    marca = db.Column(db.String(100), nullable=True)
+    modelo = db.Column(db.String(100), nullable=True)
+    serie = db.Column(db.String(100), nullable=True)
+    area = db.Column(db.String(100), nullable=True)
+    responsable = db.Column(db.String(100), nullable=True)
+    ultima_mantencion = db.Column(db.String(50), nullable=True)
+    frecuencia_mantencion = db.Column(db.String(100), nullable=True)
+    proxima_mantencion = db.Column(db.String(50), nullable=True)
+    alerta = db.Column(db.String(50), nullable=True)
+    requerimiento = db.Column(db.String(100), nullable=True)
+    tipo_mantencion = db.Column(db.String(100), nullable=True)
+    estado = db.Column(db.String(100), nullable=True)
+    ficha = db.Column(db.String(255), nullable=True)
+    historial = db.relationship('HistorialMantencion', backref='equipo', lazy='dynamic', cascade='all, delete-orphan')
+
+    @property
+    def estado_alerta(self):
+        import datetime as _dt
+        if not self.proxima_mantencion:
+            return 'Gris'
+        try:
+            fecha_prox = _dt.datetime.strptime(self.proxima_mantencion, '%d/%m/%Y').date()
+            hoy = _dt.date.today()
+            dias_restantes = (fecha_prox - hoy).days
+            
+            if dias_restantes < 0:
+                return 'Rojo'
+            elif dias_restantes <= 30:
+                return 'Amarillo'
+            else:
+                return 'Verde'
+        except Exception:
+            return 'Gris'
+
+class HistorialMantencion(db.Model):
+    """Registro histórico de mantenciones realizadas a un equipo"""
+    id = db.Column(db.Integer, primary_key=True)
+    equipo_id = db.Column(db.Integer, db.ForeignKey('equipo_mantencion.id'), nullable=False)
+    fecha_realizada = db.Column(db.DateTime, default=datetime.now)
+    tecnico = db.Column(db.String(150), nullable=True)
+    observaciones = db.Column(db.Text, nullable=True)
+    tipo = db.Column(db.String(100), nullable=True)  # Preventiva, Correctiva, etc.
+    registrado_por = db.Column(db.String(150), nullable=True)
+
 # ==================== RUTAS DE LA APLICACIÓN ====================
 
 @app.route('/')
@@ -1649,8 +1698,383 @@ def iniciar_scheduler():
         name='Enviar correos pendientes en la cola'
     )
     
+    # Alerta de mantenciones atrasadas/próximas (cada día a las 8:00 AM)
+    scheduler.add_job(
+        func=cron_alertas_mantenciones,
+        trigger='cron',
+        hour=8,
+        id='alertas_mantenciones',
+        name='Alertar mantenciones atrasadas o próximas a vencer'
+    )
+    
     scheduler.start()
     return scheduler
+
+# ==================== EQUIPOS Y MANTENCIONES ====================
+
+@app.route('/equipos')
+@login_required
+def lista_equipos():
+    """Listado de equipos y mantenciones (Solo Admin)"""
+    if g.usuario.rol != 'admin':
+        flash('Acceso denegado. Solo administradores pueden ver esta sección.', 'error')
+        return redirect(url_for('index'))
+        
+    page = request.args.get('page', 1, type=int)
+    search_query = request.args.get('q', '').strip()
+    area_filter = request.args.get('area', '').strip()
+    responsable_filter = request.args.get('responsable', '').strip()
+    marca_filter = request.args.get('marca', '').strip()
+    
+    query = EquipoMantencion.query
+    
+    if search_query:
+        query = query.filter(EquipoMantencion.nombre.ilike(f'%{search_query}%') | EquipoMantencion.codigo.ilike(f'%{search_query}%'))
+    if area_filter:
+        query = query.filter(EquipoMantencion.area.ilike(f'%{area_filter}%'))
+    if responsable_filter:
+        query = query.filter(EquipoMantencion.responsable.ilike(f'%{responsable_filter}%'))
+    if marca_filter:
+        query = query.filter(EquipoMantencion.marca.ilike(f'%{marca_filter}%'))
+        
+    # Get distinct values for filters
+    areas = [r[0] for r in db.session.query(EquipoMantencion.area).distinct().filter(EquipoMantencion.area != None, EquipoMantencion.area != '').all()]
+    responsables = [r[0] for r in db.session.query(EquipoMantencion.responsable).distinct().filter(EquipoMantencion.responsable != None, EquipoMantencion.responsable != '').all()]
+    marcas = [r[0] for r in db.session.query(EquipoMantencion.marca).distinct().filter(EquipoMantencion.marca != None, EquipoMantencion.marca != '').all()]
+    
+    equipos_paginados = query.order_by(EquipoMantencion.id.desc()).paginate(page=page, per_page=15, error_out=False)
+    
+    # Dashboard: calcular conteos de alertas sobre TODOS los equipos
+    todos_equipos = EquipoMantencion.query.all()
+    total_equipos = len(todos_equipos)
+    total_atrasados = sum(1 for e in todos_equipos if e.estado_alerta == 'Rojo')
+    total_proximos = sum(1 for e in todos_equipos if e.estado_alerta == 'Amarillo')
+    total_al_dia = sum(1 for e in todos_equipos if e.estado_alerta == 'Verde')
+    
+    return render_template('equipos/lista.html', 
+                           equipos_paginados=equipos_paginados, 
+                           search_query=search_query,
+                           area_filter=area_filter,
+                           responsable_filter=responsable_filter,
+                           marca_filter=marca_filter,
+                           areas=sorted(areas),
+                           responsables=sorted(responsables),
+                           marcas=sorted(marcas),
+                           total_equipos=total_equipos,
+                           total_atrasados=total_atrasados,
+                           total_proximos=total_proximos,
+                           total_al_dia=total_al_dia)
+
+@app.route('/equipos/nuevo', methods=['GET', 'POST'])
+@login_required
+def nuevo_equipo():
+    if g.usuario.rol != 'admin':
+        flash('Acceso denegado.', 'error')
+        return redirect(url_for('index'))
+        
+    if request.method == 'POST':
+        marca = request.form.get('marca')
+        if marca == '__otra__':
+            marca = request.form.get('nueva_marca')
+            
+        requerimiento = request.form.get('requerimiento')
+        if requerimiento == '__otra__':
+            requerimiento = request.form.get('nuevo_requerimiento')
+            
+        equipo = EquipoMantencion(
+            codigo=request.form.get('codigo'),
+            nombre=request.form.get('nombre'),
+            marca=marca,
+            modelo=request.form.get('modelo'),
+            serie=request.form.get('serie'),
+            area=request.form.get('area'),
+            responsable=request.form.get('responsable'),
+            ultima_mantencion=request.form.get('ultima_mantencion'),
+            frecuencia_mantencion=request.form.get('frecuencia_mantencion'),
+            proxima_mantencion=request.form.get('proxima_mantencion'),
+            requerimiento=requerimiento,
+            tipo_mantencion=request.form.get('tipo_mantencion'),
+            estado=request.form.get('estado'),
+            ficha=request.form.get('ficha')
+        )
+        db.session.add(equipo)
+        db.session.commit()
+        flash('Equipo registrado exitosamente.', 'success')
+        return redirect(url_for('lista_equipos'))
+        
+    marcas = [r[0] for r in db.session.query(EquipoMantencion.marca).distinct().filter(EquipoMantencion.marca != None, EquipoMantencion.marca != '').all()]
+    requerimientos = [r[0] for r in db.session.query(EquipoMantencion.requerimiento).distinct().filter(EquipoMantencion.requerimiento != None, EquipoMantencion.requerimiento != '').all()]
+    
+    return render_template('equipos/formulario.html', equipo=None, marcas=sorted(marcas), requerimientos=sorted(requerimientos))
+
+@app.route('/equipos/editar/<int:id>', methods=['GET', 'POST'])
+@login_required
+def editar_equipo(id):
+    if g.usuario.rol != 'admin':
+        flash('Acceso denegado.', 'error')
+        return redirect(url_for('index'))
+        
+    equipo = db.session.get(EquipoMantencion, id)
+    if not equipo:
+        flash('Equipo no encontrado.', 'error')
+        return redirect(url_for('lista_equipos'))
+        
+    if request.method == 'POST':
+        marca = request.form.get('marca')
+        if marca == '__otra__':
+            marca = request.form.get('nueva_marca')
+            
+        requerimiento = request.form.get('requerimiento')
+        if requerimiento == '__otra__':
+            requerimiento = request.form.get('nuevo_requerimiento')
+            
+        equipo.codigo = request.form.get('codigo')
+        equipo.nombre = request.form.get('nombre')
+        equipo.marca = marca
+        equipo.modelo = request.form.get('modelo')
+        equipo.serie = request.form.get('serie')
+        equipo.area = request.form.get('area')
+        equipo.responsable = request.form.get('responsable')
+        equipo.ultima_mantencion = request.form.get('ultima_mantencion')
+        equipo.frecuencia_mantencion = request.form.get('frecuencia_mantencion')
+        equipo.proxima_mantencion = request.form.get('proxima_mantencion')
+        equipo.requerimiento = requerimiento
+        equipo.tipo_mantencion = request.form.get('tipo_mantencion')
+        equipo.estado = request.form.get('estado')
+        equipo.ficha = request.form.get('ficha')
+        
+        db.session.commit()
+        flash('Equipo actualizado exitosamente.', 'success')
+        return redirect(url_for('lista_equipos'))
+        
+    marcas = [r[0] for r in db.session.query(EquipoMantencion.marca).distinct().filter(EquipoMantencion.marca != None, EquipoMantencion.marca != '').all()]
+    requerimientos = [r[0] for r in db.session.query(EquipoMantencion.requerimiento).distinct().filter(EquipoMantencion.requerimiento != None, EquipoMantencion.requerimiento != '').all()]
+    
+    return render_template('equipos/formulario.html', equipo=equipo, marcas=sorted(marcas), requerimientos=sorted(requerimientos))
+
+@app.route('/equipos/eliminar/<int:id>', methods=['POST'])
+@login_required
+def eliminar_equipo(id):
+    if g.usuario.rol != 'admin':
+        flash('Acceso denegado.', 'error')
+        return redirect(url_for('index'))
+        
+    equipo = db.session.get(EquipoMantencion, id)
+    if equipo:
+        db.session.delete(equipo)
+        db.session.commit()
+        flash('Equipo eliminado.', 'success')
+    return redirect(url_for('lista_equipos'))
+
+@app.route('/equipos/<int:id>/pdf')
+@login_required
+def descargar_ficha_pdf(id):
+    if g.usuario.rol != 'admin':
+        flash('Acceso denegado.', 'error')
+        return redirect(url_for('index'))
+        
+    equipo = db.session.get(EquipoMantencion, id)
+    if not equipo:
+        flash('Equipo no encontrado.', 'error')
+        return redirect(url_for('lista_equipos'))
+    
+    # Obtener historial más reciente (si existe)
+    historial_reciente = HistorialMantencion.query.filter_by(equipo_id=id).order_by(HistorialMantencion.fecha_realizada.desc()).first()
+    
+    import tempfile
+    import os
+    from flask import send_file
+    from generador_pdf import crear_ficha_pdf
+    
+    fd, temp_path = tempfile.mkstemp(suffix='.pdf', prefix=f'Ficha_{equipo.codigo or id}_')
+    os.close(fd)
+    
+    crear_ficha_pdf(equipo, historial_reciente, temp_path)
+    
+    return send_file(
+        temp_path, 
+        as_attachment=True, 
+        download_name=f"Ficha_Mantencion_{equipo.codigo or id}.pdf",
+        mimetype='application/pdf'
+    )
+
+@app.route('/equipos/descargar-masivo', methods=['POST'])
+@login_required
+def descargar_fichas_masivo():
+    if g.usuario.rol != 'admin':
+        flash('Acceso denegado.', 'error')
+        return redirect(url_for('index'))
+        
+    equipo_ids = request.form.getlist('equipo_ids')
+    if not equipo_ids:
+        flash('No se seleccionó ningún equipo para descargar.', 'warning')
+        return redirect(url_for('lista_equipos'))
+        
+    import tempfile
+    import os
+    import zipfile
+    from flask import send_file
+    from generador_pdf import crear_ficha_pdf
+    
+    # Crear un directorio temporal para el ZIP
+    temp_dir = tempfile.mkdtemp()
+    zip_path = os.path.join(temp_dir, 'Fichas_Mantencion.zip')
+    
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for eid in equipo_ids:
+            equipo = db.session.get(EquipoMantencion, int(eid))
+            if not equipo:
+                continue
+                
+            historial_reciente = HistorialMantencion.query.filter_by(equipo_id=equipo.id).order_by(HistorialMantencion.fecha_realizada.desc()).first()
+            
+            pdf_filename = f"Ficha_Mantencion_{equipo.codigo or equipo.id}.pdf"
+            pdf_path = os.path.join(temp_dir, pdf_filename)
+            
+            crear_ficha_pdf(equipo, historial_reciente, pdf_path)
+            zipf.write(pdf_path, arcname=pdf_filename)
+            
+    return send_file(
+        zip_path,
+        as_attachment=True,
+        download_name='Fichas_Mantencion_Planinfor.zip',
+        mimetype='application/zip'
+    )
+
+@app.route('/equipos/<int:id>/historial', methods=['GET', 'POST'])
+@login_required
+def historial_equipo(id):
+    """Ver historial de mantenciones de un equipo y registrar nuevas"""
+    if g.usuario.rol != 'admin':
+        flash('Acceso denegado.', 'error')
+        return redirect(url_for('index'))
+    
+    equipo = db.session.get(EquipoMantencion, id)
+    if not equipo:
+        flash('Equipo no encontrado.', 'error')
+        return redirect(url_for('lista_equipos'))
+    
+    if request.method == 'POST':
+        fecha_str = request.form.get('fecha_realizada', '').strip()
+        tecnico = request.form.get('tecnico', '').strip()
+        observaciones = request.form.get('observaciones', '').strip()
+        tipo = request.form.get('tipo', '').strip()
+        
+        # Parsear fecha
+        fecha_realizada = datetime.now()
+        if fecha_str:
+            try:
+                fecha_realizada = datetime.strptime(fecha_str, '%Y-%m-%d')
+            except ValueError:
+                pass
+        
+        registro = HistorialMantencion(
+            equipo_id=equipo.id,
+            fecha_realizada=fecha_realizada,
+            tecnico=tecnico,
+            observaciones=observaciones,
+            tipo=tipo,
+            registrado_por=g.usuario.nombre
+        )
+        db.session.add(registro)
+        
+        # Actualizar última mantención del equipo
+        equipo.ultima_mantencion = fecha_realizada.strftime('%d/%m/%Y')
+        
+        # Recalcular próxima mantención según frecuencia
+        freq = (equipo.frecuencia_mantencion or '').strip().lower()
+        if freq:
+            from dateutil.relativedelta import relativedelta
+            if 'anual' in freq:
+                prox = fecha_realizada + relativedelta(years=1)
+            elif 'semestral' in freq:
+                prox = fecha_realizada + relativedelta(months=6)
+            elif 'trimestral' in freq:
+                prox = fecha_realizada + relativedelta(months=3)
+            elif 'mensual' in freq:
+                prox = fecha_realizada + relativedelta(months=1)
+            elif 'bimestral' in freq:
+                prox = fecha_realizada + relativedelta(months=2)
+            else:
+                prox = None
+            
+            if prox:
+                equipo.proxima_mantencion = prox.strftime('%d/%m/%Y')
+        
+        db.session.commit()
+        flash('Mantención registrada exitosamente.', 'success')
+        return redirect(url_for('historial_equipo', id=equipo.id))
+    
+    historial = HistorialMantencion.query.filter_by(equipo_id=equipo.id).order_by(HistorialMantencion.fecha_realizada.desc()).all()
+    
+    return render_template('equipos/historial.html', equipo=equipo, historial=historial)
+
+def cron_alertas_mantenciones():
+    """Cron: Enviar alerta solo cuando equipos están próximos a necesitar mantención (≤30 días)"""
+    try:
+        with app.app_context():
+            import datetime as _dt
+            equipos = EquipoMantencion.query.all()
+            
+            # Solo nos interesan los que están por vencer (Amarillo)
+            proximos = []
+            for e in equipos:
+                if not e.proxima_mantencion:
+                    continue
+                try:
+                    fecha_prox = _dt.datetime.strptime(e.proxima_mantencion, '%d/%m/%Y').date()
+                    dias = (fecha_prox - _dt.date.today()).days
+                    if 0 <= dias <= 30:
+                        proximos.append((e, dias))
+                except Exception:
+                    continue
+            
+            if not proximos:
+                return
+            
+            # Ordenar por días restantes (más urgente primero)
+            proximos.sort(key=lambda x: x[1])
+            
+            # Construir contenido del correo
+            filas = _fila_dato('Equipos por mantener', str(len(proximos)), highlight=True)
+            
+            detalle = '<tr><td style="padding:20px 30px;">'
+            detalle += '<p style="margin:0 0 10px;font-size:14px;font-weight:600;color:#f59e0b;">⚠️ Equipos que necesitan mantención pronto:</p>'
+            detalle += '<ul style="margin:0;padding-left:20px;font-size:13px;color:#374151;">'
+            for e, dias in proximos[:20]:
+                if dias == 0:
+                    urgencia = '<span style="color:#ef4444;font-weight:600;">HOY</span>'
+                elif dias <= 7:
+                    urgencia = f'<span style="color:#ef4444;font-weight:600;">en {dias} días</span>'
+                else:
+                    urgencia = f'en {dias} días'
+                detalle += f'<li><strong>{e.nombre or e.codigo}</strong> — {urgencia} ({e.proxima_mantencion}) — {e.area or "Sin área"}</li>'
+            if len(proximos) > 20:
+                detalle += f'<li>...y {len(proximos) - 20} más</li>'
+            detalle += '</ul></td></tr>'
+            
+            html_correo = _base_email_html(
+                '#f59e0b',
+                '&#9888; Mantenciones Próximas',
+                f'{len(proximos)} equipo(s) necesitan mantención pronto',
+                filas,
+                detalle,
+                target_url=f'{BASE_URL}/equipos'
+            )
+            
+            notif = Notificacion(
+                destinatario='ti.noreply@planinfor.cl',
+                asunto=f'[Mantenciones] {len(proximos)} equipo(s) necesitan mantención pronto',
+                mensaje=html_correo,
+                tipo='email',
+                estado='pendiente'
+            )
+            db.session.add(notif)
+            db.session.commit()
+            
+    except Exception as e:
+        print(f'Error en cron_alertas_mantenciones: {e}')
+
 if __name__ == '__main__':
     asegurar_base_de_datos()
     crear_datos_iniciales()

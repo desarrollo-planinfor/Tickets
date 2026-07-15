@@ -1725,8 +1725,15 @@ def lista_equipos():
     area_filter = request.args.get('area', '').strip()
     responsable_filter = request.args.get('responsable', '').strip()
     marca_filter = request.args.get('marca', '').strip()
+    tab = request.args.get('tab', 'programados').strip()
     
     query = EquipoMantencion.query
+    
+    # Separar por tipo de requerimiento
+    if tab == 'por_uso':
+        query = query.filter(EquipoMantencion.requerimiento == 'Calibración / Verificación')
+    else:
+        query = query.filter((EquipoMantencion.requerimiento != 'Calibración / Verificación') | (EquipoMantencion.requerimiento == None))
     
     if search_query:
         query = query.filter(EquipoMantencion.nombre.ilike(f'%{search_query}%') | EquipoMantencion.codigo.ilike(f'%{search_query}%'))
@@ -1751,7 +1758,20 @@ def lista_equipos():
     total_proximos = sum(1 for e in todos_equipos if e.estado_alerta == 'Amarillo')
     total_al_dia = sum(1 for e in todos_equipos if e.estado_alerta == 'Verde')
     
-    return render_template('equipos/lista.html', 
+    import datetime as _dt
+    equipos_alerta_7_dias = []
+    for e in todos_equipos:
+        if e.proxima_mantencion:
+            try:
+                fecha_prox = _dt.datetime.strptime(e.proxima_mantencion, '%d/%m/%Y').date()
+                dias = (fecha_prox - _dt.date.today()).days
+                if 0 <= dias <= 7:
+                    equipos_alerta_7_dias.append({'equipo': e, 'dias': dias})
+            except Exception:
+                pass
+    equipos_alerta_7_dias.sort(key=lambda x: x['dias'])
+    
+    return render_template('equipos/lista.html',  
                            equipos_paginados=equipos_paginados, 
                            search_query=search_query,
                            area_filter=area_filter,
@@ -1763,7 +1783,9 @@ def lista_equipos():
                            total_equipos=total_equipos,
                            total_atrasados=total_atrasados,
                            total_proximos=total_proximos,
-                           total_al_dia=total_al_dia)
+                           total_al_dia=total_al_dia,
+                           equipos_alerta_7_dias=equipos_alerta_7_dias,
+                           current_tab=tab)
 
 @app.route('/equipos/nuevo', methods=['GET', 'POST'])
 @login_required
@@ -1960,6 +1982,21 @@ def historial_equipo(id):
         observaciones = request.form.get('observaciones', '').strip()
         tipo = request.form.get('tipo', '').strip()
         
+        # Recopilar detalles dinámicos (hasta 3)
+        detalles_adicionales = []
+        for i in range(1, 4):
+            cat = request.form.get(f'detalle_categoria_{i}')
+            opt = request.form.get(f'detalle_opcion_{i}')
+            if cat and opt:
+                detalles_adicionales.append(f"• {cat}: {opt}")
+        
+        if detalles_adicionales:
+            texto_detalles = "--- Detalles Adicionales ---\n" + "\n".join(detalles_adicionales)
+            if observaciones:
+                observaciones = observaciones + "\n\n" + texto_detalles
+            else:
+                observaciones = texto_detalles
+        
         # Parsear fecha
         fecha_realizada = datetime.now()
         if fecha_str:
@@ -2010,13 +2047,13 @@ def historial_equipo(id):
     return render_template('equipos/historial.html', equipo=equipo, historial=historial)
 
 def cron_alertas_mantenciones():
-    """Cron: Enviar alerta solo cuando equipos están próximos a necesitar mantención (≤30 días)"""
+    """Cron: Enviar alerta solo cuando equipos están a 30, 15 o 1 días de mantención"""
     try:
         with app.app_context():
             import datetime as _dt
             equipos = EquipoMantencion.query.all()
             
-            # Solo nos interesan los que están por vencer (Amarillo)
+            # Solo nos interesan los que están en los umbrales específicos
             proximos = []
             for e in equipos:
                 if not e.proxima_mantencion:
@@ -2024,7 +2061,7 @@ def cron_alertas_mantenciones():
                 try:
                     fecha_prox = _dt.datetime.strptime(e.proxima_mantencion, '%d/%m/%Y').date()
                     dias = (fecha_prox - _dt.date.today()).days
-                    if 0 <= dias <= 30:
+                    if dias in [30, 15, 1]:
                         proximos.append((e, dias))
                 except Exception:
                     continue
@@ -2039,16 +2076,12 @@ def cron_alertas_mantenciones():
             filas = _fila_dato('Equipos por mantener', str(len(proximos)), highlight=True)
             
             detalle = '<tr><td style="padding:20px 30px;">'
-            detalle += '<p style="margin:0 0 10px;font-size:14px;font-weight:600;color:#f59e0b;">⚠️ Equipos que necesitan mantención pronto:</p>'
+            detalle += '<p style="margin:0 0 10px;font-size:14px;font-weight:600;color:#f59e0b;">⚠️ Equipos que requieren mantención:</p>'
             detalle += '<ul style="margin:0;padding-left:20px;font-size:13px;color:#374151;">'
             for e, dias in proximos[:20]:
-                if dias == 0:
-                    urgencia = '<span style="color:#ef4444;font-weight:600;">HOY</span>'
-                elif dias <= 7:
-                    urgencia = f'<span style="color:#ef4444;font-weight:600;">en {dias} días</span>'
-                else:
-                    urgencia = f'en {dias} días'
-                detalle += f'<li><strong>{e.nombre or e.codigo}</strong> — {urgencia} ({e.proxima_mantencion}) — {e.area or "Sin área"}</li>'
+                urgencia = f'<span style="color:#ef4444;font-weight:600;">en {dias} días</span>'
+                responsable = e.responsable if e.responsable else "Sin responsable asignado"
+                detalle += f'<li><strong>{e.nombre or e.codigo}</strong> — {urgencia} ({e.proxima_mantencion}) — {responsable}</li>'
             if len(proximos) > 20:
                 detalle += f'<li>...y {len(proximos) - 20} más</li>'
             detalle += '</ul></td></tr>'

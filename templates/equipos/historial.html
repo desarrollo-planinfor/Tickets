@@ -134,7 +134,11 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Técnico / Responsable</label>
-                        <input type="text" name="tecnico" class="form-control" placeholder="Nombre del técnico" required>
+                        <select name="tecnico" class="form-control" required>
+                            <option value="">Seleccione un técnico</option>
+                            <option value="Eliacer Muñoz">Eliacer Muñoz</option>
+                            <option value="Sebastian Orellana">Sebastian Orellana</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Tipo de Mantención</label>
@@ -145,6 +149,16 @@
                             <option value="Calibración">Calibración</option>
                             <option value="Otro">Otro</option>
                         </select>
+                    </div>
+                    <div class="form-group full-width" style="margin-top: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <label class="form-label" style="margin: 0;">Detalles Específicos (Opcional)</label>
+                            <button type="button" id="btn-agregar-detalle" class="btn btn-secondary" onclick="agregarDetalle()" style="font-size: 0.8rem; padding: 4px 10px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                Agregar Detalle (Máx 3)
+                            </button>
+                        </div>
+                        <div id="detalles-container"></div>
                     </div>
                     <div class="form-group full-width">
                         <label class="form-label">Observaciones</label>
@@ -173,6 +187,7 @@
                         <th>Fecha</th>
                         <th>Tipo</th>
                         <th>Técnico</th>
+                        <th>Detalles / Actividades</th>
                         <th>Observaciones</th>
                         <th>Registrado por</th>
                     </tr>
@@ -191,7 +206,21 @@
                             {% endif %}
                         </td>
                         <td>{{ registro.tecnico or '-' }}</td>
-                        <td style="max-width: 350px;">{{ registro.observaciones or '-' }}</td>
+                        {% set obs_text = registro.observaciones or '-' %}
+                        {% set detalles_text = '' %}
+                        {% if '--- Detalles Adicionales ---' in obs_text %}
+                            {% set partes = obs_text.split('--- Detalles Adicionales ---') %}
+                            {% set obs_text = partes[0] | trim %}
+                            {% set detalles_text = partes[1] | trim %}
+                        {% endif %}
+                        <td style="max-width: 250px; font-size: 0.8rem;">
+                            {% if detalles_text %}
+                                {{ detalles_text | replace('\n', '<br>') | safe }}
+                            {% else %}
+                                <span style="color: #6b7280;">-</span>
+                            {% endif %}
+                        </td>
+                        <td style="max-width: 250px;">{{ obs_text or '-' }}</td>
                         <td style="font-size: 0.8rem; color: #6b7280;">{{ registro.registrado_por or '-' }}</td>
                     </tr>
                     {% endfor %}
@@ -207,3 +236,138 @@
     </div>
 </body>
 </html>
+
+<script>
+const opcionesMantencion = {
+    "Actividades realizadas": [
+        "Actualización de sistema operativo",
+        "Actualización de software corporativo",
+        "Instalación de parches de seguridad",
+        "Revisión general de hardware",
+        "Limpieza interna de ventilación",
+        "Limpieza externa del equipo",
+        "Verificación de estado de batería",
+        "Optimización de arranque del sistema",
+        "Revisión de antivirus y seguridad",
+        "Escaneo completo de malware",
+        "Actualización de drivers",
+        "Respaldo preventivo de información",
+        "Verificación de integridad del disco",
+        "Mantenimiento preventivo de hardware y software",
+        "Revisión de temperaturas de operación",
+        "Comprobación de puertos y periféricos",
+        "Validación de licencias de software",
+        "Revisión de rendimiento general",
+        "Configuración de políticas de seguridad",
+        "Sin actividades adicionales"
+    ],
+    "Observaciones técnicas": [
+        "No se registran observaciones.",
+        "Equipo en óptimas condiciones de funcionamiento.",
+        "Equipo nuevo, sin observaciones técnicas.",
+        "Funcionamiento normal según especificaciones.",
+        "No se detectan fallas de hardware.",
+        "Sistema operativo estable.",
+        "Sin ruidos anómalos durante la operación.",
+        "Temperaturas dentro de rangos normales.",
+        "Batería en buen estado.",
+        "Componentes internos en buen estado.",
+        "Equipo cumple con los estándares de la empresa.",
+        "Sin errores críticos detectados.",
+        "Almacenamiento funcionando correctamente.",
+        "Memoria RAM operativa sin fallas.",
+        "Equipo apto para uso continuo.",
+        "Sin observaciones posteriores a la mantención.",
+        "No requiere acciones correctivas.",
+        "Equipo operativo y estable.",
+        "Hardware y software sin incidencias.",
+        "Observaciones no aplican."
+    ],
+    "Resultados de pruebas": [
+        "Pruebas realizadas con resultado satisfactorio.",
+        "Equipo operativo tras mantención.",
+        "Funcionamiento correcto en pruebas de rendimiento.",
+        "Sistema estable luego de actualizaciones.",
+        "Pruebas de encendido y apagado correctas.",
+        "Pruebas de software exitosas.",
+        "Pruebas de hardware sin errores.",
+        "Equipo aprobado para uso normal.",
+        "Rendimiento acorde a lo esperado.",
+        "Pruebas sin incidencias.",
+        "Resultado conforme.",
+        "Equipo cumple requisitos operativos.",
+        "Pruebas completadas exitosamente.",
+        "Validación funcional correcta.",
+        "Equipo apto para operación continua.",
+        "Sin fallas durante pruebas.",
+        "Resultado positivo.",
+        "Pruebas técnicas satisfactorias.",
+        "Funcionamiento validado.",
+        "Resultado final aprobado."
+    ]
+};
+
+let numDetalles = 0;
+
+function agregarDetalle() {
+    if (numDetalles >= 3) return;
+    
+    numDetalles++;
+    const container = document.getElementById('detalles-container');
+    
+    const row = document.createElement('div');
+    row.className = 'detalle-row';
+    row.style = 'display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-bottom: 10px; align-items: center;';
+    
+    const selectCat = document.createElement('select');
+    selectCat.name = 'detalle_categoria_' + numDetalles;
+    selectCat.className = 'form-control';
+    selectCat.required = true;
+    selectCat.innerHTML = `
+        <option value="">Seleccione Categoría</option>
+        <option value="Actividades realizadas">Actividades realizadas</option>
+        <option value="Observaciones técnicas">Observaciones técnicas</option>
+        <option value="Resultados de pruebas">Resultados de pruebas</option>
+    `;
+    
+    const selectOpt = document.createElement('select');
+    selectOpt.name = 'detalle_opcion_' + numDetalles;
+    selectOpt.className = 'form-control';
+    selectOpt.required = true;
+    selectOpt.innerHTML = '<option value="">Seleccione Opción</option>';
+    
+    selectCat.onchange = function() {
+        const cat = this.value;
+        selectOpt.innerHTML = '<option value="">Seleccione Opción</option>';
+        if (opcionesMantencion[cat]) {
+            opcionesMantencion[cat].forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt;
+                selectOpt.appendChild(option);
+            });
+        }
+    };
+    
+    const btnRemove = document.createElement('button');
+    btnRemove.type = 'button';
+    btnRemove.className = 'btn btn-secondary';
+    btnRemove.style = 'padding: 8px 12px; height: 39px;';
+    btnRemove.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>';
+    btnRemove.onclick = function() {
+        container.removeChild(row);
+        numDetalles--;
+        document.getElementById('btn-agregar-detalle').style.display = 'inline-flex';
+    };
+    
+    row.appendChild(selectCat);
+    row.appendChild(selectOpt);
+    row.appendChild(btnRemove);
+    
+    container.appendChild(row);
+    
+    if (numDetalles >= 3) {
+        document.getElementById('btn-agregar-detalle').style.display = 'none';
+    }
+}
+</script>

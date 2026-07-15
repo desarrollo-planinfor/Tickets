@@ -162,8 +162,29 @@ def crear_ficha_pdf(equipo, historial_reciente, ruta_salida):
     
     # Trataremos de poner las primeras lineas de observacion si parecen actividades
     # O simplemente dejaremos espacio
-    act1, act2, act3 = '', '', ''
-    obs = h.observaciones if h and h.observaciones else ''
+    obs_cruda = h.observaciones if h and h.observaciones else ''
+    actividades = []
+    obs_tecnicas = []
+    resultados_pruebas = []
+    obs_general = obs_cruda
+    
+    if "--- Detalles Adicionales ---" in obs_cruda:
+        partes = obs_cruda.split("--- Detalles Adicionales ---")
+        obs_general = partes[0].strip()
+        detalles = partes[1].strip().split('\n')
+        
+        for d in detalles:
+            d_clean = d.replace("•", "").replace("", "").strip()
+            # No importa la categoría elegida, el usuario quiere que TODAS aparezcan 
+            # en las filas N°1, N°2 y N°3 de ACTIVIDADES REALIZADAS.
+            if ":" in d_clean:
+                actividades.append(d_clean.split(":", 1)[1].strip())
+            elif d_clean:
+                actividades.append(d_clean)
+                
+    act1 = actividades[0] if len(actividades) > 0 else ''
+    act2 = actividades[1] if len(actividades) > 1 else ''
+    act3 = actividades[2] if len(actividades) > 2 else ''
     
     act_data = [
         ["N°1:", Paragraph(act1, estilo_normal)],
@@ -192,7 +213,17 @@ def crear_ficha_pdf(equipo, historial_reciente, ruta_salida):
     ]))
     elementos.append(t_seccion4)
     
-    t_obs = Table([[Paragraph(obs, estilo_normal)]], colWidths=[18*cm], rowHeights=[2.5*cm])
+    obs_final = obs_general
+    if obs_tecnicas:
+        if obs_final:
+            obs_final += "\n\n" + "\n".join(obs_tecnicas)
+        else:
+            obs_final = "\n".join(obs_tecnicas)
+            
+    # Reemplazar saltos de linea para que ReportLab los renderice correctamente
+    obs_final_html = obs_final.replace('\n', '<br/>')
+            
+    t_obs = Table([[Paragraph(obs_final_html, estilo_normal)]], colWidths=[18*cm], rowHeights=[2.5*cm])
     t_obs.setStyle(TableStyle([
         ('BOX', (0,0), (-1,-1), 1, colors.black),
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
@@ -212,9 +243,11 @@ def crear_ficha_pdf(equipo, historial_reciente, ruta_salida):
     ]))
     elementos.append(t_seccion5)
     
+    res_final = "\n".join(resultados_pruebas) if resultados_pruebas else ""
+    res_final_html = res_final.replace('\n', '<br/>')
     eval_data = [
         ["Prueba de funcionamiento:", f"{checkbox(True)} Realizada", f"{checkbox(False)} No realizada"],
-        ["Resultados de pruebas:", "", ""],
+        ["Resultados de pruebas:", Paragraph(res_final_html, estilo_normal), ""],
         ["Próxima mantención:", equipo.proxima_mantencion or '', ""],
     ]
     t_eval = Table(eval_data, colWidths=[6*cm, 6*cm, 6*cm])

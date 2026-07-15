@@ -150,8 +150,27 @@
             </div>
         </div>
 
+        <!-- Tabs -->
+        <div style="display: flex; gap: 10px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 0;">
+            <a href="{{ url_for('lista_equipos', tab='programados') }}" 
+               style="padding: 12px 24px; text-decoration: none; font-weight: 600; font-size: 0.95rem; 
+                      color: {% if current_tab != 'por_uso' %}var(--text-main){% else %}var(--text-muted){% endif %}; 
+                      border-bottom: 3px solid {% if current_tab != 'por_uso' %}var(--accent){% else %}transparent{% endif %}; 
+                      transition: all 0.2s;">
+                Mantenimientos Programados
+            </a>
+            <a href="{{ url_for('lista_equipos', tab='por_uso') }}" 
+               style="padding: 12px 24px; text-decoration: none; font-weight: 600; font-size: 0.95rem; 
+                      color: {% if current_tab == 'por_uso' %}var(--text-main){% else %}var(--text-muted){% endif %}; 
+                      border-bottom: 3px solid {% if current_tab == 'por_uso' %}var(--accent){% else %}transparent{% endif %}; 
+                      transition: all 0.2s;">
+                Por Uso (Calibración/Verificación)
+            </a>
+        </div>
+
         <div class="filters-card">
             <form method="GET" action="{{ url_for('lista_equipos') }}" class="filters-form">
+                <input type="hidden" name="tab" value="{{ current_tab }}">
                 <div class="form-group">
                     <label class="form-label">Buscar (Código, Nombre)</label>
                     <input type="text" name="q" class="form-control" placeholder="Buscar..." value="{{ search_query }}">
@@ -294,7 +313,7 @@
         {% if equipos_paginados.pages > 1 %}
         <div class="pagination">
             {% if equipos_paginados.has_prev %}
-                <a href="{{ url_for('lista_equipos', page=equipos_paginados.prev_num, q=search_query, area=area_filter, responsable=responsable_filter, marca=marca_filter) }}" class="page-item">&laquo;</a>
+                <a href="{{ url_for('lista_equipos', page=equipos_paginados.prev_num, q=search_query, area=area_filter, responsable=responsable_filter, marca=marca_filter, tab=current_tab) }}" class="page-item">&laquo;</a>
             {% else %}
                 <span class="page-item disabled">&laquo;</span>
             {% endif %}
@@ -304,7 +323,7 @@
                     {% if equipos_paginados.page == page_num %}
                         <span class="page-item active">{{ page_num }}</span>
                     {% else %}
-                        <a href="{{ url_for('lista_equipos', page=page_num, q=search_query, area=area_filter, responsable=responsable_filter, marca=marca_filter) }}" class="page-item">{{ page_num }}</a>
+                        <a href="{{ url_for('lista_equipos', page=page_num, q=search_query, area=area_filter, responsable=responsable_filter, marca=marca_filter, tab=current_tab) }}" class="page-item">{{ page_num }}</a>
                     {% endif %}
                 {% else %}
                     <span class="page-item disabled" style="background:transparent; border:none; padding: 0 5px;">...</span>
@@ -312,7 +331,7 @@
             {% endfor %}
             
             {% if equipos_paginados.has_next %}
-                <a href="{{ url_for('lista_equipos', page=equipos_paginados.next_num, q=search_query, area=area_filter, responsable=responsable_filter, marca=marca_filter) }}" class="page-item">&raquo;</a>
+                <a href="{{ url_for('lista_equipos', page=equipos_paginados.next_num, q=search_query, area=area_filter, responsable=responsable_filter, marca=marca_filter, tab=current_tab) }}" class="page-item">&raquo;</a>
             {% else %}
                 <span class="page-item disabled">&raquo;</span>
             {% endif %}
@@ -347,5 +366,37 @@
             }
         }
     </script>
+
+    {% if equipos_alerta_7_dias %}
+    <div id="mantenimientoModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+        <div style="background: #1e293b; border: 1px solid #ef4444; border-radius: 16px; padding: 30px; max-width: 500px; width: 90%; box-shadow: 0 10px 50px rgba(239,68,68,0.2);">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <h2 style="margin: 0; font-size: 1.5rem; color: #f8fafc;">¡Mantenimientos Críticos!</h2>
+            </div>
+            <p style="color: #cbd5e1; margin-bottom: 20px; font-size: 0.95rem; line-height: 1.5;">Los siguientes equipos requieren mantenimiento en los próximos 7 días o ya están vencidos:</p>
+            <ul style="list-style: none; padding: 0; margin: 0 0 25px 0; max-height: 250px; overflow-y: auto;">
+                {% for item in equipos_alerta_7_dias %}
+                <li style="background: #0f172a; padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #ef4444;">
+                    <div style="font-weight: 600; color: #f8fafc; margin-bottom: 4px;">{{ item.equipo.nombre or item.equipo.codigo }}</div>
+                    <div style="font-size: 0.85rem; color: #94a3b8; display: flex; justify-content: space-between;">
+                        <span>Resp: <span style="color:#e2e8f0;">{{ item.equipo.responsable or 'No asignado' }}</span></span>
+                        {% if item.dias == 0 %}
+                        <span style="color: #ef4444; font-weight: bold;">HOY</span>
+                        {% elif item.dias < 0 %}
+                        <span style="color: #ef4444; font-weight: bold;">¡VENCIDO!</span>
+                        {% else %}
+                        <span style="color: #f59e0b; font-weight: bold;">Quedan {{ item.dias }} días</span>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            <button onclick="document.getElementById('mantenimientoModal').style.display='none'" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1rem; justify-content: center; background: #ef4444; box-shadow: 0 4px 12px rgba(239,68,68, 0.3);">
+                Entendido, cerrar alerta
+            </button>
+        </div>
+    </div>
+    {% endif %}
 </body>
 </html>

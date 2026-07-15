@@ -1,61 +1,219 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% if equipo %}Editar Equipo{% else %}Nuevo Equipo{% endif %} - Planinfor</title>
     <style>
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #111827; color: #f3f4f6; }
-        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
-        
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .page-title { font-size: 1.5rem; font-weight: 600; color: #ffffff; margin: 0; }
-        
-        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 0.95rem; text-decoration: none; cursor: pointer; transition: all 0.2s; border: none; }
-        .btn-primary { background: #82C341; color: #ffffff; }
-        .btn-primary:hover { background: #6da335; }
-        .btn-secondary { background: #374151; color: #d1d5db; border: 1px solid #4b5563; }
-        .btn-secondary:hover { background: #4b5563; color: #ffffff; }
-        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0f172a;
+            /* Fondo ultra oscuro tipo tailwind slate-900 */
+            color: #f3f4f6;
+            margin: 0;
+            padding: 20px;
+            color-scheme: dark;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: #82C341;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: #6da335;
+        }
+
+        .btn-secondary {
+            background: #374151;
+            color: #d1d5db;
+            border: 1px solid #4b5563;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+            color: #ffffff;
+        }
+
         /* Formulario */
-        .form-card { background: #1f2937; border-radius: 12px; padding: 30px; margin-bottom: 20px; border: 1px solid #374151; }
-        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-        .form-group { display: flex; flex-direction: column; gap: 8px; }
-        .form-group.full-width { grid-column: span 2; }
-        .form-label { font-size: 0.9rem; color: #9ca3af; font-weight: 500; }
-        .form-control { background: #111827; border: 1px solid #374151; color: #f3f4f6; padding: 12px; border-radius: 8px; font-size: 0.95rem; width: 100%; box-sizing: border-box; }
-        .form-control:focus { outline: none; border-color: #82C341; box-shadow: 0 0 0 2px rgba(130, 195, 65, 0.2); }
-        
+        .form-card {
+            background: #1f2937;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 1px solid #374151;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+
+        .form-control {
+            background: #111827;
+            border: 1px solid #374151;
+            color: #f3f4f6;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            width: 100%;
+            box-sizing: border-box;
+            color-scheme: dark;
+            /* Fuerza selectores de fecha nativos en modo oscuro */
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #82C341;
+            box-shadow: 0 0 0 2px rgba(130, 195, 65, 0.2);
+            z-index: 1;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: stretch;
+            width: 100%;
+        }
+
+        .input-group .form-control {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            position: relative;
+        }
+
+        .input-group .btn {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            margin-left: -1px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1f2937;
+            border: 1px solid #374151;
+            color: #9ca3af;
+            transition: all 0.2s;
+        }
+
+        .input-group .btn:hover {
+            background: #374151;
+            color: #ffffff;
+        }
+
         /* Alertas */
-        .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; }
-        .alert-success { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #34d399; }
-        .alert-error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; }
-        
-        .form-actions { display: flex; justify-content: flex-end; gap: 15px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #374151; }
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #374151;
+        }
 
         @media (max-width: 768px) {
-            .form-grid { grid-template-columns: 1fr; }
-            .form-group.full-width { grid-column: span 1; }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full-width {
+                grid-column: span 1;
+            }
         }
     </style>
 </head>
+
 <body>
     {% set vista = 'equipos' %}
     {% include 'header_unificado.html' %}
 
     <div class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
         {% endwith %}
 
         <div class="page-header">
             <h1 class="page-title">{% if equipo %}Editar Equipo{% else %}Nuevo Equipo{% endif %}</h1>
             <a href="{{ url_for('lista_equipos') }}" class="btn btn-secondary">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
                 Volver al listado
             </a>
         </div>
@@ -65,130 +223,320 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label">ID / Código</label>
-                        <input type="text" name="codigo" class="form-control" value="{{ equipo.codigo if equipo else '' }}">
+                        <input type="text" name="codigo" id="codigo_input" class="form-control"
+                            value="{{ equipo.codigo if equipo else '' }}" readonly
+                            style="background: #374151; color: #9ca3af; cursor: not-allowed;"
+                            placeholder="Se generará automáticamente">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Nombre</label>
-                        <input type="text" name="nombre" class="form-control" value="{{ equipo.nombre if equipo else '' }}" required>
+                        <label class="form-label">Activo (Notebook, Celular, Dron, Etc.)</label>
+                        <input type="text" name="nombre" class="form-control"
+                            value="{{ equipo.nombre if equipo else '' }}" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Marca</label>
-                        <select name="marca" id="marca-select" class="form-control" onchange="toggleNuevaMarca()">
-                            <option value="">Seleccione una marca...</option>
-                            {% for m in marcas %}
-                            <option value="{{ m }}" {% if equipo and equipo.marca == m %}selected{% endif %}>{{ m }}</option>
-                            {% endfor %}
-                            <option value="__otra__">Añadir nueva marca...</option>
-                        </select>
-                        <input type="text" name="nueva_marca" id="nueva_marca" class="form-control" style="display: none; margin-top: 5px;" placeholder="Escriba la nueva marca">
+                        <div class="input-group">
+                            <select name="marca" id="marca-select" class="form-control" onchange="verificarMarcaOtra()">
+                                <option value="">Seleccione una marca...</option>
+                                {% for m in marcas %}
+                                <option value="{{ m }}" {% if equipo and equipo.marca==m %}selected{% endif %}>{{ m }}
+                                </option>
+                                {% endfor %}
+                                <option value="__otra__" id="opt-otra-marca" style="display: none;">Otra</option>
+                            </select>
+                            <input type="text" name="nueva_marca" id="nueva_marca" class="form-control"
+                                style="display: none;" placeholder="Escriba la nueva marca">
+                            <button type="button" class="btn" id="btn-toggle-marca" onclick="toggleNuevaMarcaBtn()"
+                                title="Añadir nueva marca">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
-                    
+
                     <script>
-                        function toggleNuevaMarca() {
+                        let modoNuevaMarca = false;
+                        function verificarMarcaOtra() {
+                            var select = document.getElementById('marca-select');
+                            if (select.value === '__otra__' && !modoNuevaMarca) {
+                                toggleNuevaMarcaBtn();
+                            }
+                        }
+                        function toggleNuevaMarcaBtn() {
+                            modoNuevaMarca = !modoNuevaMarca;
                             var select = document.getElementById('marca-select');
                             var input = document.getElementById('nueva_marca');
-                            if (select.value === '__otra__') {
+                            var btn = document.getElementById('btn-toggle-marca');
+
+                            if (modoNuevaMarca) {
+                                select.style.display = 'none';
+                                select.value = '__otra__';
                                 input.style.display = 'block';
                                 input.required = true;
+                                input.focus();
+                                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'; // X
+                                btn.title = "Cancelar y seleccionar de la lista";
                             } else {
+                                select.style.display = 'block';
+                                select.value = '';
                                 input.style.display = 'none';
                                 input.required = false;
+                                input.value = '';
+                                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>'; // Plus
+                                btn.title = "Añadir nueva marca";
                             }
                         }
                     </script>
                     <div class="form-group">
                         <label class="form-label">Modelo</label>
-                        <input type="text" name="modelo" class="form-control" value="{{ equipo.modelo if equipo else '' }}">
+                        <input type="text" name="modelo" class="form-control"
+                            value="{{ equipo.modelo if equipo else '' }}">
                     </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Serie</label>
-                        <input type="text" name="serie" class="form-control" value="{{ equipo.serie if equipo else '' }}">
-                    </div>
+
                     <div class="form-group">
                         <label class="form-label">Área</label>
-                        <input type="text" name="area" class="form-control" value="{{ equipo.area if equipo else '' }}">
+                        <select name="area" class="form-control">
+                            <option value="">Seleccione un área</option>
+                            <option value="Desarrollo y Soporte TI" {% if equipo and
+                                equipo.area=='Desarrollo y Soporte TI' %}selected{% endif %}>Desarrollo y Soporte TI
+                            </option>
+                            <option value="Planificación Silvícola" {% if equipo and
+                                equipo.area=='Planificación Silvícola' %}selected{% endif %}>Planificación Silvícola
+                            </option>
+                            <option value="Administración" {% if equipo and equipo.area=='Administración' %}selected{%
+                                endif %}>Administración</option>
+                            <option value="Trazado de Caminos" {% if equipo and equipo.area=='Trazado de Caminos'
+                                %}selected{% endif %}>Trazado de Caminos</option>
+                            <option value="Planificación de Cosecha" {% if equipo and
+                                equipo.area=='Planificación de Cosecha' %}selected{% endif %}>Planificación de Cosecha
+                            </option>
+                            <option value="Geomática y Procesos SIG" {% if equipo and
+                                equipo.area=='Geomática y Procesos SIG' %}selected{% endif %}>Geomática y Procesos SIG
+                            </option>
+                            <option value="Control de Calidad de Producción de Plantas" {% if equipo and
+                                equipo.area=='Control de Calidad de Producción de Plantas' %}selected{% endif %}>Control
+                                de Calidad de Producción de Plantas</option>
+                        </select>
                     </div>
-                    
+
+                    <div class="form-group">
+                        <label class="form-label">Serie</label>
+                        <input type="text" name="serie" class="form-control"
+                            value="{{ equipo.serie if equipo else '' }}">
+                    </div>
+
                     <div class="form-group">
                         <label class="form-label">Responsable</label>
-                        <input type="text" name="responsable" class="form-control" value="{{ equipo.responsable if equipo else '' }}">
+                        <input type="text" name="responsable" class="form-control"
+                            value="{{ equipo.responsable if equipo else '' }}">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Última Mantención (ej. DD/MM/YYYY)</label>
-                        <input type="text" name="ultima_mantencion" class="form-control" value="{{ equipo.ultima_mantencion if equipo else '' }}">
+                        <label class="form-label">Última Mantención</label>
+                        <!-- Usaremos type="date" que requiere formato YYYY-MM-DD -->
+                        <input type="date" name="ultima_mantencion" id="ultima_mantencion" class="form-control"
+                            data-original-date="{{ equipo.ultima_mantencion if equipo else '' }}">
                     </div>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Frecuencia Mantención</label>
-                        <input type="text" name="frecuencia_mantencion" class="form-control" value="{{ equipo.frecuencia_mantencion if equipo else '' }}">
+                        <select name="frecuencia_mantencion" id="frecuencia_mantencion" class="form-control">
+                            <option value="">Seleccione frecuencia...</option>
+                            <option value="Trimestral" {% if equipo and equipo.frecuencia_mantencion=='Trimestral'
+                                %}selected{% endif %}>Trimestral</option>
+                            <option value="Anual" {% if equipo and equipo.frecuencia_mantencion=='Anual' %}selected{%
+                                endif %}>Anual</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Próxima Mantención (ej. DD/MM/YYYY)</label>
-                        <input type="text" name="proxima_mantencion" class="form-control" value="{{ equipo.proxima_mantencion if equipo else '' }}">
+                        <label class="form-label">Próxima Mantención</label>
+                        <input type="date" name="proxima_mantencion" id="proxima_mantencion" class="form-control"
+                            data-original-date="{{ equipo.proxima_mantencion if equipo else '' }}" readonly
+                            style="background: #374151; color: #9ca3af; cursor: not-allowed;"
+                            placeholder="Se calculará automáticamente">
                     </div>
-                    
+
                     <div class="form-group full-width">
                         <label class="form-label">Alerta</label>
-                        <input type="text" name="alerta" class="form-control" value="{{ equipo.alerta if equipo else '' }}" readonly placeholder="Calculada automáticamente" style="background: #374151; color: #9ca3af; cursor: not-allowed;">
+                        <input type="text" name="alerta" class="form-control"
+                            value="{{ equipo.alerta if equipo else '' }}" readonly
+                            placeholder="Calculada automáticamente"
+                            style="background: #374151; color: #9ca3af; cursor: not-allowed;">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Requerimiento</label>
-                        <select name="requerimiento" id="requerimiento-select" class="form-control" onchange="toggleNuevoRequerimiento()">
-                            <option value="">Seleccione un requerimiento...</option>
-                            {% for req in requerimientos %}
-                            <option value="{{ req }}" {% if equipo and equipo.requerimiento == req %}selected{% endif %}>{{ req }}</option>
-                            {% endfor %}
-                            <option value="__otra__">Añadir nuevo requerimiento...</option>
-                        </select>
-                        <input type="text" name="nuevo_requerimiento" id="nuevo_requerimiento" class="form-control" style="display: none; margin-top: 5px;" placeholder="Escriba el nuevo requerimiento">
+                        <div class="input-group">
+                            <select name="requerimiento" id="requerimiento-select" class="form-control"
+                                onchange="verificarReqOtro()">
+                                <option value="">Seleccione un requerimiento...</option>
+                                {% for req in requerimientos %}
+                                <option value="{{ req }}" {% if equipo and equipo.requerimiento==req %}selected{% endif
+                                    %}>
+                                    {{ req }}</option>
+                                {% endfor %}
+                                <option value="__otra__" id="opt-otro-req" style="display: none;">Otro</option>
+                            </select>
+                            <input type="text" name="nuevo_requerimiento" id="nuevo_requerimiento" class="form-control"
+                                style="display: none;" placeholder="Escriba el nuevo requerimiento">
+                            <button type="button" class="btn" id="btn-toggle-req" onclick="toggleNuevoReqBtn()"
+                                title="Añadir nuevo requerimiento">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
-                    
+
                     <script>
-                        function toggleNuevoRequerimiento() {
+                        let modoNuevoReq = false;
+                        function verificarReqOtro() {
+                            var select = document.getElementById('requerimiento-select');
+                            if (select.value === '__otra__' && !modoNuevoReq) {
+                                toggleNuevoReqBtn();
+                            }
+                        }
+                        function toggleNuevoReqBtn() {
+                            modoNuevoReq = !modoNuevoReq;
                             var select = document.getElementById('requerimiento-select');
                             var input = document.getElementById('nuevo_requerimiento');
-                            if (select.value === '__otra__') {
+                            var btn = document.getElementById('btn-toggle-req');
+
+                            if (modoNuevoReq) {
+                                select.style.display = 'none';
+                                select.value = '__otra__';
                                 input.style.display = 'block';
                                 input.required = true;
+                                input.focus();
+                                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'; // X
+                                btn.title = "Cancelar y seleccionar de la lista";
                             } else {
+                                select.style.display = 'block';
+                                select.value = '';
                                 input.style.display = 'none';
                                 input.required = false;
+                                input.value = '';
+                                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>'; // Plus
+                                btn.title = "Añadir nuevo requerimiento";
                             }
                         }
                     </script>
-                    
+
                     <div class="form-group">
                         <label class="form-label">Tipo de Mantención</label>
-                        <input type="text" name="tipo_mantencion" class="form-control" value="{{ equipo.tipo_mantencion if equipo else '' }}">
+                        <select name="tipo_mantencion" class="form-control">
+                            <option value="">Seleccione tipo de mantención</option>
+                            <option value="Empresa Externa" {% if equipo and equipo.tipo_mantencion=='Empresa Externa'
+                                %}selected{% endif %}>Empresa Externa</option>
+                            <option value="Interna Planinfor" {% if equipo and
+                                equipo.tipo_mantencion=='Interna Planinfor' %}selected{% endif %}>Interna Planinfor
+                            </option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Estado</label>
                         <select name="estado" class="form-control">
                             <option value="">Seleccione estado</option>
-                            <option value="Operativo" {% if equipo and equipo.estado == 'Operativo' %}selected{% endif %}>Operativo</option>
-                            <option value="En mantención" {% if equipo and equipo.estado == 'En mantención' %}selected{% endif %}>En mantención</option>
-                            <option value="En reparación" {% if equipo and equipo.estado == 'En reparación' %}selected{% endif %}>En reparación</option>
-                            <option value="De Baja" {% if equipo and equipo.estado == 'De Baja' %}selected{% endif %}>De Baja</option>
+                            <option value="Operativo" {% if equipo and equipo.estado=='Operativo' %}selected{% endif %}>
+                                Operativo</option>
+                            <option value="En mantención" {% if equipo and equipo.estado=='En mantención' %}selected{%
+                                endif %}>En mantención</option>
+                            <option value="En reparación" {% if equipo and equipo.estado=='En reparación' %}selected{%
+                                endif %}>En reparación</option>
+                            <option value="De Baja" {% if equipo and equipo.estado=='De Baja' %}selected{% endif %}>De
+                                Baja</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-group full-width">
                         <label class="form-label">Ficha (URL o Referencia)</label>
-                        <input type="text" name="ficha" class="form-control" value="{{ equipo.ficha if equipo else '' }}">
+                        <input type="text" name="ficha" class="form-control"
+                            value="{{ equipo.ficha if equipo else '' }}">
                     </div>
                 </div>
-                
+
                 <div class="form-actions">
                     <a href="{{ url_for('lista_equipos') }}" class="btn btn-secondary">Cancelar</a>
                     <button type="submit" class="btn btn-primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
                         Guardar Equipo
                     </button>
                 </div>
             </form>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const codigoInput = document.getElementById('codigo_input');
+            if (codigoInput && !codigoInput.value) {
+                // Generar código automático si está vacío
+                const randomNum = Math.floor(Math.random() * 90000 + 10000);
+                codigoInput.value = 'EQ-' + randomNum;
+            }
+
+            // Lógica para fechas de mantención
+            const ultimaInput = document.getElementById('ultima_mantencion');
+            const proximaInput = document.getElementById('proxima_mantencion');
+            const frecuenciaSelect = document.getElementById('frecuencia_mantencion');
+
+            // Función auxiliar para parsear fechas DD/MM/YYYY o YYYY-MM-DD
+            function parseDateToISO(dateStr) {
+                if (!dateStr) return '';
+                // Si ya está en YYYY-MM-DD
+                if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) return dateStr;
+                // Si está en DD/MM/YYYY o DD-MM-YYYY
+                const parts = dateStr.split(/[\/\-]/);
+                if (parts.length === 3) {
+                    // parts[0] = DD, parts[1] = MM, parts[2] = YYYY
+                    if (parts[2].length === 4) {
+                        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                    }
+                }
+                return '';
+            }
+
+            // Inicializar valores desde la base de datos si existen
+            const origUltima = ultimaInput.getAttribute('data-original-date');
+            if (origUltima) ultimaInput.value = parseDateToISO(origUltima);
+
+            const origProxima = proximaInput.getAttribute('data-original-date');
+            if (origProxima) proximaInput.value = parseDateToISO(origProxima);
+
+            function calcularProxima() {
+                if (!ultimaInput.value || !frecuenciaSelect.value) {
+                    return;
+                }
+
+                const fechaUltima = new Date(ultimaInput.value + 'T12:00:00'); // Evitar timezone offset
+                let fechaProxima = new Date(fechaUltima);
+
+                if (frecuenciaSelect.value === 'Trimestral') {
+                    fechaProxima.setMonth(fechaProxima.getMonth() + 3);
+                } else if (frecuenciaSelect.value === 'Anual') {
+                    fechaProxima.setFullYear(fechaProxima.getFullYear() + 1);
+                }
+
+                const yyyy = fechaProxima.getFullYear();
+                const mm = String(fechaProxima.getMonth() + 1).padStart(2, '0');
+                const dd = String(fechaProxima.getDate()).padStart(2, '0');
+
+                proximaInput.value = `${yyyy}-${mm}-${dd}`;
+            }
+
+            ultimaInput.addEventListener('change', calcularProxima);
+            frecuenciaSelect.addEventListener('change', calcularProxima);
+        });
+    </script>
 </body>
+
 </html>

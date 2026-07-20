@@ -1795,6 +1795,10 @@ def nuevo_equipo():
         return redirect(url_for('index'))
         
     if request.method == 'POST':
+        nombre = request.form.get('nombre')
+        if nombre == '__otra__':
+            nombre = request.form.get('nuevo_nombre')
+            
         marca = request.form.get('marca')
         if marca == '__otra__':
             marca = request.form.get('nueva_marca')
@@ -1805,7 +1809,7 @@ def nuevo_equipo():
             
         equipo = EquipoMantencion(
             codigo=request.form.get('codigo'),
-            nombre=request.form.get('nombre'),
+            nombre=nombre,
             marca=marca,
             modelo=request.form.get('modelo'),
             serie=request.form.get('serie'),
@@ -1824,10 +1828,11 @@ def nuevo_equipo():
         flash('Equipo registrado exitosamente.', 'success')
         return redirect(url_for('lista_equipos'))
         
+    nombres = [r[0] for r in db.session.query(EquipoMantencion.nombre).distinct().filter(EquipoMantencion.nombre != None, EquipoMantencion.nombre != '').all()]
     marcas = [r[0] for r in db.session.query(EquipoMantencion.marca).distinct().filter(EquipoMantencion.marca != None, EquipoMantencion.marca != '').all()]
     requerimientos = [r[0] for r in db.session.query(EquipoMantencion.requerimiento).distinct().filter(EquipoMantencion.requerimiento != None, EquipoMantencion.requerimiento != '').all()]
     
-    return render_template('equipos/formulario.html', equipo=None, marcas=sorted(marcas), requerimientos=sorted(requerimientos))
+    return render_template('equipos/formulario.html', equipo=None, nombres=sorted(nombres), marcas=sorted(marcas), requerimientos=sorted(requerimientos))
 
 @app.route('/equipos/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -1842,6 +1847,10 @@ def editar_equipo(id):
         return redirect(url_for('lista_equipos'))
         
     if request.method == 'POST':
+        nombre = request.form.get('nombre')
+        if nombre == '__otra__':
+            nombre = request.form.get('nuevo_nombre')
+            
         marca = request.form.get('marca')
         if marca == '__otra__':
             marca = request.form.get('nueva_marca')
@@ -1851,7 +1860,7 @@ def editar_equipo(id):
             requerimiento = request.form.get('nuevo_requerimiento')
             
         equipo.codigo = request.form.get('codigo')
-        equipo.nombre = request.form.get('nombre')
+        equipo.nombre = nombre
         equipo.marca = marca
         equipo.modelo = request.form.get('modelo')
         equipo.serie = request.form.get('serie')
@@ -1869,23 +1878,38 @@ def editar_equipo(id):
         flash('Equipo actualizado exitosamente.', 'success')
         return redirect(url_for('lista_equipos'))
         
+    nombres = [r[0] for r in db.session.query(EquipoMantencion.nombre).distinct().filter(EquipoMantencion.nombre != None, EquipoMantencion.nombre != '').all()]
     marcas = [r[0] for r in db.session.query(EquipoMantencion.marca).distinct().filter(EquipoMantencion.marca != None, EquipoMantencion.marca != '').all()]
     requerimientos = [r[0] for r in db.session.query(EquipoMantencion.requerimiento).distinct().filter(EquipoMantencion.requerimiento != None, EquipoMantencion.requerimiento != '').all()]
     
-    return render_template('equipos/formulario.html', equipo=equipo, marcas=sorted(marcas), requerimientos=sorted(requerimientos))
+    return render_template('equipos/formulario.html', equipo=equipo, nombres=sorted(nombres), marcas=sorted(marcas), requerimientos=sorted(requerimientos))
 
-@app.route('/equipos/eliminar/<int:id>', methods=['POST'])
+@app.route('/equipos/inactivar/<int:id>', methods=['POST'])
 @login_required
-def eliminar_equipo(id):
+def inactivar_equipo(id):
     if g.usuario.rol != 'admin':
         flash('Acceso denegado.', 'error')
         return redirect(url_for('index'))
         
     equipo = db.session.get(EquipoMantencion, id)
     if equipo:
-        db.session.delete(equipo)
+        equipo.estado = 'Inactivo'
         db.session.commit()
-        flash('Equipo eliminado.', 'success')
+        flash('Equipo marcado como Inactivo.', 'success')
+    return redirect(url_for('lista_equipos'))
+
+@app.route('/equipos/activar/<int:id>', methods=['POST'])
+@login_required
+def activar_equipo(id):
+    if g.usuario.rol != 'admin':
+        flash('Acceso denegado.', 'error')
+        return redirect(url_for('index'))
+        
+    equipo = db.session.get(EquipoMantencion, id)
+    if equipo:
+        equipo.estado = 'Operativo'
+        db.session.commit()
+        flash('Equipo activado exitosamente.', 'success')
     return redirect(url_for('lista_equipos'))
 
 @app.route('/equipos/<int:id>/pdf')
@@ -1917,6 +1941,39 @@ def descargar_ficha_pdf(id):
         temp_path, 
         as_attachment=True, 
         download_name=f"Ficha_Mantencion_{equipo.codigo or id}.pdf",
+        mimetype='application/pdf'
+    )
+
+@app.route('/mantencion/<int:id>/pdf')
+@login_required
+def descargar_pdf_mantencion(id):
+    if g.usuario.rol != 'admin':
+        flash('Acceso denegado.', 'error')
+        return redirect(url_for('index'))
+        
+    mantencion = db.session.get(HistorialMantencion, id)
+    if not mantencion:
+        flash('Mantención no encontrada.', 'error')
+        return redirect(url_for('lista_equipos'))
+        
+    equipo = db.session.get(EquipoMantencion, mantencion.equipo_id)
+    
+    import tempfile
+    import os
+    from flask import send_file
+    from generador_pdf import crear_ficha_pdf
+    
+    fd, temp_path = tempfile.mkstemp(suffix='.pdf', prefix=f'Mantencion_{mantencion.id}_')
+    os.close(fd)
+    
+    crear_ficha_pdf(equipo, mantencion, temp_path)
+    
+    fecha_str = mantencion.fecha_realizada.strftime('%Y%m%d') if mantencion.fecha_realizada else 'sinfecha'
+    
+    return send_file(
+        temp_path, 
+        as_attachment=True, 
+        download_name=f"Ficha_Mantencion_{equipo.codigo or equipo.id}_{fecha_str}.pdf",
         mimetype='application/pdf'
     )
 
@@ -1982,13 +2039,20 @@ def historial_equipo(id):
         observaciones = request.form.get('observaciones', '').strip()
         tipo = request.form.get('tipo', '').strip()
         
-        # Recopilar detalles dinámicos (hasta 3)
+        # Recopilar detalles del PDF
         detalles_adicionales = []
         for i in range(1, 4):
-            cat = request.form.get(f'detalle_categoria_{i}')
-            opt = request.form.get(f'detalle_opcion_{i}')
-            if cat and opt:
-                detalles_adicionales.append(f"• {cat}: {opt}")
+            act = request.form.get(f'actividad_{i}')
+            if act:
+                detalles_adicionales.append(f"Actividad: {act}")
+        
+        obs = request.form.get('observacion_tecnica')
+        if obs:
+            detalles_adicionales.append(f"Observacion: {obs}")
+            
+        res = request.form.get('resultado_pruebas')
+        if res:
+            detalles_adicionales.append(f"Resultado: {res}")
         
         if detalles_adicionales:
             texto_detalles = "--- Detalles Adicionales ---\n" + "\n".join(detalles_adicionales)

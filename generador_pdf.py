@@ -174,11 +174,22 @@ def crear_ficha_pdf(equipo, historial_reciente, ruta_salida):
         detalles = partes[1].strip().split('\n')
         
         for d in detalles:
-            d_clean = d.replace("•", "").replace("", "").strip()
-            # No importa la categoría elegida, el usuario quiere que TODAS aparezcan 
-            # en las filas N°1, N°2 y N°3 de ACTIVIDADES REALIZADAS.
-            if ":" in d_clean:
-                actividades.append(d_clean.split(":", 1)[1].strip())
+            d_clean = d.replace("•", "").strip()
+            if d_clean.startswith("Actividad:"):
+                actividades.append(d_clean.split("Actividad:", 1)[1].strip())
+            elif d_clean.startswith("Observacion:"):
+                obs_tecnicas.append(d_clean.split("Observacion:", 1)[1].strip())
+            elif d_clean.startswith("Resultado:"):
+                resultados_pruebas.append(d_clean.split("Resultado:", 1)[1].strip())
+            # Compatibilidad con registros antiguos
+            elif ":" in d_clean:
+                cat, val = d_clean.split(":", 1)
+                if "Observaciones" in cat:
+                    obs_tecnicas.append(val.strip())
+                elif "Resultados" in cat:
+                    resultados_pruebas.append(val.strip())
+                else:
+                    actividades.append(val.strip())
             elif d_clean:
                 actividades.append(d_clean)
                 

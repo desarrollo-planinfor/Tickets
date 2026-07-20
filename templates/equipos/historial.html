@@ -4,9 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial - {{ equipo.nombre or equipo.codigo }} - Planinfor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Choices.js para selects bonitos -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
     <style>
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #111827; color: #f3f4f6; }
-        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+        /* Estilos personalizados Choices.js Tema Oscuro */
+        .choices__inner { background-color: #111827 !important; border: 1px solid #374151 !important; border-radius: 8px !important; color: #f3f4f6 !important; min-height: 42px !important; padding: 3px 10px !important; }
+        .choices.is-focused .choices__inner { border-color: #82C341 !important; box-shadow: 0 0 0 2px rgba(130, 195, 65, 0.2) !important; }
+        .choices__list--dropdown { background-color: #1f2937 !important; border: 1px solid #374151 !important; border-radius: 8px !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important; color: #f3f4f6 !important; z-index: 1000 !important; margin-top: 5px; word-break: break-word; }
+        .choices__list--dropdown .choices__item { font-size: 0.9rem !important; padding: 10px 15px !important; color: #f3f4f6 !important; }
+        .choices__list--dropdown .choices__item--selectable.is-highlighted { background-color: #374151 !important; color: #ffffff !important; }
+        .choices__item.is-selected { display: none !important; }
+        .choices[data-type*="select-one"]::after { border: none !important; content: "" !important; width: 16px; height: 16px; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-size: cover; right: 15px !important; top: 50% !important; transform: translateY(-50%) !important; pointer-events: none; }
+        .choices.is-open[data-type*="select-one"]::after { transform: translateY(-50%) rotate(180deg) !important; }
+        .choices__placeholder { color: #9ca3af !important; opacity: 1 !important; }
+        .choices__list--dropdown .choices__item--choice { border-bottom: 1px solid #374151; }
+        .choices__list--dropdown .choices__item--choice:last-child { border-bottom: none; }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { margin: 0; padding: 0; font-family: 'Outfit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #111827; color: #f3f4f6; }
+        .historial-container { max-width: 1100px; margin: 0 auto; padding: 20px; }
         
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .page-title { font-size: 1.5rem; font-weight: 600; color: #ffffff; margin: 0; }
@@ -63,7 +83,7 @@
     {% set vista = 'equipos' %}
     {% include 'header_unificado.html' %}
 
-    <div class="container">
+    <div class="historial-container">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -151,14 +171,36 @@
                         </select>
                     </div>
                     <div class="form-group full-width" style="margin-top: 10px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <label class="form-label" style="margin: 0;">Detalles Específicos (Opcional)</label>
-                            <button type="button" id="btn-agregar-detalle" class="btn btn-secondary" onclick="agregarDetalle()" style="font-size: 0.8rem; padding: 4px 10px;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                Agregar Detalle (Máx 3)
-                            </button>
+                        <label class="form-label" style="margin-bottom: 15px; display: block;">Actividades Realizadas (Obligatorias)</label>
+                        <div class="detalle-row" style="margin-bottom: 12px;">
+                            <select name="actividad_1" id="actividad_1" class="form-control" required>
+                                <option value="">Seleccione Actividad 1...</option>
+                            </select>
                         </div>
-                        <div id="detalles-container"></div>
+                        <div class="detalle-row" style="margin-bottom: 12px;">
+                            <select name="actividad_2" id="actividad_2" class="form-control" required>
+                                <option value="">Seleccione Actividad 2...</option>
+                            </select>
+                        </div>
+                        <div class="detalle-row" style="margin-bottom: 25px;">
+                            <select name="actividad_3" id="actividad_3" class="form-control" required>
+                                <option value="">Seleccione Actividad 3...</option>
+                            </select>
+                        </div>
+                        
+                        <label class="form-label" style="margin-bottom: 15px; display: block;">Observaciones Técnicas</label>
+                        <div class="detalle-row" style="margin-bottom: 25px;">
+                            <select name="observacion_tecnica" id="observacion_tecnica" class="form-control" required>
+                                <option value="">Seleccione Observación...</option>
+                            </select>
+                        </div>
+                        
+                        <label class="form-label" style="margin-bottom: 15px; display: block;">Resultados de Pruebas</label>
+                        <div class="detalle-row" style="margin-bottom: 12px;">
+                            <select name="resultado_pruebas" id="resultado_pruebas" class="form-control" required>
+                                <option value="">Seleccione Resultado...</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-group full-width">
                         <label class="form-label">Observaciones</label>
@@ -190,6 +232,7 @@
                         <th>Detalles / Actividades</th>
                         <th>Observaciones</th>
                         <th>Registrado por</th>
+                        <th>Acción</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -222,6 +265,11 @@
                         </td>
                         <td style="max-width: 250px;">{{ obs_text or '-' }}</td>
                         <td style="font-size: 0.8rem; color: #6b7280;">{{ registro.registrado_por or '-' }}</td>
+                        <td>
+                            <a href="{{ url_for('descargar_pdf_mantencion', id=registro.id) }}" class="btn btn-secondary" style="padding: 6px 10px; font-size: 0.8rem;" title="Descargar Ficha PDF">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 18 15 15"></polyline></svg>
+                            </a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -307,67 +355,51 @@ const opcionesMantencion = {
     ]
 };
 
-let numDetalles = 0;
-
-function agregarDetalle() {
-    if (numDetalles >= 3) return;
-    
-    numDetalles++;
-    const container = document.getElementById('detalles-container');
-    
-    const row = document.createElement('div');
-    row.className = 'detalle-row';
-    row.style = 'display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-bottom: 10px; align-items: center;';
-    
-    const selectCat = document.createElement('select');
-    selectCat.name = 'detalle_categoria_' + numDetalles;
-    selectCat.className = 'form-control';
-    selectCat.required = true;
-    selectCat.innerHTML = `
-        <option value="">Seleccione Categoría</option>
-        <option value="Actividades realizadas">Actividades realizadas</option>
-        <option value="Observaciones técnicas">Observaciones técnicas</option>
-        <option value="Resultados de pruebas">Resultados de pruebas</option>
-    `;
-    
-    const selectOpt = document.createElement('select');
-    selectOpt.name = 'detalle_opcion_' + numDetalles;
-    selectOpt.className = 'form-control';
-    selectOpt.required = true;
-    selectOpt.innerHTML = '<option value="">Seleccione Opción</option>';
-    
-    selectCat.onchange = function() {
-        const cat = this.value;
-        selectOpt.innerHTML = '<option value="">Seleccione Opción</option>';
-        if (opcionesMantencion[cat]) {
-            opcionesMantencion[cat].forEach(opt => {
+document.addEventListener('DOMContentLoaded', function() {
+    // Poblar Actividades Realizadas
+    ['actividad_1', 'actividad_2', 'actividad_3'].forEach(id => {
+        const selectOpt = document.getElementById(id);
+        if (opcionesMantencion['Actividades realizadas'] && selectOpt) {
+            opcionesMantencion['Actividades realizadas'].forEach(opt => {
                 const option = document.createElement('option');
                 option.value = opt;
                 option.textContent = opt;
                 selectOpt.appendChild(option);
             });
         }
-    };
-    
-    const btnRemove = document.createElement('button');
-    btnRemove.type = 'button';
-    btnRemove.className = 'btn btn-secondary';
-    btnRemove.style = 'padding: 8px 12px; height: 39px;';
-    btnRemove.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>';
-    btnRemove.onclick = function() {
-        container.removeChild(row);
-        numDetalles--;
-        document.getElementById('btn-agregar-detalle').style.display = 'inline-flex';
-    };
-    
-    row.appendChild(selectCat);
-    row.appendChild(selectOpt);
-    row.appendChild(btnRemove);
-    
-    container.appendChild(row);
-    
-    if (numDetalles >= 3) {
-        document.getElementById('btn-agregar-detalle').style.display = 'none';
+    });
+
+    // Poblar Observaciones técnicas
+    const obsSelect = document.getElementById('observacion_tecnica');
+    if (opcionesMantencion['Observaciones técnicas'] && obsSelect) {
+        opcionesMantencion['Observaciones técnicas'].forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt;
+            option.textContent = opt;
+            obsSelect.appendChild(option);
+        });
     }
-}
+
+    // Poblar Resultados de pruebas
+    const resSelect = document.getElementById('resultado_pruebas');
+    if (opcionesMantencion['Resultados de pruebas'] && resSelect) {
+        opcionesMantencion['Resultados de pruebas'].forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt;
+            option.textContent = opt;
+            resSelect.appendChild(option);
+        });
+    }
+
+    // Inicializar Choices.js en los selects
+    const selects = document.querySelectorAll('select.form-control');
+    selects.forEach(s => {
+        new Choices(s, {
+            searchEnabled: false,
+            itemSelectText: '',
+            shouldSort: false,
+            position: 'bottom'
+        });
+    });
+});
 </script>

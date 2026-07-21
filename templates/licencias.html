@@ -603,6 +603,73 @@
         </div>
     </div>
 
+    <!-- Modal de Advertencia: Licencias Próximas a Expirar sin Renovación Automática -->
+    {% if licencias_alerta_manual %}
+    <div id="warningRenewModal" style="display:flex; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:10000; align-items:center; justify-content:center; padding:20px; backdrop-filter: blur(4px);">
+        <div style="background:#1f2937; border-radius:14px; border:1px solid rgba(239, 68, 68, 0.4); max-width:750px; width:100%; padding:25px; box-shadow:0 20px 40px rgba(0,0,0,0.6);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #374151; padding-bottom:12px;">
+                <h3 style="margin:0; font-size:1.15rem; color:#f87171; display:flex; align-items:center; gap:10px; font-weight:700;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    Atención: Licencias sin Renovación Automática por Vencer
+                </h3>
+                <button type="button" onclick="closeWarningModal()" style="background:transparent; border:none; color:#9ca3af; font-size:1.5rem; cursor:pointer; padding:0; line-height:1;">&times;</button>
+            </div>
+            
+            <p style="font-size:0.9rem; color:#d1d5db; margin-bottom:15px; line-height:1.4;">
+                Se detectaron <strong style="color:#f87171;">{{ licencias_alerta_manual | length }} licencia(s)</strong> próximas a vencer (o vencidas) que <strong style="color:#fbbf24;">NO se renuevan automáticamente</strong>. Requieren gestión manual inmediata:
+            </p>
+
+            <div style="max-height:280px; overflow-y:auto; border-radius:8px; border:1px solid #374151; background:#111827; margin-bottom:20px;">
+                <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.85rem;">
+                    <thead>
+                        <tr style="background:#1f2937; color:#9ca3af; border-bottom:1px solid #374151;">
+                            <th style="padding:10px 12px;">Servicio / Dominio</th>
+                            <th style="padding:10px 12px;">Tipo</th>
+                            <th style="padding:10px 12px;">Responsable</th>
+                            <th style="padding:10px 12px;">Expiración</th>
+                            <th style="padding:10px 12px;">Estado / Días</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lic in licencias_alerta_manual %}
+                        {% set d = lic.dias_restantes %}
+                        <tr style="border-bottom:1px solid #1f2937;">
+                            <td style="padding:10px 12px; font-weight:600; color:#ffffff;">{{ lic.nombre_servicio }}</td>
+                            <td style="padding:10px 12px;">
+                                {% if lic.tipo == 'SSL' %}
+                                    <span class="badge badge-ssl">SSL</span>
+                                {% elif lic.tipo == 'Software' %}
+                                    <span class="badge badge-software">Software</span>
+                                {% else %}
+                                    <span class="badge badge-saas">SaaS</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding:10px 12px; color:#d1d5db;">{{ lic.responsable or '-' }}</td>
+                            <td style="padding:10px 12px; color:#d1d5db;">{{ lic.fecha_expiracion.strftime('%d/%m/%Y') if lic.fecha_expiracion else '-' }}</td>
+                            <td style="padding:10px 12px;">
+                                {% if d < 0 %}
+                                    <span style="color:#f87171; font-weight:700;">Vencida (hace {{ d|abs }}d)</span>
+                                {% elif d == 0 %}
+                                    <span style="color:#f87171; font-weight:700;">¡Vence Hoy!</span>
+                                {% else %}
+                                    <span style="color:#fbbf24; font-weight:700;">Quedan {{ d }} días</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" onclick="closeWarningModal()" class="btn btn-primary" style="padding:8px 20px; font-size:0.9rem;">
+                    Entendido / Revisar
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <script>
         function toggleForm() {
             const body = document.getElementById('form-body');
@@ -632,16 +699,28 @@
             document.getElementById('editModal').style.display = 'none';
         }
 
-        // Cerrar modal con tecla ESC o haciendo clic afuera
+        function closeWarningModal() {
+            const modal = document.getElementById('warningRenewModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Cerrar modales con tecla ESC o haciendo clic afuera
         window.onclick = function(event) {
-            const modal = document.getElementById('editModal');
-            if (event.target === modal) {
+            const editModal = document.getElementById('editModal');
+            const warningModal = document.getElementById('warningRenewModal');
+            if (event.target === editModal) {
                 closeEditModal();
+            }
+            if (event.target === warningModal) {
+                closeWarningModal();
             }
         };
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeEditModal();
+                closeWarningModal();
             }
         });
     </script>

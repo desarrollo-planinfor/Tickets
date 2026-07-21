@@ -2443,12 +2443,18 @@ def licencias():
         'vigentes': vigentes
     }
     
+    licencias_sin_renovacion = [
+        l for l in todas 
+        if not l.renovacion_automatica and l.fecha_expiracion and (l.fecha_expiracion - hoy).days <= 30
+    ]
+    
     return render_template('licencias.html',
         licencias=licencias_list,
         vista='licencias',
         stats=stats,
         current_tab=tab,
-        search_query=search_query
+        search_query=search_query,
+        licencias_alerta_manual=licencias_sin_renovacion
     )
 
 @app.route('/licencias/nueva', methods=['POST'])

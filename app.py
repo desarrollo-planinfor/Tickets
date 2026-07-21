@@ -327,6 +327,39 @@ class HistorialMantencion(db.Model):
     tipo = db.Column(db.String(100), nullable=True)  # Preventiva, Correctiva, etc.
     registrado_por = db.Column(db.String(150), nullable=True)
 
+class Licencia(db.Model):
+    """Modelo para Gestión de Licencias (SSL, Software, SaaS)"""
+    id = db.Column(db.Integer, primary_key=True)
+    nombre_servicio = db.Column(db.String(200), nullable=False)
+    tipo = db.Column(db.String(50), nullable=False) # 'SSL', 'Software', 'SaaS'
+    proveedor = db.Column(db.String(150), nullable=True)
+    cantidad = db.Column(db.Integer, nullable=True)
+    responsable = db.Column(db.String(150), nullable=True)
+    fecha_inicio = db.Column(db.Date, nullable=True) # Emisión/Compra
+    fecha_expiracion = db.Column(db.Date, nullable=False) # Expiración/Renovación
+    renovacion_automatica = db.Column(db.Boolean, default=False)
+    estado = db.Column(db.String(50), default='Activo')
+    observaciones = db.Column(db.Text, nullable=True)
+    fecha_creacion = db.Column(db.DateTime, default=datetime.now)
+
+    @property
+    def dias_restantes(self):
+        import datetime as _dt
+        hoy = _dt.date.today()
+        if self.fecha_expiracion:
+            return (self.fecha_expiracion - hoy).days
+        return 0
+        
+    @property
+    def estado_alerta(self):
+        dias = self.dias_restantes
+        if dias < 0:
+            return 'Rojo'
+        elif dias <= 30:
+            return 'Amarillo'
+        else:
+            return 'Verde'
+
 # ==================== RUTAS DE LA APLICACIÓN ====================
 
 @app.route('/')
@@ -1644,6 +1677,130 @@ def crear_datos_iniciales():
             )
             db.session.add(agente)
         
+        # Poblar licencias iniciales si no hay ninguna
+        if Licencia.query.count() == 0:
+            import datetime as _dt
+            licencias_iniciales = [
+                # SSL
+                Licencia(
+                    nombre_servicio='portal.planinfor.cl',
+                    tipo='SSL',
+                    proveedor='Don Web',
+                    fecha_inicio=_dt.date(2026, 12, 21),
+                    fecha_expiracion=_dt.date(2027, 12, 21),
+                    responsable='Jorge Rodriguez',
+                    renovacion_automatica=False,
+                    estado='Activo',
+                    observaciones=''
+                ),
+                Licencia(
+                    nombre_servicio='planinfor.cl',
+                    tipo='SSL',
+                    proveedor='Don Web',
+                    fecha_inicio=_dt.date(2026, 5, 28),
+                    fecha_expiracion=_dt.date(2027, 5, 28),
+                    responsable='Jorge Rodriguez',
+                    renovacion_automatica=False,
+                    estado='Activo',
+                    observaciones=''
+                ),
+                # Software
+                Licencia(
+                    nombre_servicio='DJI Terra 1 año',
+                    tipo='Software',
+                    proveedor='DJI',
+                    cantidad=1,
+                    responsable='Equipos Silvicultura (3)',
+                    fecha_inicio=_dt.date(2026, 1, 13),
+                    fecha_expiracion=_dt.date(2027, 1, 13),
+                    estado='Activo',
+                    observaciones='Una licencia para 3 equipos. (Tipo: Agricultura)'
+                ),
+                Licencia(
+                    nombre_servicio='DJI Terra 1 año',
+                    tipo='Software',
+                    proveedor='DJI',
+                    cantidad=1,
+                    responsable='Geomática',
+                    fecha_inicio=_dt.date(2025, 11, 11),
+                    fecha_expiracion=_dt.date(2026, 11, 11),
+                    estado='Activo',
+                    observaciones='Tipo: Standard'
+                ),
+                Licencia(
+                    nombre_servicio='Terrain Forestry',
+                    tipo='Software',
+                    proveedor='Softree',
+                    cantidad=4,
+                    responsable='Trazado',
+                    fecha_inicio=_dt.date(2026, 1, 28),
+                    fecha_expiracion=_dt.date(2027, 1, 31),
+                    estado='Activo',
+                    observaciones='Fecha de expiración corresponde a soporte. Licencias de red.'
+                ),
+                Licencia(
+                    nombre_servicio='Roadeng',
+                    tipo='Software',
+                    proveedor='Softree',
+                    cantidad=5,
+                    responsable='Trazado',
+                    fecha_inicio=_dt.date(2026, 1, 28),
+                    fecha_expiracion=_dt.date(2027, 1, 31),
+                    estado='Activo',
+                    observaciones='Fecha de expiración corresponde a soporte. Licencias de red.'
+                ),
+                # SaaS Microsoft
+                Licencia(
+                    nombre_servicio='Aplicaciones de Microsoft 365 para negocios',
+                    tipo='SaaS',
+                    proveedor='Microsoft',
+                    cantidad=52,
+                    responsable='TI',
+                    fecha_inicio=None,
+                    fecha_expiracion=_dt.date(2026, 8, 21),
+                    renovacion_automatica=True,
+                    estado='Activo',
+                    observaciones='Licencia SaaS - Renovación Mensual (día 21)'
+                ),
+                Licencia(
+                    nombre_servicio='Power BI Pro',
+                    tipo='SaaS',
+                    proveedor='Microsoft',
+                    cantidad=7,
+                    responsable='TI',
+                    fecha_inicio=None,
+                    fecha_expiracion=_dt.date(2026, 8, 21),
+                    renovacion_automatica=True,
+                    estado='Activo',
+                    observaciones='Licencia SaaS - Renovación Mensual (día 21)'
+                ),
+                Licencia(
+                    nombre_servicio='Planner Plan 1',
+                    tipo='SaaS',
+                    proveedor='Microsoft',
+                    cantidad=1,
+                    responsable='TI',
+                    fecha_inicio=None,
+                    fecha_expiracion=_dt.date(2026, 8, 21),
+                    renovacion_automatica=True,
+                    estado='Activo',
+                    observaciones='Licencia SaaS - Renovación Mensual (día 21)'
+                ),
+                Licencia(
+                    nombre_servicio='Salas de Microsoft Teams Básico',
+                    tipo='SaaS',
+                    proveedor='Microsoft',
+                    cantidad=25,
+                    responsable='TI',
+                    fecha_inicio=None,
+                    fecha_expiracion=_dt.date(2026, 8, 21),
+                    renovacion_automatica=True,
+                    estado='Activo',
+                    observaciones='Licencia SaaS - Renovación Mensual (día 21)'
+                )
+            ]
+            db.session.add_all(licencias_iniciales)
+        
         db.session.commit()
 
 # ==================== SCHEDULER PARA CRON JOBS ====================
@@ -1705,6 +1862,15 @@ def iniciar_scheduler():
         hour=8,
         id='alertas_mantenciones',
         name='Alertar mantenciones atrasadas o próximas a vencer'
+    )
+    
+    # Alerta de licencias próximas a vencer (cada día a las 9:00 AM)
+    scheduler.add_job(
+        func=cron_alertas_licencias,
+        trigger='cron',
+        hour=9,
+        id='alertas_licencias',
+        name='Alertar licencias próximas a vencer'
     )
     
     scheduler.start()
@@ -2171,6 +2337,210 @@ def cron_alertas_mantenciones():
             
     except Exception as e:
         print(f'Error en cron_alertas_mantenciones: {e}')
+
+def cron_alertas_licencias():
+    """Cron: Alerta de licencias a punto de expirar"""
+    try:
+        with app.app_context():
+            import datetime as _dt
+            licencias = Licencia.query.all()
+            proximos = []
+            hoy = _dt.date.today()
+            for l in licencias:
+                if not l.fecha_expiracion:
+                    continue
+                dias = (l.fecha_expiracion - hoy).days
+                if dias in [30, 15, 7, 1, 0]:
+                    proximos.append((l, dias))
+            
+            if not proximos:
+                return
+                
+            proximos.sort(key=lambda x: x[1])
+            filas = _fila_dato('Licencias por expirar', str(len(proximos)), highlight=True)
+            
+            detalle = '<tr><td style="padding:20px 30px;">'
+            detalle += '<p style="margin:0 0 10px;font-size:14px;font-weight:600;color:#ef4444;">🚨 Licencias próximas a expirar o expiradas:</p>'
+            detalle += '<ul style="margin:0;padding-left:20px;font-size:13px;color:#374151;">'
+            for l, dias in proximos:
+                urgencia = f'<span style="color:#ef4444;font-weight:600;">en {dias} días</span>' if dias > 0 else f'<span style="color:#ef4444;font-weight:600;">HOY</span>'
+                detalle += f'<li><strong>{l.nombre_servicio}</strong> ({l.tipo}) — expira {urgencia} ({l.fecha_expiracion})</li>'
+            detalle += '</ul></td></tr>'
+            
+            html_correo = _base_email_html(
+                '#ef4444',
+                '&#128680; Licencias por expirar',
+                f'{len(proximos)} licencia(s) expiran pronto',
+                filas,
+                detalle,
+                target_url=f'{BASE_URL}/licencias'
+            )
+            
+            notif = Notificacion(
+                destinatario='ti.noreply@planinfor.cl',
+                asunto=f'[Licencias] {len(proximos)} licencia(s) expiran pronto',
+                mensaje=html_correo,
+                tipo='email',
+                estado='pendiente'
+            )
+            db.session.add(notif)
+            db.session.commit()
+    except Exception as e:
+        print(f'Error en cron_alertas_licencias: {e}')
+
+# ==================== GESTIÓN DE LICENCIAS ====================
+
+@app.route('/licencias')
+@login_required
+def licencias():
+    if g.usuario.rol not in ['admin', 'agente']:
+        flash('Acceso denegado.', 'error')
+        return redirect(url_for('index'))
+    
+    import datetime as _dt
+    hoy = _dt.date.today()
+    
+    tab = request.args.get('tab', 'todas').strip()
+    search_query = request.args.get('q', '').strip()
+    
+    query = Licencia.query
+    
+    # Filtro por tipo (tab)
+    if tab == 'ssl':
+        query = query.filter(Licencia.tipo == 'SSL')
+    elif tab == 'software':
+        query = query.filter(Licencia.tipo == 'Software')
+    elif tab == 'saas':
+        query = query.filter(Licencia.tipo == 'SaaS')
+    
+    # Búsqueda
+    if search_query:
+        query = query.filter(
+            Licencia.nombre_servicio.ilike(f'%{search_query}%') |
+            Licencia.proveedor.ilike(f'%{search_query}%') |
+            Licencia.responsable.ilike(f'%{search_query}%')
+        )
+    
+    licencias_list = query.order_by(Licencia.fecha_expiracion.asc()).all()
+    
+    # Estadísticas globales (sin filtro de tab/búsqueda)
+    todas = Licencia.query.all()
+    total = len(todas)
+    total_ssl = sum(1 for l in todas if l.tipo == 'SSL')
+    total_software = sum(1 for l in todas if l.tipo == 'Software')
+    total_saas = sum(1 for l in todas if l.tipo == 'SaaS')
+    expiradas = sum(1 for l in todas if l.fecha_expiracion and l.fecha_expiracion < hoy)
+    proximas = sum(1 for l in todas if l.fecha_expiracion and 0 <= (l.fecha_expiracion - hoy).days <= 30)
+    vigentes = sum(1 for l in todas if l.fecha_expiracion and (l.fecha_expiracion - hoy).days > 30)
+    
+    stats = {
+        'total': total,
+        'total_ssl': total_ssl,
+        'total_software': total_software,
+        'total_saas': total_saas,
+        'expiradas': expiradas,
+        'proximas': proximas,
+        'vigentes': vigentes
+    }
+    
+    return render_template('licencias.html',
+        licencias=licencias_list,
+        vista='licencias',
+        stats=stats,
+        current_tab=tab,
+        search_query=search_query
+    )
+
+@app.route('/licencias/nueva', methods=['POST'])
+@login_required
+def nueva_licencia():
+    if g.usuario.rol not in ['admin', 'agente']:
+        return jsonify({'success': False, 'message': 'Acceso denegado'})
+    
+    import datetime as _dt
+    try:
+        f_inicio = request.form.get('fecha_inicio')
+        f_expiracion = request.form.get('fecha_expiracion')
+        
+        f_inicio_obj = _dt.datetime.strptime(f_inicio, '%Y-%m-%d').date() if f_inicio else None
+        f_exp_obj = _dt.datetime.strptime(f_expiracion, '%Y-%m-%d').date() if f_expiracion else None
+        
+        if not f_exp_obj:
+            flash('La fecha de expiración es obligatoria.', 'error')
+            return redirect(url_for('licencias'))
+
+        lic = Licencia(
+            nombre_servicio=request.form.get('nombre_servicio'),
+            tipo=request.form.get('tipo'),
+            proveedor=request.form.get('proveedor'),
+            cantidad=request.form.get('cantidad') or None,
+            responsable=request.form.get('responsable'),
+            fecha_inicio=f_inicio_obj,
+            fecha_expiracion=f_exp_obj,
+            renovacion_automatica=request.form.get('renovacion_automatica') == 'on',
+            estado=request.form.get('estado', 'Activo'),
+            observaciones=request.form.get('observaciones')
+        )
+        db.session.add(lic)
+        db.session.commit()
+        flash('Licencia agregada exitosamente.', 'success')
+    except Exception as e:
+        flash(f'Error al agregar licencia: {e}', 'error')
+        
+    return redirect(url_for('licencias'))
+
+@app.route('/licencias/editar/<int:id>', methods=['POST'])
+@login_required
+def editar_licencia(id):
+    if g.usuario.rol not in ['admin', 'agente']:
+        return jsonify({'success': False, 'message': 'Acceso denegado'})
+    
+    lic = db.session.get(Licencia, id)
+    if not lic:
+        flash('Licencia no encontrada.', 'error')
+        return redirect(url_for('licencias'))
+        
+    import datetime as _dt
+    try:
+        f_inicio = request.form.get('fecha_inicio')
+        f_expiracion = request.form.get('fecha_expiracion')
+        
+        f_inicio_obj = _dt.datetime.strptime(f_inicio, '%Y-%m-%d').date() if f_inicio else None
+        f_exp_obj = _dt.datetime.strptime(f_expiracion, '%Y-%m-%d').date() if f_expiracion else None
+        
+        if not f_exp_obj:
+            flash('La fecha de expiración es obligatoria.', 'error')
+            return redirect(url_for('licencias'))
+
+        lic.nombre_servicio = request.form.get('nombre_servicio')
+        lic.tipo = request.form.get('tipo')
+        lic.proveedor = request.form.get('proveedor')
+        lic.cantidad = request.form.get('cantidad') or None
+        lic.responsable = request.form.get('responsable')
+        lic.fecha_inicio = f_inicio_obj
+        lic.fecha_expiracion = f_exp_obj
+        lic.renovacion_automatica = (request.form.get('renovacion_automatica') == 'on')
+        lic.estado = request.form.get('estado', 'Activo')
+        lic.observaciones = request.form.get('observaciones')
+
+        db.session.commit()
+        flash('Licencia actualizada exitosamente.', 'success')
+    except Exception as e:
+        flash(f'Error al actualizar licencia: {e}', 'error')
+        
+    return redirect(url_for('licencias'))
+
+@app.route('/licencias/eliminar/<int:id>', methods=['POST'])
+@login_required
+def eliminar_licencia(id):
+    if g.usuario.rol not in ['admin', 'agente']:
+        return jsonify({'success': False, 'message': 'Acceso denegado'})
+    lic = db.session.get(Licencia, id)
+    if lic:
+        db.session.delete(lic)
+        db.session.commit()
+        flash('Licencia eliminada.', 'success')
+    return redirect(url_for('licencias'))
 
 if __name__ == '__main__':
     asegurar_base_de_datos()

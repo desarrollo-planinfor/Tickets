@@ -393,8 +393,8 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Última Mantención</label>
-                        <!-- Usaremos type="date" que requiere formato YYYY-MM-DD -->
-                        <input type="date" name="ultima_mantencion" id="ultima_mantencion" class="form-control"
+                        <!-- Usaremos type="text" con flatpickr para formato dd/mm/aaaa -->
+                        <input type="text" name="ultima_mantencion" id="ultima_mantencion" class="form-control datepicker" placeholder="dd/mm/aaaa"
                             data-original-date="{{ equipo.ultima_mantencion if equipo else '' }}">
                     </div>
 
@@ -410,7 +410,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Próxima Mantención</label>
-                        <input type="date" name="proxima_mantencion" id="proxima_mantencion" class="form-control"
+                        <input type="text" name="proxima_mantencion" id="proxima_mantencion" class="form-control datepicker" placeholder="dd/mm/aaaa"
                             data-original-date="{{ equipo.proxima_mantencion if equipo else '' }}" readonly
                             style="background: #374151; color: #9ca3af; cursor: not-allowed;"
                             placeholder="Se calculará automáticamente">

@@ -1,3 +1,7 @@
+<!-- Flatpickr CSS/JS para Fechas -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
 <style>
     /* Diseño Unificado de Cabecera */
     .header-unificada { 
@@ -206,7 +210,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
             Seguridad
         </a>
-        {% if g.usuario.rol == 'admin' %}
+        {% if g.usuario.rol in ['admin', 'agente'] %}
         <a href="{{ url_for('lista_equipos') }}" class="nav-link-u {% if vista == 'equipos' %}active{% endif %}">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
             Inventario de Equipos
@@ -220,3 +224,21 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof flatpickr !== 'undefined') {
+            flatpickr('.datepicker', {
+                locale: 'es',
+                dateFormat: 'd/m/Y',
+                allowInput: true
+            });
+            flatpickr('.datetimepicker', {
+                locale: 'es',
+                enableTime: true,
+                dateFormat: 'd/m/Y H:i',
+                allowInput: true
+            });
+        }
+    });
+</script>

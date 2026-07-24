@@ -215,7 +215,7 @@
                                 {% if ticket.estado == 'ATRASADO' %}
                                 <span class="ticket-fecha" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); color: #f87171; font-weight: 700;">ATRASADO</span>
                                 {% else %}
-                                <span class="ticket-fecha">{{ ticket.fecha_creacion.strftime('%d/%m %H:%M') }}</span>
+                                <span class="ticket-fecha">{{ ticket.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</span>
                                 {% endif %}
                             </div>
                             <div class="ticket-asunto">{{ ticket.asunto }}</div>
@@ -239,7 +239,7 @@
                                     </select>
                                 </div>
                                 <div style="display: flex; gap: 8px; width: 100%;">
-                                    <input type="datetime-local" name="hora_atencion" required style="flex-grow: 1; padding: 6px; font-size: 0.85rem;">
+                                    <input type="text" name="hora_atencion" class="datetimepicker form-control" placeholder="dd/mm/aaaa HH:MM" required style="flex-grow: 1; padding: 6px; font-size: 0.85rem;">
                                     <button type="submit" class="btn btn-primary btn-sm">Recibir</button>
                                 </div>
                             </form>
@@ -262,7 +262,7 @@
                             <div class="ticket-header">
                                 <span class="ticket-id">#{{ ticket.id }}</span>
                                 <span class="ticket-fecha" style="background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); color: #fbbf24;">
-                                    {{ ticket.fecha_atencion_programada.strftime('%d/%m %H:%M') }}
+                                    {{ ticket.fecha_atencion_programada.strftime('%d/%m/%Y %H:%M') }}
                                 </span>
                             </div>
                             <div class="ticket-asunto">{{ ticket.asunto }}</div>
@@ -293,7 +293,7 @@
                             <div class="ticket-header">
                                 <span class="ticket-id">#{{ ticket.id }}</span>
                                 <span class="ticket-fecha" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: #34d399;">
-                                    Inicio: {{ ticket.fecha_inicio_atencion.strftime('%d/%m %H:%M') if ticket.fecha_inicio_atencion else '-' }}
+                                    Inicio: {{ ticket.fecha_inicio_atencion.strftime('%d/%m/%Y %H:%M') if ticket.fecha_inicio_atencion else '-' }}
                                 </span>
                             </div>
                             <div class="ticket-asunto">{{ ticket.asunto }}</div>

@@ -90,9 +90,10 @@
         .table-title { font-size: 1.05rem; font-weight: 600; color: #ffffff; display: flex; align-items: center; gap: 10px; }
         .table-count { font-size: 0.85rem; color: #9ca3af; font-weight: 400; }
         .table-scroll { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
-        th { padding: 14px 16px; text-align: left; background: rgba(17, 24, 39, 0.5); color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.75rem; border-bottom: 1px solid #374151; white-space: nowrap; }
+        table { width: 100%; border-collapse: collapse; }
+        th { padding: 14px 16px; text-align: left; background: rgba(17, 24, 39, 0.5); color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.75rem; border-bottom: 1px solid #374151; white-space: normal; }
         td { padding: 14px 16px; text-align: left; font-size: 0.9rem; color: #f3f4f6; border-bottom: 1px solid rgba(55, 65, 81, 0.5); }
+        th:last-child, td:last-child { padding-right: 25px; width: 1%; white-space: nowrap; text-align: right; }
         tbody tr { transition: background 0.15s ease; }
         tbody tr:hover { background: rgba(55, 65, 81, 0.3); }
         tbody tr:last-child td { border-bottom: none; }
@@ -134,7 +135,7 @@
         .renew-indicator { display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; color: #34d399; background: rgba(16, 185, 129, 0.08); padding: 2px 8px; border-radius: 10px; margin-top: 4px; }
 
         /* ===== Actions Cell ===== */
-        .actions-cell { display: flex; gap: 6px; align-items: center; }
+        .actions-cell { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
         .action-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid #4b5563; color: #9ca3af; cursor: pointer; transition: all 0.2s; }
         .action-btn:hover { background: rgba(255,255,255,0.05); color: #ffffff; border-color: #6b7280; }
         .action-btn.danger:hover { background: rgba(239, 68, 68, 0.1); color: #f87171; border-color: rgba(239, 68, 68, 0.3); }
@@ -277,11 +278,11 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Fecha de Inicio</label>
-                                <input type="date" name="fecha_inicio" class="form-control">
+                                <input type="text" name="fecha_inicio" class="form-control datepicker" placeholder="dd/mm/aaaa">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Fecha de Expiración *</label>
-                                <input type="date" name="fecha_expiracion" class="form-control" required>
+                                <input type="text" name="fecha_expiracion" class="form-control datepicker" placeholder="dd/mm/aaaa" required>
                             </div>
                             <div class="form-group span-2">
                                 <label class="form-label">Observaciones</label>
@@ -371,7 +372,7 @@
                             <th>Fecha Expiración</th>
                             <th style="min-width: 170px;">Días Restantes</th>
                             <th>Estado</th>
-                            <th></th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -454,12 +455,30 @@
                                 <div class="progress-bar">
                                     {% if dias < 0 %}
                                         <div class="progress-fill danger" style="width: 100%;"></div>
-                                    {% elif dias <= 30 %}
-                                        <div class="progress-fill warning" style="width: {{ [((30 - dias) / 30 * 100)|int, 100]|min }}%;"></div>
-                                    {% elif dias <= 365 %}
-                                        <div class="progress-fill success" style="width: {{ [(dias / 365 * 100)|int, 100]|min }}%;"></div>
                                     {% else %}
-                                        <div class="progress-fill success" style="width: 100%;"></div>
+                                        {% set total_dias = 365.0 %}
+                                        {% if lic.fecha_inicio and lic.fecha_expiracion %}
+                                            {% set calc_total = (lic.fecha_expiracion - lic.fecha_inicio).days %}
+                                            {% if calc_total > 0 %}{% set total_dias = calc_total %}{% endif %}
+                                        {% else %}
+                                            {% if dias <= 31 %}
+                                                {% set total_dias = 30.0 %}
+                                            {% elif dias <= 365 %}
+                                                {% set total_dias = 365.0 %}
+                                            {% else %}
+                                                {% set total_dias = dias %}
+                                            {% endif %}
+                                        {% endif %}
+                                        
+                                        {% set width_pct = (dias * 100.0 / total_dias) %}
+                                        {% if width_pct > 100 %}{% set width_pct = 100 %}{% endif %}
+                                        {% if width_pct < 2 %}{% set width_pct = 2 %}{% endif %}
+                                        
+                                        {% if dias <= 30 %}
+                                            <div class="progress-fill warning" style="width: {{ width_pct|round(1) }}%;"></div>
+                                        {% else %}
+                                            <div class="progress-fill success" style="width: {{ width_pct|round(1) }}%;"></div>
+                                        {% endif %}
                                     {% endif %}
                                 </div>
                             </td>
@@ -571,11 +590,11 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Fecha de Inicio</label>
-                        <input type="date" name="fecha_inicio" id="edit_fecha_inicio" class="form-control">
+                        <input type="text" name="fecha_inicio" id="edit_fecha_inicio" class="form-control datepicker" placeholder="dd/mm/aaaa">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Fecha de Expiración *</label>
-                        <input type="date" name="fecha_expiracion" id="edit_fecha_expiracion" class="form-control" required>
+                        <input type="text" name="fecha_expiracion" id="edit_fecha_expiracion" class="form-control datepicker" placeholder="dd/mm/aaaa" required>
                     </div>
                     <div class="form-group span-2">
                         <label class="form-label">Observaciones</label>

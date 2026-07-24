@@ -7,7 +7,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
     <style>
+        /* Tom Select Dark Theme Overrides */
+        .ts-control { background: #111827 !important; border: 1px solid #4b5563 !important; color: white !important; border-radius: 8px !important; padding: 10px 15px !important; box-shadow: none !important; min-height: 42px !important; }
+        .ts-control > input { color: white !important; font-family: inherit !important; font-size: 0.9rem !important; }
+        .ts-wrapper.form-control { padding: 0 !important; border: none !important; background: transparent !important; height: auto !important; box-shadow: none !important; }
+        .ts-dropdown { background: #1f2937 !important; border: 1px solid #4b5563 !important; color: white !important; border-radius: 8px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important; font-size: 0.9rem; }
+        .ts-dropdown .option { padding: 10px 15px !important; transition: all 0.2s; }
+        .ts-dropdown .option.active, .ts-dropdown .option:hover { background: rgba(130, 195, 65, 0.2) !important; color: #82C341 !important; font-weight: 500; }
+        .ts-wrapper.single .ts-control:after { border-color: #9ca3af transparent transparent transparent !important; }
+        .ts-wrapper.focus .ts-control { border-color: #82C341 !important; box-shadow: 0 0 0 2px rgba(130, 195, 65, 0.2) !important; }
+        
         :root {
             --bg-main: #0f172a;
             --bg-card: #1e293b;
@@ -177,7 +188,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Área</label>
-                    <select name="area" class="form-control">
+                    <select name="area" class="form-control select-search" placeholder="Todas las áreas">
                         <option value="">Todas las áreas</option>
                         {% for area in areas %}
                         <option value="{{ area }}" {% if area_filter == area %}selected{% endif %}>{{ area }}</option>
@@ -186,8 +197,8 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Responsable</label>
-                    <select name="responsable" class="form-control">
-                        <option value="">Todos</option>
+                    <select name="responsable" class="form-control select-search" placeholder="Todos los responsables">
+                        <option value="">Todos los responsables</option>
                         {% for responsable in responsables %}
                         <option value="{{ responsable }}" {% if responsable_filter == responsable %}selected{% endif %}>{{ responsable }}</option>
                         {% endfor %}
@@ -195,7 +206,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Marca</label>
-                    <select name="marca" class="form-control">
+                    <select name="marca" class="form-control select-search" placeholder="Todas las marcas">
                         <option value="">Todas las marcas</option>
                         {% for marca in marcas %}
                         <option value="{{ marca }}" {% if marca_filter == marca %}selected{% endif %}>{{ marca }}</option>
@@ -406,5 +417,17 @@
         </div>
     </div>
     {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.select-search').forEach(function(el) {
+                new TomSelect(el, {
+                    create: false,
+                    maxOptions: 100
+                });
+            });
+        });
+    </script>
 </body>
 </html>

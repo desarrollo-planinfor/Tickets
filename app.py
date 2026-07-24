@@ -658,7 +658,7 @@ def recibir_ticket(ticket_id):
         
         if hora_atencion:
             # Convertir hora string a datetime
-            fecha_at = datetime.strptime(hora_atencion, '%Y-%m-%dT%H:%M')
+            fecha_at = datetime.strptime(hora_atencion, '%d/%m/%Y %H:%M')
             ticket.fecha_atencion_programada = fecha_at
             
         if nueva_prioridad:
@@ -1881,9 +1881,9 @@ def iniciar_scheduler():
 @app.route('/equipos')
 @login_required
 def lista_equipos():
-    """Listado de equipos y mantenciones (Solo Admin)"""
-    if g.usuario.rol != 'admin':
-        flash('Acceso denegado. Solo administradores pueden ver esta sección.', 'error')
+    """Listado de equipos y mantenciones (Admin y Agentes)"""
+    if g.usuario.rol not in ['admin', 'agente']:
+        flash('Acceso denegado. Solo administradores y agentes pueden ver esta sección.', 'error')
         return redirect(url_for('index'))
         
     page = request.args.get('page', 1, type=int)
@@ -1956,7 +1956,7 @@ def lista_equipos():
 @app.route('/equipos/nuevo', methods=['GET', 'POST'])
 @login_required
 def nuevo_equipo():
-    if g.usuario.rol != 'admin':
+    if g.usuario.rol not in ['admin', 'agente']:
         flash('Acceso denegado.', 'error')
         return redirect(url_for('index'))
         
@@ -2003,7 +2003,7 @@ def nuevo_equipo():
 @app.route('/equipos/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
 def editar_equipo(id):
-    if g.usuario.rol != 'admin':
+    if g.usuario.rol not in ['admin', 'agente']:
         flash('Acceso denegado.', 'error')
         return redirect(url_for('index'))
         
@@ -2053,7 +2053,7 @@ def editar_equipo(id):
 @app.route('/equipos/inactivar/<int:id>', methods=['POST'])
 @login_required
 def inactivar_equipo(id):
-    if g.usuario.rol != 'admin':
+    if g.usuario.rol not in ['admin', 'agente']:
         flash('Acceso denegado.', 'error')
         return redirect(url_for('index'))
         
@@ -2067,7 +2067,7 @@ def inactivar_equipo(id):
 @app.route('/equipos/activar/<int:id>', methods=['POST'])
 @login_required
 def activar_equipo(id):
-    if g.usuario.rol != 'admin':
+    if g.usuario.rol not in ['admin', 'agente']:
         flash('Acceso denegado.', 'error')
         return redirect(url_for('index'))
         
@@ -2081,7 +2081,7 @@ def activar_equipo(id):
 @app.route('/equipos/<int:id>/pdf')
 @login_required
 def descargar_ficha_pdf(id):
-    if g.usuario.rol != 'admin':
+    if g.usuario.rol not in ['admin', 'agente']:
         flash('Acceso denegado.', 'error')
         return redirect(url_for('index'))
         
@@ -2113,7 +2113,7 @@ def descargar_ficha_pdf(id):
 @app.route('/mantencion/<int:id>/pdf')
 @login_required
 def descargar_pdf_mantencion(id):
-    if g.usuario.rol != 'admin':
+    if g.usuario.rol not in ['admin', 'agente']:
         flash('Acceso denegado.', 'error')
         return redirect(url_for('index'))
         
@@ -2146,7 +2146,7 @@ def descargar_pdf_mantencion(id):
 @app.route('/equipos/descargar-masivo', methods=['POST'])
 @login_required
 def descargar_fichas_masivo():
-    if g.usuario.rol != 'admin':
+    if g.usuario.rol not in ['admin', 'agente']:
         flash('Acceso denegado.', 'error')
         return redirect(url_for('index'))
         
@@ -2190,7 +2190,7 @@ def descargar_fichas_masivo():
 @login_required
 def historial_equipo(id):
     """Ver historial de mantenciones de un equipo y registrar nuevas"""
-    if g.usuario.rol != 'admin':
+    if g.usuario.rol not in ['admin', 'agente']:
         flash('Acceso denegado.', 'error')
         return redirect(url_for('index'))
     
@@ -2231,7 +2231,7 @@ def historial_equipo(id):
         fecha_realizada = datetime.now()
         if fecha_str:
             try:
-                fecha_realizada = datetime.strptime(fecha_str, '%Y-%m-%d')
+                fecha_realizada = datetime.strptime(fecha_str, '%d/%m/%Y')
             except ValueError:
                 pass
         
@@ -2347,7 +2347,7 @@ def cron_alertas_licencias():
             proximos = []
             hoy = _dt.date.today()
             for l in licencias:
-                if not l.fecha_expiracion:
+                if not l.fecha_expiracion or l.renovacion_automatica:
                     continue
                 dias = (l.fecha_expiracion - hoy).days
                 if dias in [30, 15, 7, 1, 0]:
@@ -2468,8 +2468,8 @@ def nueva_licencia():
         f_inicio = request.form.get('fecha_inicio')
         f_expiracion = request.form.get('fecha_expiracion')
         
-        f_inicio_obj = _dt.datetime.strptime(f_inicio, '%Y-%m-%d').date() if f_inicio else None
-        f_exp_obj = _dt.datetime.strptime(f_expiracion, '%Y-%m-%d').date() if f_expiracion else None
+        f_inicio_obj = _dt.datetime.strptime(f_inicio, '%d/%m/%Y').date() if f_inicio else None
+        f_exp_obj = _dt.datetime.strptime(f_expiracion, '%d/%m/%Y').date() if f_expiracion else None
         
         if not f_exp_obj:
             flash('La fecha de expiración es obligatoria.', 'error')
@@ -2511,8 +2511,8 @@ def editar_licencia(id):
         f_inicio = request.form.get('fecha_inicio')
         f_expiracion = request.form.get('fecha_expiracion')
         
-        f_inicio_obj = _dt.datetime.strptime(f_inicio, '%Y-%m-%d').date() if f_inicio else None
-        f_exp_obj = _dt.datetime.strptime(f_expiracion, '%Y-%m-%d').date() if f_expiracion else None
+        f_inicio_obj = _dt.datetime.strptime(f_inicio, '%d/%m/%Y').date() if f_inicio else None
+        f_exp_obj = _dt.datetime.strptime(f_expiracion, '%d/%m/%Y').date() if f_expiracion else None
         
         if not f_exp_obj:
             flash('La fecha de expiración es obligatoria.', 'error')

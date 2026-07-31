@@ -176,12 +176,21 @@ def load_user():
 # ==================== MODELOS DE BASE DE DATOS ====================
 
 class Area(db.Model):
-    """Modelo de Área"""
+    """Modelo de Área (para usuarios)"""
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False, unique=True)
+
+class AreaEquipo(db.Model):
+    """Modelo de Área para Equipos (inventario)"""
+    __tablename__ = 'area_equipo'
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(150), nullable=False, unique=True)
 
 class Usuario(db.Model):
     """Modelo de Usuario del sistema"""
@@ -1854,7 +1863,7 @@ def crear_datos_iniciales():
             except Exception:
                 db.session.rollback()
                 
-            # Poblar áreas iniciales
+            # Poblar áreas iniciales (para usuarios)
             areas_iniciales = [
                 "Trazado de Caminos", "Planificacion Silvicola", "Programacion de Cosecha",
                 "Planificacion de Cosecha", "Topografia LIDAR"
@@ -1862,6 +1871,22 @@ def crear_datos_iniciales():
             for nombre_area in areas_iniciales:
                 if not Area.query.filter_by(nombre=nombre_area).first():
                     db.session.add(Area(nombre=nombre_area))
+
+            # Poblar áreas de equipos (inventario)
+            areas_equipo_iniciales = [
+                "Desarrollo y Soporte TI",
+                "Planificación Silvícola",
+                "Administración",
+                "Trazado de Caminos",
+                "Planificación y Programación de Cosecha",
+                "Geomática y Procesos SIG",
+                "Control de Calidad de Producción de Plantas",
+                "Gerencia",
+                "Soporte IT y Desarrollo",
+            ]
+            for nombre_ae in areas_equipo_iniciales:
+                if not AreaEquipo.query.filter_by(nombre=nombre_ae).first():
+                    db.session.add(AreaEquipo(nombre=nombre_ae))
             db.session.commit()
         except Exception as e:
             print(f"⚠️ Error al crear tablas (posible problema de conexión): {e}")
@@ -2213,8 +2238,9 @@ def nuevo_equipo():
     nombres = [r[0] for r in db.session.query(EquipoMantencion.nombre).distinct().filter(EquipoMantencion.nombre != None, EquipoMantencion.nombre != '').all()]
     marcas = [r[0] for r in db.session.query(EquipoMantencion.marca).distinct().filter(EquipoMantencion.marca != None, EquipoMantencion.marca != '').all()]
     requerimientos = [r[0] for r in db.session.query(EquipoMantencion.requerimiento).distinct().filter(EquipoMantencion.requerimiento != None, EquipoMantencion.requerimiento != '').all()]
+    areas_equipo = AreaEquipo.query.order_by(AreaEquipo.nombre).all()
     
-    return render_template('equipos/formulario.html', equipo=None, nombres=sorted(nombres), marcas=sorted(marcas), requerimientos=sorted(requerimientos))
+    return render_template('equipos/formulario.html', equipo=None, nombres=sorted(nombres), marcas=sorted(marcas), requerimientos=sorted(requerimientos), areas_equipo=areas_equipo)
 
 @app.route('/equipos/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -2275,8 +2301,9 @@ def editar_equipo(id):
     nombres = [r[0] for r in db.session.query(EquipoMantencion.nombre).distinct().filter(EquipoMantencion.nombre != None, EquipoMantencion.nombre != '').all()]
     marcas = [r[0] for r in db.session.query(EquipoMantencion.marca).distinct().filter(EquipoMantencion.marca != None, EquipoMantencion.marca != '').all()]
     requerimientos = [r[0] for r in db.session.query(EquipoMantencion.requerimiento).distinct().filter(EquipoMantencion.requerimiento != None, EquipoMantencion.requerimiento != '').all()]
+    areas_equipo = AreaEquipo.query.order_by(AreaEquipo.nombre).all()
     
-    return render_template('equipos/formulario.html', equipo=equipo, nombres=sorted(nombres), marcas=sorted(marcas), requerimientos=sorted(requerimientos))
+    return render_template('equipos/formulario.html', equipo=equipo, nombres=sorted(nombres), marcas=sorted(marcas), requerimientos=sorted(requerimientos), areas_equipo=areas_equipo)
 
 @app.route('/equipos/inactivar/<int:id>', methods=['POST'])
 @login_required

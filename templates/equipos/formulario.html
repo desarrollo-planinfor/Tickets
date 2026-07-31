@@ -314,25 +314,9 @@
                         <label class="form-label">Área</label>
                         <select name="area" class="form-control">
                             <option value="">Seleccione un área</option>
-                            <option value="Desarrollo y Soporte TI" {% if equipo and
-                                equipo.area=='Desarrollo y Soporte TI' %}selected{% endif %}>Desarrollo y Soporte TI
-                            </option>
-                            <option value="Planificación Silvícola" {% if equipo and
-                                equipo.area=='Planificación Silvícola' %}selected{% endif %}>Planificación Silvícola
-                            </option>
-                            <option value="Administración" {% if equipo and equipo.area=='Administración' %}selected{%
-                                endif %}>Administración</option>
-                            <option value="Trazado de Caminos" {% if equipo and equipo.area=='Trazado de Caminos'
-                                %}selected{% endif %}>Trazado de Caminos</option>
-                            <option value="Planificación y Programación de Cosecha" {% if equipo and
-                                equipo.area=='Planificación y Programación de Cosecha' %}selected{% endif %}>Planificación y Programación de Cosecha
-                            </option>
-                            <option value="Geomática y Procesos SIG" {% if equipo and
-                                equipo.area=='Geomática y Procesos SIG' %}selected{% endif %}>Geomática y Procesos SIG
-                            </option>
-                            <option value="Control de Calidad de Producción de Plantas" {% if equipo and
-                                equipo.area=='Control de Calidad de Producción de Plantas' %}selected{% endif %}>Control
-                                de Calidad de Producción de Plantas</option>
+                            {% for ae in areas_equipo %}
+                            <option value="{{ ae.nombre }}" {% if equipo and equipo.area == ae.nombre %}selected{% endif %}>{{ ae.nombre }}</option>
+                            {% endfor %}
                         </select>
                     </div>
 

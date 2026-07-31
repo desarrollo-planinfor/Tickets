@@ -1,3 +1,32 @@
+<!-- Toastify CSS/JS para Notificaciones -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    Toastify({
+                        text: "{{ message }}",
+                        duration: 4000,
+                        gravity: "top",
+                        position: "right",
+                        stopOnFocus: true,
+                        style: {
+                            background: "{{ '#82C341' if category == 'success' else '#f87171' }}",
+                            color: "{{ '#111827' if category == 'success' else '#ffffff' }}",
+                            borderRadius: "8px",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                            fontWeight: "600",
+                            fontFamily: "'Outfit', sans-serif"
+                        }
+                    }).showToast();
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    });
+</script>
+
 <!-- Flatpickr CSS/JS para Fechas -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -64,7 +93,7 @@
     .btn-logout-u:hover { background: rgba(255,255,255,0.05); color: #ffffff; border-color: #6b7280; }
 
     /* Barra de Navegación Secundaria */
-    .nav-bar-u { display: flex; gap: 12px; margin-bottom: 25px; margin-top: 20px; }
+    .nav-bar-u { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 25px; margin-top: 20px; }
     .nav-link-u { 
         padding: 10px 18px; 
         background: #1f2937; 
@@ -146,13 +175,13 @@
                     <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
                     <line x1="12" y1="22.08" x2="12" y2="12"></line>
                 </svg>
-                <span style="display: flex; gap: 0;">Plan<span style="color: #82C341;">infor</span></span>
+                <span style="display: flex; gap: 8px; align-items: center;">
+                    <span style="background: rgba(130, 195, 65, 0.15); border: 1px solid #82C341; color: #82C341; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; line-height: 1;">HUB</span>
+                    <span style="display: flex; gap: 0;">Plan<span style="color: #82C341;">infor</span></span>
+                </span>
             </h1>
         
-        <span class="header-divider">|</span>
-        <span class="view-title">
-            {% if vista == 'admin' %}Panel de Administración{% else %}Panel Agente{% endif %}
-        </span>
+
 
         {% if vista == 'agente' and stats %}
         <div class="header-stats">
@@ -182,6 +211,10 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 {{ g.usuario.nombre }} <span style="color: #6b7280; font-size: 0.8rem;">({{ g.usuario.rol }})</span>
             </div>
+            <a href="{{ url_for('cambiar_password') }}" class="btn-logout-u" style="border-color: transparent;" title="Mi Contraseña">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                Mi Contraseña
+            </a>
             <a href="{{ url_for('logout') }}" class="btn-logout-u">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                 Cerrar Sesión
@@ -192,36 +225,54 @@
 
 <div class="container" style="padding-top: 0; padding-bottom: 0;">
     <div class="nav-bar-u">
-        {% if g.usuario.rol == 'admin' %}
-        <a href="{{ url_for('panel_admin') }}" class="nav-link-u {% if vista == 'admin' %}active{% endif %}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-            Dashboard
-        </a>
-        {% endif %}
-        <a href="{{ url_for('panel_agente') }}" class="nav-link-u {% if vista == 'agente' %}active{% endif %}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-            Panel de Tickets
-        </a>
-        <a href="{{ url_for('todos_tickets') }}" class="nav-link-u {% if vista == 'todos' %}active{% endif %}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            Todos los Tickets
-        </a>
-        <a href="{{ url_for('cambiar_password') }}" class="nav-link-u {% if vista == 'seguridad' %}active{% endif %}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-            Seguridad
-        </a>
-        {% if g.usuario.rol in ['admin', 'agente'] %}
-        <a href="{{ url_for('lista_equipos') }}" class="nav-link-u {% if vista == 'equipos' %}active{% endif %}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
-            Inventario de Equipos
-        </a>
-        {% endif %}
-        {% if g.usuario.rol in ['admin', 'agente'] %}
-        <a href="{{ url_for('licencias') }}" class="nav-link-u {% if vista == 'licencias' %}active{% endif %}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-            Gestión de Licencias
-        </a>
-        {% endif %}
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            {% if g.usuario.rol == 'admin' %}
+            <a href="{{ url_for('panel_admin') }}" class="nav-link-u {% if vista == 'admin' %}active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                Dashboard
+            </a>
+            {% endif %}
+            {% if g.usuario.rol in ['admin', 'agente'] or g.usuario.tiene_permiso('ver_panel_agente') %}
+            <a href="{{ url_for('panel_agente') }}" class="nav-link-u {% if vista == 'agente' %}active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                Panel de Tickets
+            </a>
+            {% endif %}
+            
+            {% if g.usuario.rol != 'admin' %}
+            <a href="{{ url_for('mis_tickets') }}" class="nav-link-u {% if vista == 'cliente' %}active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                Mis Tickets
+            </a>
+            {% endif %}
+            {% if g.usuario.rol in ['admin', 'agente'] or g.usuario.tiene_permiso('ver_tickets_area') %}
+            <a href="{{ url_for('todos_tickets') }}" class="nav-link-u {% if vista == 'todos' %}active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                {% if g.usuario.rol in ['admin', 'agente'] %}Todos los Tickets{% else %}Tickets (Área){% endif %}
+            </a>
+            {% endif %}
+            {% if g.usuario.rol == 'admin' or g.usuario.tiene_permiso('ver_seguridad') %}
+            <a href="{{ url_for('vista_seguridad') }}" class="nav-link-u {% if vista == 'seguridad' %}active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                Seguridad
+            </a>
+            {% endif %}
+    
+            {% if g.usuario.tiene_permiso('ver_inventario') %}
+            <a href="{{ url_for('lista_equipos') }}" class="nav-link-u {% if vista == 'equipos' %}active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                Inventario de Equipos
+            </a>
+            {% endif %}
+            {% if g.usuario.tiene_permiso('ver_licencias') %}
+            <a href="{{ url_for('licencias') }}" class="nav-link-u {% if vista == 'licencias' %}active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                Gestión de Licencias
+            </a>
+            {% endif %}
+        </div>
+        
+
     </div>
 </div>
 
@@ -240,5 +291,24 @@
                 allowInput: true
             });
         }
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Add fade animation to main containers
+        const containers = document.querySelectorAll('.container');
+        containers.forEach(c => c.classList.add('animate-fade-in-up'));
+        
+        // Add spinner on form submit
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function() {
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if(submitBtn) {
+                    submitBtn.classList.add('btn-loading');
+                }
+            });
+        });
     });
 </script>

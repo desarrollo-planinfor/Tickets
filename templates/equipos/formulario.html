@@ -2,43 +2,19 @@
 <html lang="es">
 
 <head>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='P.ico') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if equipo %}Editar Equipo{% else %}Nuevo Equipo{% endif %} - Planinfor</title>
+    <title>HUB Planinfor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Outfit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #111827;
-            /* Fondo ultra oscuro tipo tailwind slate-900 */
-            color: #f3f4f6;
-            margin: 0;
-            color-scheme: dark;
-        }
-
         .form-container {
             max-width: 900px;
             margin: 0 auto;
             padding: 20px;
         }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .page-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #ffffff;
-            margin: 0;
-        }
-
         .btn {
             display: inline-flex;
             align-items: center;
@@ -52,27 +28,22 @@
             transition: all 0.2s;
             border: none;
         }
-
         .btn-primary {
             background: #82C341;
             color: #ffffff;
         }
-
         .btn-primary:hover {
             background: #6da335;
         }
-
         .btn-secondary {
             background: #374151;
             color: #d1d5db;
             border: 1px solid #4b5563;
         }
-
         .btn-secondary:hover {
             background: #4b5563;
             color: #ffffff;
         }
-
         /* Formulario */
         .form-card {
             background: #1f2937;
@@ -81,29 +52,24 @@
             margin-bottom: 20px;
             border: 1px solid #374151;
         }
-
         .form-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 20px;
         }
-
         .form-group {
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
-
         .form-group.full-width {
             grid-column: span 2;
         }
-
         .form-label {
             font-size: 0.9rem;
             color: #9ca3af;
             font-weight: 500;
         }
-
         .form-control {
             background: #111827;
             border: 1px solid #374151;
@@ -116,26 +82,22 @@
             color-scheme: dark;
             /* Fuerza selectores de fecha nativos en modo oscuro */
         }
-
         .form-control:focus {
             outline: none;
             border-color: #82C341;
             box-shadow: 0 0 0 2px rgba(130, 195, 65, 0.2);
             z-index: 1;
         }
-
         .input-group {
             display: flex;
             align-items: stretch;
             width: 100%;
         }
-
         .input-group .form-control {
             border-top-right-radius: 0;
             border-bottom-right-radius: 0;
             position: relative;
         }
-
         .input-group .btn {
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
@@ -149,12 +111,10 @@
             color: #9ca3af;
             transition: all 0.2s;
         }
-
         .input-group .btn:hover {
             background: #374151;
             color: #ffffff;
         }
-
         /* Alertas */
         .alert {
             padding: 15px;
@@ -162,19 +122,16 @@
             margin-bottom: 20px;
             font-size: 0.9rem;
         }
-
         .alert-success {
             background: rgba(16, 185, 129, 0.1);
             border: 1px solid rgba(16, 185, 129, 0.2);
             color: #34d399;
         }
-
         .alert-error {
             background: rgba(239, 68, 68, 0.1);
             border: 1px solid rgba(239, 68, 68, 0.2);
             color: #f87171;
         }
-
         .form-actions {
             display: flex;
             justify-content: flex-end;
@@ -183,17 +140,16 @@
             padding-top: 20px;
             border-top: 1px solid #374151;
         }
-
         @media (max-width: 768px) {
             .form-grid {
                 grid-template-columns: 1fr;
             }
-
             .form-group.full-width {
                 grid-column: span 1;
             }
         }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>

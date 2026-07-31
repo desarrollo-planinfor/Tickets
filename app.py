@@ -145,6 +145,21 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def requiere_permiso(permiso):
+    """Decorator para verificar si el usuario tiene un permiso específico"""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not getattr(g, 'usuario', None):
+                flash('Debe iniciar sesión.', 'error')
+                return redirect(url_for('login'))
+            if not g.usuario.tiene_permiso(permiso):
+                flash('Acceso denegado. No tienes permisos para ver esta sección.', 'error')
+                return redirect(url_for('mis_tickets'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
 @app.before_request
 def load_user():
     """Cargar usuario en cada request"""
@@ -160,19 +175,49 @@ def load_user():
 
 # ==================== MODELOS DE BASE DE DATOS ====================
 
+class Area(db.Model):
+    """Modelo de Área"""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False, unique=True)
+
 class Usuario(db.Model):
     """Modelo de Usuario del sistema"""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False)  # Contraseña hasheada
     rol = db.Column(db.String(20), default='cliente')  # cliente, agente, admin
     activo = db.Column(db.Boolean, default=True)
+    
+    # Nuevos campos
+    area_id = db.Column(db.Integer, db.ForeignKey('area.id'), nullable=True)
+    area = db.relationship('Area', backref='usuarios', lazy=True)
+    permisos = db.Column(db.Text, default='[]')
+    
     tickets = db.relationship('Ticket', foreign_keys='Ticket.usuario_id', backref='usuario', lazy=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
 
+    def tiene_permiso(self, permiso):
+        if self.rol == 'admin':
+            return True
+        import json
+        try:
+            lista_permisos = json.loads(self.permisos) if self.permisos else []
+            return permiso in lista_permisos
+        except:
+            return False
+
 class Ticket(db.Model):
     """Modelo principal de Ticket"""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     id = db.Column(db.Integer, primary_key=True)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
     
@@ -235,11 +280,15 @@ class Ticket(db.Model):
             return datetime.now() - self.fecha_atencion_programada
         return None
 
+@app.route('/favicon.ico')
+def favicon():
+    return send_file('static/P.ico', mimetype='image/x-icon')
+
 @app.route('/tickets/todos')
 @login_required
 def todos_tickets():
-    """Ver todos los tickets con paginación (Agentes y Admin)"""
-    if g.usuario.rol == 'cliente':
+    """Ver todos los tickets con paginación (Agentes, Admin, o permisos de área)"""
+    if g.usuario.rol == 'cliente' and not g.usuario.tiene_permiso('ver_tickets_area'):
         flash('Acceso denegado.', 'error')
         return redirect(url_for('mis_tickets'))
         
@@ -247,6 +296,13 @@ def todos_tickets():
     search_query = request.args.get('q', '').strip()
     
     query = Ticket.query.join(Usuario, Ticket.usuario_id == Usuario.id)
+    
+    # Filtro de área si no es admin ni agente (es un usuario con permiso de área)
+    if g.usuario.rol not in ['admin', 'agente']:
+        if g.usuario.area_id:
+            query = query.filter(Usuario.area_id == g.usuario.area_id)
+        else:
+            query = query.filter(Usuario.id == -1) # No tiene área, no ve tickets de otros
     
     if search_query:
         query = query.filter(Usuario.nombre.ilike(f'%{search_query}%'))
@@ -257,6 +313,9 @@ def todos_tickets():
 
 class TicketLog(db.Model):
     """Modelo para auditoría de cambios de estado"""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     id = db.Column(db.Integer, primary_key=True)
     ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id'), nullable=False)
     estado_anterior = db.Column(db.String(20), nullable=True)
@@ -266,8 +325,27 @@ class TicketLog(db.Model):
     fecha_cambio = db.Column(db.DateTime, default=datetime.now)
     usuario = db.relationship('Usuario')
 
+
+class TicketAdjunto(db.Model):
+    """Archivos adjuntos para tickets"""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    id = db.Column(db.Integer, primary_key=True)
+    ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id'), nullable=False)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    nombre_archivo = db.Column(db.String(255), nullable=False)
+    ruta_archivo = db.Column(db.String(255), nullable=False)
+    fecha_subida = db.Column(db.DateTime, default=datetime.now)
+    
+    usuario = db.relationship('Usuario')
+    ticket = db.relationship('Ticket', backref=db.backref('adjuntos', lazy=True))
+
 class Notificacion(db.Model):
     """Modelo de notificaciones del sistema"""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     id = db.Column(db.Integer, primary_key=True)
     ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id'), nullable=True)
     destinatario = db.Column(db.String(120), nullable=False)
@@ -280,6 +358,9 @@ class Notificacion(db.Model):
 
 class EquipoMantencion(db.Model):
     """Modelo de Equipos y Mantenciones (Inventario)"""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     id = db.Column(db.Integer, primary_key=True)
     codigo = db.Column(db.String(50), nullable=True) # ID original del Excel
     nombre = db.Column(db.String(200), nullable=True)
@@ -297,6 +378,7 @@ class EquipoMantencion(db.Model):
     estado = db.Column(db.String(100), nullable=True)
     ficha = db.Column(db.String(255), nullable=True)
     historial = db.relationship('HistorialMantencion', backref='equipo', lazy='dynamic', cascade='all, delete-orphan')
+    historial_responsables = db.relationship('HistorialResponsable', backref='equipo', lazy='dynamic', cascade='all, delete-orphan')
 
     @property
     def estado_alerta(self):
@@ -319,6 +401,9 @@ class EquipoMantencion(db.Model):
 
 class HistorialMantencion(db.Model):
     """Registro histórico de mantenciones realizadas a un equipo"""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     id = db.Column(db.Integer, primary_key=True)
     equipo_id = db.Column(db.Integer, db.ForeignKey('equipo_mantencion.id'), nullable=False)
     fecha_realizada = db.Column(db.DateTime, default=datetime.now)
@@ -327,8 +412,22 @@ class HistorialMantencion(db.Model):
     tipo = db.Column(db.String(100), nullable=True)  # Preventiva, Correctiva, etc.
     registrado_por = db.Column(db.String(150), nullable=True)
 
+class HistorialResponsable(db.Model):
+    """Registro histórico de responsables de un equipo"""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    id = db.Column(db.Integer, primary_key=True)
+    equipo_id = db.Column(db.Integer, db.ForeignKey('equipo_mantencion.id'), nullable=False)
+    responsable = db.Column(db.String(150), nullable=False)
+    fecha_inicio = db.Column(db.DateTime, default=datetime.now, nullable=False)
+    fecha_fin = db.Column(db.DateTime, nullable=True)
+
 class Licencia(db.Model):
     """Modelo para Gestión de Licencias (SSL, Software, SaaS)"""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     id = db.Column(db.Integer, primary_key=True)
     nombre_servicio = db.Column(db.String(200), nullable=False)
     tipo = db.Column(db.String(50), nullable=False) # 'SSL', 'Software', 'SaaS'
@@ -779,7 +878,63 @@ def cerrar_ticket(ticket_id):
         flash(f'Error: {str(e)}', 'error')
         return redirect(url_for('panel_agente'))
 
-@app.route('/portal/ticket/<int:ticket_id>')
+import uuid
+from werkzeug.utils import secure_filename
+
+@app.route('/ticket/<int:ticket_id>/adjuntar', methods=['POST'])
+@login_required
+def adjuntar_archivo(ticket_id):
+    ticket = db.session.get(Ticket, ticket_id)
+    if not ticket:
+        flash('Ticket no encontrado', 'error')
+        return redirect(url_for('mis_tickets'))
+        
+    if g.usuario.rol == 'cliente' and ticket.usuario_id != g.usuario.id:
+        flash('No tienes autorización', 'error')
+        return redirect(url_for('mis_tickets'))
+        
+    if 'archivo' not in request.files:
+        flash('No se seleccionó ningún archivo', 'error')
+        return redirect(url_for('ver_ticket', ticket_id=ticket.id))
+        
+    archivo = request.files['archivo']
+    if archivo.filename == '':
+        flash('No se seleccionó ningún archivo', 'error')
+        return redirect(url_for('ver_ticket', ticket_id=ticket.id))
+        
+    if archivo:
+        filename = secure_filename(archivo.filename)
+        # Generate unique name
+        unique_filename = f"{uuid.uuid4().hex}_{filename}"
+        upload_folder = os.path.join(app.root_path, 'static', 'uploads', 'adjuntos')
+        os.makedirs(upload_folder, exist_ok=True)
+        
+        file_path = os.path.join(upload_folder, unique_filename)
+        archivo.save(file_path)
+        
+        adjunto = TicketAdjunto(
+            ticket_id=ticket.id,
+            usuario_id=g.usuario.id,
+            nombre_archivo=filename,
+            ruta_archivo=f"uploads/adjuntos/{unique_filename}"
+        )
+        db.session.add(adjunto)
+        
+        # Agregar log
+        log = TicketLog(
+            ticket_id=ticket.id,
+            estado_anterior=ticket.estado,
+            estado_nuevo=ticket.estado,
+            descripcion=f"Archivo adjuntado: {filename}",
+            usuario_id=g.usuario.id
+        )
+        db.session.add(log)
+        
+        db.session.commit()
+        flash('Archivo adjuntado exitosamente', 'success')
+        
+    return redirect(url_for('ver_ticket', ticket_id=ticket.id))
+
 @app.route('/ticket/<int:ticket_id>')
 @login_required
 def ver_ticket(ticket_id):
@@ -996,13 +1151,26 @@ def panel_admin():
         'agentes': Usuario.query.filter_by(rol='agente').count()
     }
     
-    # Lista de usuarios
-    usuarios = Usuario.query.order_by(Usuario.created_at.desc()).all()
-    
-    # Últimos tickets
     ultimos_tickets = Ticket.query.order_by(Ticket.fecha_creacion.desc()).limit(10).all()
     
-    return render_template('panel_admin.html', stats=stats, usuarios=usuarios, ultimos_tickets=ultimos_tickets)
+    # Datos para Graficos
+    from sqlalchemy import func
+    tecnicos_stats = db.session.query(
+        Usuario.nombre, func.count(Ticket.id)
+    ).join(Ticket, Ticket.tecnico_id == Usuario.id).group_by(Usuario.nombre).all()
+    chart_tecnicos = {'labels': [t[0] for t in tecnicos_stats], 'data': [t[1] for t in tecnicos_stats]}
+    
+    return render_template('panel_admin.html', stats=stats, ultimos_tickets=ultimos_tickets, chart_tecnicos=chart_tecnicos)
+
+@app.route('/seguridad')
+@login_required
+def vista_seguridad():
+    if g.usuario.rol != 'admin' and not g.usuario.tiene_permiso('ver_dashboard'):
+        flash('Acceso denegado. Solo administradores o usuarios autorizados.', 'error')
+        return redirect(url_for('panel_agente'))
+    usuarios = Usuario.query.all()
+    areas = Area.query.all()
+    return render_template('seguridad.html', usuarios=usuarios, areas=areas)
 
 @app.route('/admin/usuario/nuevo', methods=['POST'])
 @login_required
@@ -1010,7 +1178,7 @@ def crear_usuario():
     """Crear nuevo usuario (admin)"""
     if g.usuario.rol != 'admin':
         flash('Acceso denegado', 'error')
-        return redirect(url_for('panel_admin'))
+        return redirect(url_for('vista_seguridad'))
     
     nombre = request.form.get('nombre')
     email = request.form.get('email')
@@ -1020,30 +1188,46 @@ def crear_usuario():
     
     if password != confirm_password:
         flash('Las contraseñas no coinciden', 'error')
-        return redirect(url_for('panel_admin'))
+        return redirect(url_for('vista_seguridad'))
         
     if Usuario.query.filter_by(email=email).first():
         flash('El correo ya está registrado', 'error')
-        return redirect(url_for('panel_admin'))
+        return redirect(url_for('vista_seguridad'))
+    
+    import json
+    
+    area_id = request.form.get('area_id')
+    nueva_area = request.form.get('nueva_area')
+    if nueva_area:
+        area_obj = Area(nombre=nueva_area)
+        db.session.add(area_obj)
+        db.session.flush()
+        area_id = area_obj.id
+    else:
+        area_id = int(area_id) if area_id else None
+        
+    permisos = request.form.getlist('permisos')
     
     usuario = Usuario(
         nombre=nombre,
         email=email,
         password=generate_password_hash(password),
-        rol=rol
+        rol=rol,
+        area_id=area_id,
+        permisos=json.dumps(permisos)
     )
     db.session.add(usuario)
     db.session.commit()
     
     flash(f'Usuario {nombre} creado exitosamente', 'success')
-    return redirect(url_for('panel_admin'))
+    return redirect(url_for('vista_seguridad'))
 
 @app.route('/admin/usuario/toggle/<int:usuario_id>')
 @login_required
 def eliminar_usuario(usuario_id):
     """Desactivar/Activar usuario en lugar de eliminar para preservar historial"""
-    if g.usuario.rol != 'admin':
-        flash('Acceso denegado. Solo administradores.', 'error')
+    if g.usuario.rol != 'admin' and not g.usuario.tiene_permiso('ver_seguridad'):
+        flash('Acceso denegado. Solo administradores o usuarios autorizados.', 'error')
         return redirect(url_for('panel_admin'))
     
     usuario = db.session.get(Usuario, usuario_id)
@@ -1068,7 +1252,7 @@ def editar_usuario(usuario_id):
     """Editar usuario (admin)"""
     if g.usuario.rol != 'admin':
         flash('Acceso denegado', 'error')
-        return redirect(url_for('panel_admin'))
+        return redirect(url_for('vista_seguridad'))
     
     usuario = db.session.get(Usuario, usuario_id)
     if usuario:
@@ -1078,14 +1262,21 @@ def editar_usuario(usuario_id):
         if nuevo_password:
             if nuevo_password != confirm_password:
                 flash('Las contraseñas no coinciden', 'error')
-                return redirect(url_for('panel_admin'))
+                return redirect(url_for('vista_seguridad'))
             usuario.password = generate_password_hash(nuevo_password)
-        if g.usuario.id != usuario.id:  # No cambiar rol de uno mismo
+        if g.usuario.id != usuario.id:  # No cambiar rol, area ni permisos de uno mismo
             usuario.rol = request.form.get('rol')
+            area_id = request.form.get('area_id')
+            usuario.area_id = int(area_id) if area_id else None
+            
+            import json
+            permisos = request.form.getlist('permisos')
+            usuario.permisos = json.dumps(permisos)
+            
         db.session.commit()
         flash('Usuario actualizado', 'success')
     
-    return redirect(url_for('panel_admin'))
+    return redirect(url_for('vista_seguridad'))
 
 # ==================== API PARA CRON JOBS ====================
 
@@ -1458,7 +1649,7 @@ def cron_enviar_correos_pendientes():
             notificaciones = Notificacion.query.filter_by(estado='pendiente', tipo='email').all()
             
             if not notificaciones:
-                return jsonify({'status': 'success', 'enviados': 0})
+                return
                 
             enviados = 0
             try:
@@ -1470,7 +1661,7 @@ def cron_enviar_correos_pendientes():
                         notif.fecha_envio = datetime.now()
                         enviados += 1
                     db.session.commit()
-                    return jsonify({'status': 'simulated', 'enviados': enviados})
+                    return
 
                 # Iniciar conexión SMTP real
                 server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
@@ -1500,14 +1691,15 @@ def cron_enviar_correos_pendientes():
                 
                 server.quit()
                 db.session.commit()
-                return jsonify({'status': 'success', 'enviados': enviados})
+                print(f"✅ Se enviaron {enviados} correos exitosamente.")
+                return
+                
                 
             except Exception as e:
                 print(f"❌ Error enviando correo: {str(e)}")
-                return jsonify({'status': 'error_smtp', 'message': str(e)})
                 
     except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)})
+        print(f"❌ Error general en cron de correos: {str(e)}")
 
 # ==================== API ====================
 
@@ -1653,6 +1845,24 @@ def crear_datos_iniciales():
     with app.app_context():
         try:
             db.create_all()
+            from sqlalchemy import text
+            try:
+                db.session.execute(text("ALTER TABLE usuario ADD COLUMN area_id INTEGER"))
+                db.session.execute(text("ALTER TABLE usuario ADD CONSTRAINT fk_usuario_area FOREIGN KEY(area_id) REFERENCES area(id)"))
+                db.session.execute(text("ALTER TABLE usuario ADD COLUMN permisos TEXT DEFAULT '[]'"))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                
+            # Poblar áreas iniciales
+            areas_iniciales = [
+                "Trazado de Caminos", "Planificacion Silvicola", "Programacion de Cosecha",
+                "Planificacion de Cosecha", "Topografia LIDAR"
+            ]
+            for nombre_area in areas_iniciales:
+                if not Area.query.filter_by(nombre=nombre_area).first():
+                    db.session.add(Area(nombre=nombre_area))
+            db.session.commit()
         except Exception as e:
             print(f"⚠️ Error al crear tablas (posible problema de conexión): {e}")
             return
@@ -1880,12 +2090,9 @@ def iniciar_scheduler():
 
 @app.route('/equipos')
 @login_required
+@requiere_permiso('ver_inventario')
 def lista_equipos():
     """Listado de equipos y mantenciones (Admin y Agentes)"""
-    if g.usuario.rol not in ['admin', 'agente']:
-        flash('Acceso denegado. Solo administradores y agentes pueden ver esta sección.', 'error')
-        return redirect(url_for('index'))
-        
     page = request.args.get('page', 1, type=int)
     search_query = request.args.get('q', '').strip()
     area_filter = request.args.get('area', '').strip()
@@ -1955,11 +2162,8 @@ def lista_equipos():
 
 @app.route('/equipos/nuevo', methods=['GET', 'POST'])
 @login_required
+@requiere_permiso('ver_inventario')
 def nuevo_equipo():
-    if g.usuario.rol not in ['admin', 'agente']:
-        flash('Acceso denegado.', 'error')
-        return redirect(url_for('index'))
-        
     if request.method == 'POST':
         nombre = request.form.get('nombre')
         if nombre == '__otra__':
@@ -1990,6 +2194,18 @@ def nuevo_equipo():
             ficha=request.form.get('ficha')
         )
         db.session.add(equipo)
+        db.session.flush()
+        
+        responsable = request.form.get('responsable')
+        if responsable and responsable.strip():
+            hist_resp = HistorialResponsable(
+                equipo_id=equipo.id,
+                responsable=responsable.strip(),
+                fecha_inicio=datetime.now(),
+                fecha_fin=None
+            )
+            db.session.add(hist_resp)
+
         db.session.commit()
         flash('Equipo registrado exitosamente.', 'success')
         return redirect(url_for('lista_equipos'))
@@ -2002,11 +2218,8 @@ def nuevo_equipo():
 
 @app.route('/equipos/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
+@requiere_permiso('ver_inventario')
 def editar_equipo(id):
-    if g.usuario.rol not in ['admin', 'agente']:
-        flash('Acceso denegado.', 'error')
-        return redirect(url_for('index'))
-        
     equipo = db.session.get(EquipoMantencion, id)
     if not equipo:
         flash('Equipo no encontrado.', 'error')
@@ -2025,13 +2238,28 @@ def editar_equipo(id):
         if requerimiento == '__otra__':
             requerimiento = request.form.get('nuevo_requerimiento')
             
+        old_resp = (equipo.responsable or '').strip()
+        new_resp = (request.form.get('responsable') or '').strip()
+        if old_resp != new_resp:
+            active_hist = HistorialResponsable.query.filter_by(equipo_id=equipo.id, fecha_fin=None).first()
+            if active_hist:
+                active_hist.fecha_fin = datetime.now()
+            if new_resp:
+                new_hist = HistorialResponsable(
+                    equipo_id=equipo.id,
+                    responsable=new_resp,
+                    fecha_inicio=datetime.now(),
+                    fecha_fin=None
+                )
+                db.session.add(new_hist)
+
         equipo.codigo = request.form.get('codigo')
         equipo.nombre = nombre
         equipo.marca = marca
         equipo.modelo = request.form.get('modelo')
         equipo.serie = request.form.get('serie')
         equipo.area = request.form.get('area')
-        equipo.responsable = request.form.get('responsable')
+        equipo.responsable = new_resp
         equipo.ultima_mantencion = request.form.get('ultima_mantencion')
         equipo.frecuencia_mantencion = request.form.get('frecuencia_mantencion')
         equipo.proxima_mantencion = request.form.get('proxima_mantencion')
@@ -2052,11 +2280,8 @@ def editar_equipo(id):
 
 @app.route('/equipos/inactivar/<int:id>', methods=['POST'])
 @login_required
+@requiere_permiso('ver_inventario')
 def inactivar_equipo(id):
-    if g.usuario.rol not in ['admin', 'agente']:
-        flash('Acceso denegado.', 'error')
-        return redirect(url_for('index'))
-        
     equipo = db.session.get(EquipoMantencion, id)
     if equipo:
         equipo.estado = 'Inactivo'
@@ -2066,11 +2291,8 @@ def inactivar_equipo(id):
 
 @app.route('/equipos/activar/<int:id>', methods=['POST'])
 @login_required
+@requiere_permiso('ver_inventario')
 def activar_equipo(id):
-    if g.usuario.rol not in ['admin', 'agente']:
-        flash('Acceso denegado.', 'error')
-        return redirect(url_for('index'))
-        
     equipo = db.session.get(EquipoMantencion, id)
     if equipo:
         equipo.estado = 'Operativo'
@@ -2080,11 +2302,8 @@ def activar_equipo(id):
 
 @app.route('/equipos/<int:id>/pdf')
 @login_required
+@requiere_permiso('ver_inventario')
 def descargar_ficha_pdf(id):
-    if g.usuario.rol not in ['admin', 'agente']:
-        flash('Acceso denegado.', 'error')
-        return redirect(url_for('index'))
-        
     equipo = db.session.get(EquipoMantencion, id)
     if not equipo:
         flash('Equipo no encontrado.', 'error')
@@ -2113,10 +2332,6 @@ def descargar_ficha_pdf(id):
 @app.route('/mantencion/<int:id>/pdf')
 @login_required
 def descargar_pdf_mantencion(id):
-    if g.usuario.rol not in ['admin', 'agente']:
-        flash('Acceso denegado.', 'error')
-        return redirect(url_for('index'))
-        
     mantencion = db.session.get(HistorialMantencion, id)
     if not mantencion:
         flash('Mantención no encontrada.', 'error')
@@ -2145,11 +2360,8 @@ def descargar_pdf_mantencion(id):
 
 @app.route('/equipos/descargar-masivo', methods=['POST'])
 @login_required
+@requiere_permiso('ver_inventario')
 def descargar_fichas_masivo():
-    if g.usuario.rol not in ['admin', 'agente']:
-        flash('Acceso denegado.', 'error')
-        return redirect(url_for('index'))
-        
     equipo_ids = request.form.getlist('equipo_ids')
     if not equipo_ids:
         flash('No se seleccionó ningún equipo para descargar.', 'warning')
@@ -2188,11 +2400,9 @@ def descargar_fichas_masivo():
 
 @app.route('/equipos/<int:id>/historial', methods=['GET', 'POST'])
 @login_required
+@requiere_permiso('ver_inventario')
 def historial_equipo(id):
     """Ver historial de mantenciones de un equipo y registrar nuevas"""
-    if g.usuario.rol not in ['admin', 'agente']:
-        flash('Acceso denegado.', 'error')
-        return redirect(url_for('index'))
     
     equipo = db.session.get(EquipoMantencion, id)
     if not equipo:
@@ -2234,6 +2444,23 @@ def historial_equipo(id):
                 fecha_realizada = datetime.strptime(fecha_str, '%d/%m/%Y')
             except ValueError:
                 pass
+                
+        # Capturar actividades adicionales
+        actividades = []
+        for key in request.form.keys():
+            if key.startswith('actividad_tipo_'):
+                idx = key.split('_')[-1]
+                tipo_act = request.form.get(key, '').strip()
+                valor_act = request.form.get(f'actividad_valor_{idx}', '').strip()
+                if tipo_act and valor_act:
+                    actividades.append(f"- {tipo_act}: {valor_act}")
+        
+        if actividades:
+            texto_actividades = "\n".join(actividades)
+            if observaciones:
+                observaciones = observaciones + "\n\nActividades adicionales:\n" + texto_actividades
+            else:
+                observaciones = "Actividades adicionales:\n" + texto_actividades
         
         registro = HistorialMantencion(
             equipo_id=equipo.id,
@@ -2273,8 +2500,9 @@ def historial_equipo(id):
         return redirect(url_for('historial_equipo', id=equipo.id))
     
     historial = HistorialMantencion.query.filter_by(equipo_id=equipo.id).order_by(HistorialMantencion.fecha_realizada.desc()).all()
-    
-    return render_template('equipos/historial.html', equipo=equipo, historial=historial)
+    historial_responsables = HistorialResponsable.query.filter_by(equipo_id=equipo.id).order_by(HistorialResponsable.fecha_inicio.desc()).all()
+
+    return render_template('equipos/historial.html', equipo=equipo, historial=historial, responsables=historial_responsables)
 
 def cron_alertas_mantenciones():
     """Cron: Enviar alerta solo cuando equipos están a 30, 15 o 1 días de mantención"""
@@ -2392,10 +2620,8 @@ def cron_alertas_licencias():
 
 @app.route('/licencias')
 @login_required
+@requiere_permiso('ver_licencias')
 def licencias():
-    if g.usuario.rol not in ['admin', 'agente']:
-        flash('Acceso denegado.', 'error')
-        return redirect(url_for('index'))
     
     import datetime as _dt
     hoy = _dt.date.today()
@@ -2459,6 +2685,7 @@ def licencias():
 
 @app.route('/licencias/nueva', methods=['POST'])
 @login_required
+@requiere_permiso('ver_licencias')
 def nueva_licencia():
     if g.usuario.rol not in ['admin', 'agente']:
         return jsonify({'success': False, 'message': 'Acceso denegado'})
@@ -2497,6 +2724,7 @@ def nueva_licencia():
 
 @app.route('/licencias/editar/<int:id>', methods=['POST'])
 @login_required
+@requiere_permiso('ver_licencias')
 def editar_licencia(id):
     if g.usuario.rol not in ['admin', 'agente']:
         return jsonify({'success': False, 'message': 'Acceso denegado'})
@@ -2538,6 +2766,7 @@ def editar_licencia(id):
 
 @app.route('/licencias/eliminar/<int:id>', methods=['POST'])
 @login_required
+@requiere_permiso('ver_licencias')
 def eliminar_licencia(id):
     if g.usuario.rol not in ['admin', 'agente']:
         return jsonify({'success': False, 'message': 'Acceso denegado'})
@@ -2548,6 +2777,93 @@ def eliminar_licencia(id):
         flash('Licencia eliminada.', 'success')
     return redirect(url_for('licencias'))
 
+from io import BytesIO
+from flask import send_file
+from openpyxl.styles import Font, PatternFill
+
+@app.route('/exportar/tickets')
+@login_required
+def exportar_tickets():
+    if g.usuario.rol == 'cliente' and not g.usuario.tiene_permiso('ver_tickets_area'):
+        flash('Acceso denegado', 'error')
+        return redirect(url_for('mis_tickets'))
+        
+    query = Ticket.query.join(Usuario, Ticket.usuario_id == Usuario.id)
+    if g.usuario.rol not in ['admin', 'agente']:
+        if g.usuario.area_id:
+            query = query.filter(Usuario.area_id == g.usuario.area_id)
+        else:
+            query = query.filter(Usuario.id == -1)
+            
+    tickets = query.order_by(Ticket.fecha_creacion.desc()).all()
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Tickets"
+    
+    headers = ['ID', 'Asunto', 'Usuario', 'Estado', 'Prioridad', 'Fecha Creación', 'Técnico Asignado']
+    ws.append(headers)
+    
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="111827", end_color="111827", fill_type="solid")
+    for cell in ws[1]:
+        cell.font = header_font
+        cell.fill = header_fill
+        
+    for t in tickets:
+        tecnico_nombre = t.tecnico.nombre if t.tecnico else 'Sin asignar'
+        ws.append([
+            t.id, 
+            t.asunto, 
+            t.usuario.nombre if t.usuario else 'Desconocido', 
+            t.estado, 
+            t.prioridad, 
+            t.fecha_creacion.strftime('%d/%m/%Y %H:%M') if t.fecha_creacion else '',
+            tecnico_nombre
+        ])
+        
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    return send_file(output, download_name="tickets_reporte.xlsx", as_attachment=True)
+
+@app.route('/exportar/inventario')
+@login_required
+@requiere_permiso('ver_inventario')
+def exportar_inventario():
+    equipos = EquipoMantencion.query.order_by(EquipoMantencion.id.desc()).all()
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Inventario"
+    
+    headers = ['ID', 'Tipo', 'Marca', 'Modelo', 'N/S', 'Estado', 'Asignado A']
+    ws.append(headers)
+    
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="111827", end_color="111827", fill_type="solid")
+    for cell in ws[1]:
+        cell.font = header_font
+        cell.fill = header_fill
+        
+    for eq in equipos:
+        ws.append([
+            eq.id,
+            eq.tipo_equipo,
+            eq.marca,
+            eq.modelo,
+            eq.numero_serie,
+            eq.estado,
+            eq.usuario_asignado.nombre if eq.usuario_asignado else 'Sin Asignar'
+        ])
+        
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    return send_file(output, download_name="inventario_reporte.xlsx", as_attachment=True)
+
 if __name__ == '__main__':
     asegurar_base_de_datos()
     crear_datos_iniciales()
@@ -2557,9 +2873,10 @@ if __name__ == '__main__':
         print("Iniciando Sistema de Tickets...")
         
         # Usamos el puerto 5500 que está libre
-        serve(app, host='127.0.0.1', port=5500)
+        app.run(host='127.0.0.1', port=5500, debug=True, use_reloader=False)
         
     finally:
         if scheduler:
             print("Apagando el scheduler...")
             scheduler.shutdown()
+

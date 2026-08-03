@@ -2,41 +2,14 @@
 <html lang="es">
 
 <head>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='P.ico') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalle del Ticket #{{ ticket.id }} - Planinfor</title>
+    <title>HUB Planinfor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #82C341;
-            --bg-dark: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f8fafc;
-            --text-dim: #94a3b8;
-            --border: rgba(148, 163, 184, 0.1);
-            --pending: #fbbf24;
-            --received: #60a5fa;
-            --process: #82C341;
-            --closed: #94a3b8;
-            --delayed: #f87171;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-
         .navbar {
             background: rgba(15, 23, 42, 0.8);
             backdrop-filter: blur(12px);
@@ -49,7 +22,6 @@
             justify-content: space-between;
             align-items: center;
         }
-
         .nav-brand {
             display: flex;
             align-items: center;
@@ -59,17 +31,9 @@
             color: #fff;
             text-decoration: none;
         }
-
         .nav-brand span {
             color: var(--primary);
         }
-
-        .container {
-            max-width: 1000px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-        }
-
         .back-link {
             display: inline-flex;
             align-items: center;
@@ -80,24 +44,20 @@
             margin-bottom: 1.5rem;
             transition: color 0.2s;
         }
-
         .back-link:hover {
             color: var(--primary);
         }
-
         .ticket-grid {
             display: grid;
             grid-template-columns: 1.5fr 1fr;
             gap: 2rem;
         }
-
         .main-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: 16px;
             padding: 2rem;
         }
-
         .ticket-header {
             display: flex;
             justify-content: space-between;
@@ -106,13 +66,11 @@
             padding-bottom: 1.5rem;
             border-bottom: 1px solid var(--border);
         }
-
         .ticket-title h1 {
             font-size: 1.75rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
         }
-
         .status-badge {
             padding: 6px 16px;
             border-radius: 100px;
@@ -121,37 +79,31 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-
         .badge-PENDIENTE {
             background: rgba(251, 191, 36, 0.1);
             color: var(--pending);
             border: 1px solid rgba(251, 191, 36, 0.2);
         }
-
         .badge-RECIBIDO {
             background: rgba(96, 165, 250, 0.1);
             color: var(--received);
             border: 1px solid rgba(96, 165, 250, 0.2);
         }
-
         .badge-EN_PROCESO {
             background: rgba(130, 195, 65, 0.1);
             color: var(--process);
             border: 1px solid rgba(130, 195, 65, 0.2);
         }
-
         .badge-CERRADO {
             background: rgba(148, 163, 184, 0.1);
             color: var(--closed);
             border: 1px solid rgba(148, 163, 184, 0.2);
         }
-
         .badge-ATRASADO {
             background: rgba(248, 113, 113, 0.1);
             color: var(--delayed);
             border: 1px solid rgba(248, 113, 113, 0.2);
         }
-
         .priority-indicator {
             display: inline-flex;
             align-items: center;
@@ -162,49 +114,39 @@
             border-radius: 6px;
             margin-top: 8px;
         }
-
         .priority-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
         }
-
         .prio-Baja {
             background: rgba(148, 163, 184, 0.1);
             color: var(--text-dim);
         }
-
         .prio-Baja .priority-dot {
             background: var(--text-dim);
         }
-
         .prio-Media {
             background: rgba(59, 130, 246, 0.1);
             color: var(--received);
         }
-
         .prio-Media .priority-dot {
             background: var(--received);
         }
-
         .prio-Alta {
             background: rgba(245, 158, 11, 0.1);
             color: var(--pending);
         }
-
         .prio-Alta .priority-dot {
             background: var(--pending);
         }
-
         .prio-Urgente {
             background: rgba(239, 68, 68, 0.1);
             color: var(--delayed);
         }
-
         .prio-Urgente .priority-dot {
             background: var(--delayed);
         }
-
         .sla-box {
             background: rgba(130, 195, 65, 0.05);
             border: 1px solid rgba(130, 195, 65, 0.2);
@@ -215,13 +157,11 @@
             align-items: center;
             justify-content: space-between;
         }
-
         .sla-time {
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--primary);
         }
-
         .description-box {
             background: rgba(15, 23, 42, 0.3);
             border-radius: 12px;
@@ -230,13 +170,11 @@
             white-space: pre-wrap;
             color: #e2e8f0;
         }
-
         .meta-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 1.5rem;
         }
-
         .meta-item label {
             display: block;
             font-size: 0.8rem;
@@ -245,14 +183,12 @@
             letter-spacing: 1px;
             margin-bottom: 4px;
         }
-
         .meta-item p {
             font-weight: 500;
             display: flex;
             align-items: center;
             gap: 8px;
         }
-
         /* --- Timeline Styling --- */
         .timeline-card {
             background: var(--card-bg);
@@ -260,18 +196,15 @@
             border-radius: 16px;
             padding: 2rem;
         }
-
         .timeline-card h2 {
             font-size: 1.2rem;
             font-weight: 600;
             margin-bottom: 1.5rem;
         }
-
         .timeline {
             position: relative;
             padding-left: 30px;
         }
-
         .timeline::before {
             content: '';
             position: absolute;
@@ -281,16 +214,13 @@
             width: 2px;
             background: var(--border);
         }
-
         .timeline-item {
             position: relative;
             margin-bottom: 1.5rem;
         }
-
         .timeline-item:last-child {
             margin-bottom: 0;
         }
-
         .timeline-dot {
             position: absolute;
             left: -30px;
@@ -301,32 +231,27 @@
             border: 2px solid var(--border);
             z-index: 1;
         }
-
         .timeline-item.active .timeline-dot {
             border-color: var(--primary);
             background: var(--primary);
             box-shadow: 0 0 0 4px rgba(130, 195, 65, 0.2);
         }
-
         .timeline-content {
             background: rgba(255, 255, 255, 0.02);
             padding: 12px 16px;
             border-radius: 10px;
             border: 1px solid var(--border);
         }
-
         .timeline-date {
             font-size: 0.75rem;
             color: var(--text-dim);
             display: block;
             margin-bottom: 4px;
         }
-
         .timeline-msg {
             font-size: 0.9rem;
             font-weight: 500;
         }
-
         @media (max-width: 768px) {
             .navbar {
                 padding: 1rem;
@@ -334,42 +259,30 @@
                 gap: 1rem;
                 text-align: center;
             }
-
             .navbar div {
                 flex-direction: column;
                 gap: 5px !important;
             }
-
-            .container {
-                padding: 0 1rem;
-                margin: 1.5rem auto;
-            }
-
             .ticket-grid {
                 grid-template-columns: 1fr;
                 gap: 1.5rem;
             }
-
             .main-card,
             .timeline-card {
                 padding: 1.5rem;
             }
-
             .ticket-header {
                 flex-direction: column;
                 gap: 1rem;
                 align-items: flex-start;
             }
-
             .ticket-title h1 {
                 font-size: 1.4rem;
             }
-
             .meta-grid {
                 grid-template-columns: 1fr;
                 gap: 1rem;
             }
-
             .sla-box {
                 flex-direction: column;
                 text-align: center;
@@ -377,6 +290,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
@@ -438,6 +352,21 @@
                 <div class="description-box">
                     {{ ticket.descripcion }}
                 </div>
+                {% if ticket.adjuntos %}
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #374151;">
+                    <h3 style="font-size: 1rem; color: #9ca3af; margin-bottom: 10px;">Archivos Adjuntos</h3>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        {% for adjunto in ticket.adjuntos %}
+                        <a href="{{ url_for('static', filename=adjunto.ruta_archivo) }}" target="_blank" class="btn btn-outline" style="display: inline-flex; justify-content: flex-start; align-items: center; gap: 8px; padding: 10px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                            {{ adjunto.nombre_archivo }}
+                            <span style="margin-left: auto; font-size: 0.75rem; color: #6b7280;">{{ adjunto.fecha_subida.strftime('%d/%m/%Y') }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
 
                 <div class="meta-grid">
                     <div class="meta-item">
@@ -505,6 +434,18 @@
                 </div>
                 {% endif %}
             </div>
+
+            
+                <div class="card" style="margin-bottom: 20px;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: #ffffff;">Adjuntar Archivo</h3>
+                    <form action="{{ url_for('adjuntar_archivo', ticket_id=ticket.id) }}" method="POST" enctype="multipart/form-data" style="display: flex; gap: 10px; align-items: center;">
+                        <input type="file" name="archivo" required style="flex: 1; padding: 10px; background: #374151; border: 1px dashed #4b5563; border-radius: 8px; color: #fff; cursor: pointer;">
+                        <button type="submit" class="btn btn-primary" style="white-space: nowrap;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            Subir
+                        </button>
+                    </form>
+                </div>
 
             <div class="timeline-card">
                 <h2>Historial y Seguimiento</h2>

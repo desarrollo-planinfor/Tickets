@@ -2,9 +2,10 @@
 <html lang="es">
 
 <head>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='P.ico') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión - Sistema de Tickets Planinfor</title>
+    <title>HUB Planinfor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -238,7 +239,13 @@
                 right: 15px;
             }
         }
-    </style>
+    
+        /* Ocultar el icono de ojo nativo de Edge/IE */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none;
+        }
+</style>
 </head>
 
 <body>
@@ -255,9 +262,12 @@
                         <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
                         <line x1="12" y1="22.08" x2="12" y2="12"></line>
                     </svg>
-                    <div>Plan<span class="highlight">infor</span></div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span style="background: rgba(130, 195, 65, 0.15); border: 1px solid #82C341; color: #82C341; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; line-height: 1;">HUB</span>
+                        <div>Plan<span class="highlight">infor</span></div>
+                    </div>
                 </h1>
-                <p>Sistema de Tickets de Soporte</p>
+                <p>Sistema Cerrado de Planinfor LTDA</p>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}

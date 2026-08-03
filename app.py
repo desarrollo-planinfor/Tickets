@@ -176,12 +176,14 @@ def load_user():
 # ==================== MODELOS DE BASE DE DATOS ====================
 
 class Area(db.Model):
-    """Modelo de Área"""
+    __tablename__ = 'area'
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False, unique=True)
+    activa = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
 class Usuario(db.Model):
     """Modelo de Usuario del sistema"""
@@ -460,15 +462,6 @@ class Licencia(db.Model):
             return 'Verde'
 
 # ==================== MODELOS SISTEMA DE EVENTOS ====================
-
-class Area(db.Model):
-    __tablename__ = 'area'
-    def __init__(self, **kwargs):
-        super(Area, self).__init__(**kwargs)
-    id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100), nullable=False, unique=True)
-    activa = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.now)
 
 class SistemaNormativo(db.Model):
     __tablename__ = 'sistema_normativo'

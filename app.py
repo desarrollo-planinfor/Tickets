@@ -2185,6 +2185,21 @@ def lista_equipos():
                            equipos_alerta_7_dias=equipos_alerta_7_dias,
                            current_tab=tab)
 
+def normalizar_fecha(fecha_str):
+    """Convierte una fecha de YYYY-MM-DD a DD/MM/YYYY si es necesario.
+    Si ya está en DD/MM/YYYY la retorna sin cambios."""
+    if not fecha_str:
+        return fecha_str
+    fecha_str = fecha_str.strip()
+    # Formato ISO del browser: YYYY-MM-DD
+    if len(fecha_str) == 10 and fecha_str[4] == '-' and fecha_str[7] == '-':
+        try:
+            yyyy, mm, dd = fecha_str.split('-')
+            return f"{dd}/{mm}/{yyyy}"
+        except Exception:
+            pass
+    return fecha_str
+
 @app.route('/equipos/nuevo', methods=['GET', 'POST'])
 @login_required
 @requiere_permiso('ver_inventario')
@@ -2210,9 +2225,9 @@ def nuevo_equipo():
             serie=request.form.get('serie'),
             area=request.form.get('area'),
             responsable=request.form.get('responsable'),
-            ultima_mantencion=request.form.get('ultima_mantencion'),
+            ultima_mantencion=normalizar_fecha(request.form.get('ultima_mantencion')),
             frecuencia_mantencion=request.form.get('frecuencia_mantencion'),
-            proxima_mantencion=request.form.get('proxima_mantencion'),
+            proxima_mantencion=normalizar_fecha(request.form.get('proxima_mantencion')),
             requerimiento=requerimiento,
             tipo_mantencion=request.form.get('tipo_mantencion'),
             estado=request.form.get('estado'),
@@ -2286,9 +2301,9 @@ def editar_equipo(id):
         equipo.serie = request.form.get('serie')
         equipo.area = request.form.get('area')
         equipo.responsable = new_resp
-        equipo.ultima_mantencion = request.form.get('ultima_mantencion')
+        equipo.ultima_mantencion = normalizar_fecha(request.form.get('ultima_mantencion'))
         equipo.frecuencia_mantencion = request.form.get('frecuencia_mantencion')
-        equipo.proxima_mantencion = request.form.get('proxima_mantencion')
+        equipo.proxima_mantencion = normalizar_fecha(request.form.get('proxima_mantencion'))
         equipo.requerimiento = requerimiento
         equipo.tipo_mantencion = request.form.get('tipo_mantencion')
         equipo.estado = request.form.get('estado')

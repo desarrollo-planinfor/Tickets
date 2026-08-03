@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuevo Evento - Planinfor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --border: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #5b9e3b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background: #111827; color: var(--text-main); min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+        .form-container { max-width: 800px; margin: 0 auto; padding: 30px; background: #1f2937; border-radius: 12px; }
+
+        .page-title { font-size: 1.5rem; font-weight: 600; margin-bottom: 24px; border-bottom: 1px solid #374151; padding-bottom: 10px; }
+
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 6px; font-size: 0.9rem; color: #9ca3af; }
+        input, select, textarea { width: 100%; padding: 10px; border-radius: 6px; background: #111827; border: 1px solid #374151; color: #fff; font-family: inherit; }
+        
+        .btn { padding: 10px 18px; border-radius: 8px; font-weight: 600; text-decoration: none; cursor: pointer; border: none; display: inline-block; margin-top: 20px;}
+        .btn-primary { background: #82C341; color: #111827; }
+        .btn-primary:hover { background: #90d648; }
+    </style>
+</head>
+<body>
+    {% set vista = 'eventos' %}
+    {% include 'header_unificado.html' %}
+
+    <div class="container">
+        {% include 'eventos/sub_nav.html' %}
+        <div class="form-container">
+            <h1 class="page-title">Registrar Nuevo Evento</h1>
+        
+        <form action="{{ url_for('eventos_nuevo') }}" method="POST">
+            <div class="form-group">
+                <label>Área</label>
+                <select name="area_id" required>
+                    <option value="">Seleccione...</option>
+                    {% for area in areas %}
+                    <option value="{{ area.id }}">{{ area.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Tipo de Evento</label>
+                <select name="tipo_evento_id" required>
+                    <option value="">Seleccione...</option>
+                    {% for tipo in tipos %}
+                    <option value="{{ tipo.id }}">{{ tipo.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea name="descripcion" rows="4" required></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Registrar Evento</button>
+        </form>
+        </div>
+    </div>
+</body>
+</html>

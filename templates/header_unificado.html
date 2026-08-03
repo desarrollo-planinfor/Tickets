@@ -227,40 +227,6 @@
 
 <div class="container" style="padding-top: 0; padding-bottom: 0;">
     <div class="nav-bar-u">
-        {% if g.usuario.rol == 'admin' %}
-        <a href="{{ url_for('panel_admin') }}" class="nav-link-u {% if vista == 'admin' %}active{% endif %}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-            Dashboard
-        </a>
-        {% endif %}
-        <a href="{{ url_for('panel_agente') }}" class="nav-link-u {% if vista == 'agente' %}active{% endif %}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-            Panel de Tickets
-        </a>
-        <a href="{{ url_for('todos_tickets') }}" class="nav-link-u {% if vista == 'todos' %}active{% endif %}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            Todos los Tickets
-        </a>
-        <a href="{{ url_for('cambiar_password') }}" class="nav-link-u {% if vista == 'seguridad' %}active{% endif %}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-            Seguridad
-        </a>
-        {% if g.usuario.rol == 'admin' %}
-        <a href="{{ url_for('lista_equipos') }}" class="nav-link-u {% if vista == 'equipos' %}active{% endif %}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
-            Inventario de Equipos
-        </a>
-        {% endif %}
-        {% if g.usuario.rol in ['admin', 'agente'] %}
-        <a href="{{ url_for('licencias') }}" class="nav-link-u {% if vista == 'licencias' %}active{% endif %}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-            Gestión de Licencias
-        </a>
-        <a href="{{ url_for('eventos_lista') }}" class="nav-link-u {% if vista in ['eventos', 'acciones', 'dashboard_eventos', 'configuraciones_eventos'] %}active{% endif %}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-            Hallazgos
-        </a>
-        {% endif %}
         <div style="display: flex; gap: 12px; flex-wrap: wrap;">
             {% if g.usuario.rol == 'admin' %}
             <a href="{{ url_for('panel_admin') }}" class="nav-link-u {% if vista == 'admin' %}active{% endif %}">
@@ -306,9 +272,13 @@
                 Gestión de Licencias
             </a>
             {% endif %}
+            {% if g.usuario.rol in ['admin', 'agente'] %}
+            <a href="{{ url_for('eventos_lista') }}" class="nav-link-u {% if vista in ['eventos', 'acciones', 'dashboard_eventos', 'configuraciones_eventos'] %}active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                Hallazgos
+            </a>
+            {% endif %}
         </div>
-        
-
     </div>
 </div>
 

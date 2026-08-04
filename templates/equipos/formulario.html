@@ -514,7 +514,10 @@
                     return;
                 }
 
-                const fechaUltima = new Date(ultimaInput.value + 'T12:00:00'); // Evitar timezone offset
+                const isoDate = parseDateToISO(ultimaInput.value);
+                if (!isoDate) return;
+
+                const fechaUltima = new Date(isoDate + 'T12:00:00'); // Evitar timezone offset
                 let fechaProxima = new Date(fechaUltima);
 
                 if (frecuenciaSelect.value === 'Trimestral') {
@@ -527,7 +530,7 @@
                 const mm = String(fechaProxima.getMonth() + 1).padStart(2, '0');
                 const dd = String(fechaProxima.getDate()).padStart(2, '0');
 
-                proximaInput.value = `${yyyy}-${mm}-${dd}`;
+                proximaInput.value = `${dd}/${mm}/${yyyy}`;
             }
 
             ultimaInput.addEventListener('change', calcularProxima);

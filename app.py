@@ -2737,8 +2737,8 @@ def nueva_licencia():
         f_inicio = request.form.get('fecha_inicio')
         f_expiracion = request.form.get('fecha_expiracion')
         
-        f_inicio_obj = _dt.datetime.strptime(f_inicio, '%d/%m/%Y').date() if f_inicio else None
-        f_exp_obj = _dt.datetime.strptime(f_expiracion, '%d/%m/%Y').date() if f_expiracion else None
+        f_inicio_obj = _dt.datetime.strptime(f_inicio, '%Y-%m-%d').date() if f_inicio else None
+        f_exp_obj = _dt.datetime.strptime(f_expiracion, '%Y-%m-%d').date() if f_expiracion else None
         
         if not f_exp_obj:
             flash('La fecha de expiración es obligatoria.', 'error')
@@ -2759,8 +2759,11 @@ def nueva_licencia():
         db.session.add(lic)
         db.session.commit()
         flash('Licencia agregada exitosamente.', 'success')
+    except ValueError:
+        flash('Error al agregar licencia: El formato de la fecha es incorrecto.', 'error')
     except Exception as e:
-        flash(f'Error al agregar licencia: {e}', 'error')
+        msg = str(e).replace("'", "")
+        flash(f'Error al agregar licencia: {msg}', 'error')
         
     return redirect(url_for('licencias'))
 
@@ -2781,8 +2784,8 @@ def editar_licencia(id):
         f_inicio = request.form.get('fecha_inicio')
         f_expiracion = request.form.get('fecha_expiracion')
         
-        f_inicio_obj = _dt.datetime.strptime(f_inicio, '%d/%m/%Y').date() if f_inicio else None
-        f_exp_obj = _dt.datetime.strptime(f_expiracion, '%d/%m/%Y').date() if f_expiracion else None
+        f_inicio_obj = _dt.datetime.strptime(f_inicio, '%Y-%m-%d').date() if f_inicio else None
+        f_exp_obj = _dt.datetime.strptime(f_expiracion, '%Y-%m-%d').date() if f_expiracion else None
         
         if not f_exp_obj:
             flash('La fecha de expiración es obligatoria.', 'error')
@@ -2801,8 +2804,11 @@ def editar_licencia(id):
 
         db.session.commit()
         flash('Licencia actualizada exitosamente.', 'success')
+    except ValueError:
+        flash('Error al actualizar licencia: El formato de la fecha es incorrecto.', 'error')
     except Exception as e:
-        flash(f'Error al actualizar licencia: {e}', 'error')
+        msg = str(e).replace("'", "")
+        flash(f'Error al actualizar licencia: {msg}', 'error')
         
     return redirect(url_for('licencias'))
 

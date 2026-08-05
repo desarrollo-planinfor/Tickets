@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='P.ico') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Eventos - HUB Planinfor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Outfit', sans-serif; background: #111827; color: #f3f4f6; }
+        .container { max-width: 1440px; margin: 0 auto; padding: 30px 20px; }
+
+        /* Page Header */
+        .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+        .dash-title { font-size: 1.6rem; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 12px; }
+        .dash-title svg { color: #82C341; }
+        .dash-subtitle { font-size: 0.85rem; color: #6b7280; font-weight: 400; margin-left: 4px; }
+
+        /* Filters */
+        .filters-bar {
+            display: flex; align-items: center; gap: 12px;
+            background: #1a2332; border: 1px solid #2d3a4d; border-radius: 12px;
+            padding: 12px 20px; margin-bottom: 24px; flex-wrap: wrap;
+        }
+        .filter-group { display: flex; align-items: center; gap: 8px; }
+        .filter-label { font-size: 0.8rem; color: #6b7280; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+        .filter-input {
+            background: #111827; border: 1px solid #374151; color: #e5e7eb;
+            padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; font-family: 'Outfit', sans-serif;
+        }
+        .filter-input:focus { outline: none; border-color: #82C341; }
+        .filter-select { background: #111827; border: 1px solid #374151; color: #e5e7eb; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; font-family: 'Outfit', sans-serif; min-width: 160px; }
+        .filter-select:focus { outline: none; border-color: #82C341; }
+        .btn-filter {
+            background: #82C341; color: #0f1729; padding: 8px 20px; border: none; border-radius: 8px;
+            font-weight: 600; font-size: 0.85rem; cursor: pointer; font-family: 'Outfit', sans-serif; transition: 0.2s;
+        }
+        .btn-filter:hover { background: #94d44f; transform: translateY(-1px); }
+        .btn-clear {
+            background: transparent; color: #9ca3af; padding: 8px 16px; border: 1px solid #374151; border-radius: 8px;
+            font-weight: 500; font-size: 0.85rem; cursor: pointer; font-family: 'Outfit', sans-serif; transition: 0.2s;
+        }
+        .btn-clear:hover { background: #1f2937; color: #f3f4f6; }
+
+        /* KPI Cards */
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .kpi-card {
+            background: linear-gradient(135deg, #1a2332 0%, #1f2937 100%);
+            border: 1px solid #2d3a4d; border-radius: 16px; padding: 20px 24px;
+            position: relative; overflow: hidden; transition: all 0.3s ease;
+        }
+        .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); }
+        .kpi-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            border-radius: 16px 16px 0 0;
+        }
+        .kpi-card.emerald::before { background: linear-gradient(90deg, #10b981, #34d399); }
+        .kpi-card.blue::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+        .kpi-card.amber::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .kpi-card.red::before { background: linear-gradient(90deg, #ef4444, #f87171); }
+        .kpi-card.purple::before { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+        .kpi-card.cyan::before { background: linear-gradient(90deg, #06b6d4, #22d3ee); }
+        .kpi-card.rose::before { background: linear-gradient(90deg, #f43f5e, #fb7185); }
+
+        .kpi-icon {
+            width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            margin-bottom: 12px; font-size: 1.2rem;
+        }
+        .kpi-icon.emerald { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+        .kpi-icon.blue { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
+        .kpi-icon.amber { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
+        .kpi-icon.red { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
+        .kpi-icon.purple { background: rgba(139, 92, 246, 0.12); color: #8b5cf6; }
+        .kpi-icon.cyan { background: rgba(6, 182, 212, 0.12); color: #06b6d4; }
+        .kpi-icon.rose { background: rgba(244, 63, 94, 0.12); color: #f43f5e; }
+
+        .kpi-label { font-size: 0.78rem; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; }
+        .kpi-value { font-size: 2rem; font-weight: 700; margin-top: 4px; line-height: 1.1; }
+        .kpi-value.emerald { color: #10b981; } .kpi-value.blue { color: #3b82f6; }
+        .kpi-value.amber { color: #f59e0b; } .kpi-value.red { color: #ef4444; }
+        .kpi-value.purple { color: #8b5cf6; } .kpi-value.cyan { color: #06b6d4; }
+        .kpi-value.rose { color: #f43f5e; }
+
+        /* Chart Cards */
+        .charts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 24px; }
+        .charts-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 24px; }
+        .chart-card {
+            background: linear-gradient(135deg, #1a2332 0%, #1e293b 100%);
+            border: 1px solid #2d3a4d; border-radius: 16px; padding: 24px;
+            transition: all 0.3s ease;
+        }
+        .chart-card:hover { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); }
+        .chart-card-title {
+            font-size: 0.95rem; font-weight: 600; color: #e5e7eb; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .chart-card-title .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .chart-wrapper { position: relative; width: 100%; }
+        .chart-wrapper.donut { max-width: 220px; margin: 0 auto; }
+
+        /* Full Width */
+        .full-width { grid-column: 1 / -1; }
+
+        /* Activity Table */
+        .activity-card {
+            background: linear-gradient(135deg, #1a2332 0%, #1e293b 100%);
+            border: 1px solid #2d3a4d; border-radius: 16px; padding: 24px;
+        }
+        .activity-table { width: 100%; border-collapse: collapse; }
+        .activity-table th {
+            text-align: left; padding: 10px 16px; color: #6b7280; font-weight: 600;
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px;
+            border-bottom: 1px solid #2d3a4d;
+        }
+        .activity-table td { padding: 12px 16px; border-bottom: 1px solid rgba(45, 58, 77, 0.5); font-size: 0.9rem; color: #d1d5db; }
+        .activity-table tr:last-child td { border-bottom: none; }
+        .activity-table tr:hover td { background: rgba(130, 195, 65, 0.03); }
+
+        .badge {
+            padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 4px;
+        }
+        .badge-escalado { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.25); }
+        .badge-abierto { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.25); }
+        .badge-cerrado { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); }
+        .badge-proceso { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); }
+        .badge-risk-high { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+        .badge-risk-med { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+        .badge-risk-low { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+
+        .ev-link { color: #82C341; text-decoration: none; font-weight: 600; transition: 0.2s; }
+        .ev-link:hover { color: #94d44f; text-decoration: underline; }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .charts-grid { grid-template-columns: 1fr; }
+            .charts-grid-2 { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 640px) {
+            .kpi-grid { grid-template-columns: 1fr; }
+            .filters-bar { flex-direction: column; align-items: stretch; }
+        }
+
+        /* Fade animation */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeInUp 0.4s ease-out both; }
+        .delay-1 { animation-delay: 0.05s; } .delay-2 { animation-delay: 0.1s; } .delay-3 { animation-delay: 0.15s; }
+        .delay-4 { animation-delay: 0.2s; } .delay-5 { animation-delay: 0.25s; } .delay-6 { animation-delay: 0.3s; }
+        .delay-7 { animation-delay: 0.35s; }
+
+        /* Empty state */
+        .empty-chart { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; color: #4b5563; }
+        .empty-chart svg { margin-bottom: 12px; opacity: 0.5; }
+        .empty-chart p { font-size: 0.85rem; }
+    </style>
+</head>
+
+<body>
+    {% set vista = 'hallazgos' %}
+    {% include 'header_unificado.html' %}
+
+    <div class="container">
+        {% set sub_vista = 'dashboard' %}
+        {% include 'hallazgos/sub_nav.html' %}
+
+        <!-- HEADER -->
+        <div class="dash-header animate-in">
+            <div class="dash-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                Dashboard
+                <span class="dash-subtitle">Panel de Control de Eventos</span>
+            </div>
+        </div>
+
+        <!-- FILTERS -->
+        <form method="GET" action="{{ url_for('hallazgos.dashboard') }}">
+            <div class="filters-bar animate-in delay-1">
+                <div class="filter-group">
+                    <label class="filter-label">Mes</label>
+                    <select name="mes" class="filter-select">
+                        <option value="">Todos los Meses</option>
+                        <option value="1" {% if filtro_mes == 1 %}selected{% endif %}>Enero</option>
+                        <option value="2" {% if filtro_mes == 2 %}selected{% endif %}>Febrero</option>
+                        <option value="3" {% if filtro_mes == 3 %}selected{% endif %}>Marzo</option>
+                        <option value="4" {% if filtro_mes == 4 %}selected{% endif %}>Abril</option>
+                        <option value="5" {% if filtro_mes == 5 %}selected{% endif %}>Mayo</option>
+                        <option value="6" {% if filtro_mes == 6 %}selected{% endif %}>Junio</option>
+                        <option value="7" {% if filtro_mes == 7 %}selected{% endif %}>Julio</option>
+                        <option value="8" {% if filtro_mes == 8 %}selected{% endif %}>Agosto</option>
+                        <option value="9" {% if filtro_mes == 9 %}selected{% endif %}>Septiembre</option>
+                        <option value="10" {% if filtro_mes == 10 %}selected{% endif %}>Octubre</option>
+                        <option value="11" {% if filtro_mes == 11 %}selected{% endif %}>Noviembre</option>
+                        <option value="12" {% if filtro_mes == 12 %}selected{% endif %}>Diciembre</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Año</label>
+                    <select name="anio" class="filter-select">
+                        <option value="">Todos los Años</option>
+                        {% for y in years %}
+                        <option value="{{ y }}" {% if filtro_anio == y %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <select name="area_id" class="filter-select">
+                        <option value="">Todas las Áreas</option>
+                        {% for area in areas %}
+                        <option value="{{ area.id }}" {% if filtro_area == area.id %}selected{% endif %}>{{ area.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn-filter">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle; margin-right: 4px;"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                    Filtrar
+                </button>
+                <a href="{{ url_for('hallazgos.dashboard') }}" class="btn-clear">Limpiar</a>
+            </div>
+        </form>
+
+        <!-- KPIs -->
+        <div class="kpi-grid">
+            <div class="kpi-card emerald animate-in delay-1">
+                <div class="kpi-icon emerald">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                </div>
+                <div class="kpi-label">Total Eventos</div>
+                <div class="kpi-value emerald">{{ total_eventos }}</div>
+            </div>
+            <div class="kpi-card blue animate-in delay-2">
+                <div class="kpi-icon blue">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+                <div class="kpi-label">Total Acciones Correctivas</div>
+                <div class="kpi-value blue">{{ acciones_correctivas }}</div>
+            </div>
+            <div class="kpi-card amber animate-in delay-3">
+                <div class="kpi-icon amber">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                </div>
+                <div class="kpi-label">Eventos Escalados</div>
+                <div class="kpi-value amber">{{ eventos_escalados }}</div>
+            </div>
+            <div class="kpi-card red animate-in delay-4">
+                <div class="kpi-icon red">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                </div>
+                <div class="kpi-label">Tasa de Escalamiento</div>
+                <div class="kpi-value red">{{ tasa_escalamiento }}%</div>
+            </div>
+        </div>
+
+        <!-- Secondary KPIs -->
+        <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="kpi-card purple animate-in delay-4">
+                <div class="kpi-icon purple">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </div>
+                <div class="kpi-label">AC Abiertas</div>
+                <div class="kpi-value purple">{{ ac_abiertas }}</div>
+            </div>
+            <div class="kpi-card cyan animate-in delay-5">
+                <div class="kpi-icon cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+                <div class="kpi-label">AC Cerradas</div>
+                <div class="kpi-value cyan">{{ ac_cerradas }}</div>
+            </div>
+            <div class="kpi-card rose animate-in delay-6">
+                <div class="kpi-icon rose">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                </div>
+                <div class="kpi-label">AC Vencidas</div>
+                <div class="kpi-value rose">{{ ac_vencidas }}</div>
+            </div>
+        </div>
+
+        <!-- Tasas de Cierre KPIs -->
+        <div class="kpi-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="kpi-card emerald animate-in delay-5">
+                <div class="kpi-icon emerald">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+                <div class="kpi-label">Tasa de Cierre de Eventos</div>
+                <div class="kpi-value emerald">{{ tasa_cierre_eventos }}%</div>
+            </div>
+            <div class="kpi-card cyan animate-in delay-6">
+                <div class="kpi-icon cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+                <div class="kpi-label">Tasa de Cierre de Acciones Correctivas</div>
+                <div class="kpi-value cyan">{{ tasa_cierre_ac }}%</div>
+            </div>
+        </div>
+
+        <!-- ROW 1: 3 Donuts -->
+        <div class="charts-grid">
+            <div class="chart-card animate-in delay-3">
+                <div class="chart-card-title"><div class="dot" style="background: #3b82f6;"></div> Estado de Eventos</div>
+                <div class="chart-wrapper donut"><canvas id="chartEvEstados"></canvas></div>
+            </div>
+            <div class="chart-card animate-in delay-4">
+                <div class="chart-card-title"><div class="dot" style="background: #10b981;"></div> Estado de Acciones Correctivas</div>
+                <div class="chart-wrapper donut"><canvas id="chartAcEstados"></canvas></div>
+            </div>
+            <div class="chart-card animate-in delay-5">
+                <div class="chart-card-title"><div class="dot" style="background: #f59e0b;"></div> Nivel de Riesgo</div>
+                <div class="chart-wrapper donut"><canvas id="chartRiesgo"></canvas></div>
+            </div>
+        </div>
+
+        <!-- ROW 2: 2 Bar Charts -->
+        <div class="charts-grid-2">
+            <div class="chart-card animate-in delay-4">
+                <div class="chart-card-title"><div class="dot" style="background: #82C341;"></div> Eventos y AC por Área</div>
+                <div class="chart-wrapper"><canvas id="chartArea"></canvas></div>
+            </div>
+            <div class="chart-card animate-in delay-5">
+                <div class="chart-card-title"><div class="dot" style="background: #8b5cf6;"></div> Por Sistema Normativo</div>
+                <div class="chart-wrapper"><canvas id="chartSN"></canvas></div>
+            </div>
+        </div>
+
+        <!-- ROW 3: Tendencia + Tipos + Metodología -->
+        <div class="charts-grid">
+            <div class="chart-card full-width animate-in delay-5" style="grid-column: span 2;">
+                <div class="chart-card-title"><div class="dot" style="background: #06b6d4;"></div> Tendencia Mensual</div>
+                <div class="chart-wrapper"><canvas id="chartTendencia"></canvas></div>
+            </div>
+            <div class="chart-card animate-in delay-6">
+                <div class="chart-card-title"><div class="dot" style="background: #f43f5e;"></div> Tipos de Eventos</div>
+                <div class="chart-wrapper donut"><canvas id="chartTipos"></canvas></div>
+            </div>
+        </div>
+
+        <!-- ROW 4: Metodología ACR + Últimos Eventos -->
+        <div class="charts-grid-2">
+            <div class="chart-card animate-in delay-6">
+                <div class="chart-card-title"><div class="dot" style="background: #ec4899;"></div> Metodología ACR Utilizada</div>
+                <div class="chart-wrapper donut"><canvas id="chartMetodo"></canvas></div>
+            </div>
+            <div class="activity-card animate-in delay-7">
+                <div class="chart-card-title"><div class="dot" style="background: #82C341;"></div> Últimos Eventos Registrados</div>
+                <table class="activity-table">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Área</th>
+                            <th>Fecha</th>
+                            <th>Riesgo</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ev in ultimos_eventos %}
+                        {% set risk = (ev.impacto or 0) + (ev.recurrencia or 0) + (ev.potencialidad or 0) %}
+                        <tr>
+                            <td><a href="{{ url_for('hallazgos.editar', id=ev.id) }}" class="ev-link">{{ ev.codigo }}</a></td>
+                            <td>{{ ev.area.nombre if ev.area else '--' }}</td>
+                            <td>{{ ev.fecha_registro.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                {% if risk >= 9 %}
+                                <span class="badge badge-risk-high">Alto ({{ risk }})</span>
+                                {% elif risk >= 6 %}
+                                <span class="badge badge-risk-med">Medio ({{ risk }})</span>
+                                {% elif risk > 0 %}
+                                <span class="badge badge-risk-low">Bajo ({{ risk }})</span>
+                                {% else %}
+                                <span style="color: #6b7280; font-size: 0.85rem;">--</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if ev.evaluacion == 'Escalado' %}
+                                <span class="badge badge-escalado">Escalado</span>
+                                {% elif ev.estado == 'Cerrado' %}
+                                <span class="badge badge-cerrado">Cerrado</span>
+                                {% elif ev.estado == 'En Proceso' %}
+                                <span class="badge badge-proceso">En Proceso</span>
+                                {% else %}
+                                <span class="badge badge-abierto">Abierto</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" style="text-align: center; color: #4b5563; padding: 30px;">No hay eventos registrados.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ROW 5: Acciones Correctivas Pendientes o Atrasadas -->
+        <div class="activity-card animate-in delay-7">
+            <div class="chart-card-title"><div class="dot" style="background: #ef4444;"></div> Acciones Correctivas Pendientes o Atrasadas</div>
+            <table class="activity-table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Área</th>
+                        <th>Responsable</th>
+                        <th>Fecha Plazo</th>
+                        <th>Estado Plazo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ac in ac_pendientes %}
+                    <tr>
+                        <td><a href="{{ url_for('hallazgos.acciones_correctivas_editar', id=ac.id) }}" class="ev-link">{{ ac.codigo }}</a></td>
+                        <td>{{ ac.area }}</td>
+                        <td>{{ ac.responsable }}</td>
+                        <td>{{ ac.fecha_plazo }}</td>
+                        <td>
+                            {% if ac.estado_plazo == 'Vencido' %}
+                            <span class="badge badge-risk-high">Vencida</span>
+                            {% else %}
+                            <span class="badge badge-risk-med">A tiempo</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" style="text-align: center; color: #4b5563; padding: 30px;">No hay acciones correctivas pendientes o atrasadas.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script>
+        const DATA = {{ chart_data | safe }};
+
+        // Color palettes
+        const DONUT_COLORS = {
+            estados_ev: { 'Abierto': '#3b82f6', 'En Proceso': '#f59e0b', 'Cerrado': '#10b981', 'Escalado': '#ef4444', 'Completado': '#22d3ee' },
+            estados_ac: { 'Abierto': '#f59e0b', 'Cerrado': '#10b981', 'En Proceso': '#3b82f6' },
+            riesgo: { 'Alto (≥9)': '#ef4444', 'Medio (6-8)': '#f59e0b', 'Bajo (3-5)': '#10b981', 'Sin Evaluar': '#4b5563' },
+        };
+        const VIBRANT = ['#82C341', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f43f5e', '#22d3ee', '#a78bfa', '#34d399'];
+        const METODO_COLORS = { '5 Porqués': '#22d3ee', 'Ishikawa': '#ec4899' };
+
+        // Chart.js global defaults
+        Chart.defaults.color = '#9ca3af';
+        Chart.defaults.font.family = "'Outfit', sans-serif";
+        Chart.defaults.plugins.legend.labels.padding = 16;
+        Chart.defaults.plugins.legend.labels.usePointStyle = true;
+        Chart.defaults.plugins.legend.labels.pointStyleWidth = 12;
+
+        function donutOpts(title) {
+            return {
+                responsive: true, maintainAspectRatio: true,
+                cutout: '65%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 12 } },
+                    tooltip: {
+                        backgroundColor: '#1e293b', titleColor: '#f3f4f6', bodyColor: '#d1d5db',
+                        borderColor: '#374151', borderWidth: 1, cornerRadius: 8, padding: 10,
+                        titleFont: { weight: 600 }
+                    }
+                }
+            };
+        }
+
+        function makeDonut(canvasId, dataObj, colorMap) {
+            const labels = Object.keys(dataObj);
+            const values = Object.values(dataObj);
+            if (values.every(v => v === 0) || labels.length === 0) {
+                document.getElementById(canvasId).parentElement.innerHTML = '<div class="empty-chart"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg><p>Sin datos</p></div>';
+                return;
+            }
+            const colors = colorMap
+                ? labels.map((l, i) => colorMap[l] || VIBRANT[i % VIBRANT.length])
+                : labels.map((_, i) => VIBRANT[i % VIBRANT.length]);
+            new Chart(document.getElementById(canvasId), {
+                type: 'doughnut',
+                data: { labels, datasets: [{ data: values, backgroundColor: colors, borderColor: 'transparent', borderWidth: 0, hoverOffset: 6 }] },
+                options: donutOpts()
+            });
+        }
+
+        function makeBar(canvasId, labels, datasets) {
+            if (!labels.length) {
+                document.getElementById(canvasId).parentElement.innerHTML = '<div class="empty-chart"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg><p>Sin datos</p></div>';
+                return;
+            }
+            new Chart(document.getElementById(canvasId), {
+                type: 'bar',
+                data: { labels, datasets },
+                options: {
+                    responsive: true, maintainAspectRatio: true,
+                    scales: {
+                        x: { grid: { color: 'rgba(55, 65, 81, 0.4)' }, ticks: { font: { size: 11 } } },
+                        y: { beginAtZero: true, grid: { color: 'rgba(55, 65, 81, 0.4)' }, ticks: { stepSize: 1, font: { size: 11 } } }
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { size: 11 }, padding: 12 } },
+                        tooltip: { backgroundColor: '#1e293b', titleColor: '#f3f4f6', bodyColor: '#d1d5db', borderColor: '#374151', borderWidth: 1, cornerRadius: 8, padding: 10 }
+                    }
+                }
+            });
+        }
+
+        // -- Render Charts --
+
+        // 1. Estado Eventos
+        makeDonut('chartEvEstados', DATA.ev_estados, DONUT_COLORS.estados_ev);
+
+        // 2. Estado AC
+        makeDonut('chartAcEstados', DATA.ac_estados, DONUT_COLORS.estados_ac);
+
+        // 3. Riesgo
+        makeDonut('chartRiesgo', DATA.riesgo, DONUT_COLORS.riesgo);
+
+        // 4. Por Área
+        makeBar('chartArea', DATA.area_labels, [
+            { label: 'Eventos', data: DATA.ev_por_area, backgroundColor: '#82C341', borderRadius: 6, barPercentage: 0.6 },
+            { label: 'AC', data: DATA.ac_por_area, backgroundColor: '#3b82f6', borderRadius: 6, barPercentage: 0.6 }
+        ]);
+
+        // 5. Por Sistema Normativo
+        makeBar('chartSN', DATA.sn_labels, [
+            { label: 'Eventos', data: DATA.ev_por_sn, backgroundColor: '#82C341', borderRadius: 6, barPercentage: 0.6 },
+            { label: 'AC', data: DATA.ac_por_sn, backgroundColor: '#8b5cf6', borderRadius: 6, barPercentage: 0.6 }
+        ]);
+
+        // 6. Tendencia Mensual (Line/Area)
+        (function() {
+            const labels = DATA.tendencia_labels;
+            if (!labels.length) {
+                document.getElementById('chartTendencia').parentElement.innerHTML = '<div class="empty-chart"><p>Sin datos de tendencia</p></div>';
+                return;
+            }
+            const ctx = document.getElementById('chartTendencia').getContext('2d');
+            const gradEv = ctx.createLinearGradient(0, 0, 0, 300);
+            gradEv.addColorStop(0, 'rgba(130, 195, 65, 0.25)'); gradEv.addColorStop(1, 'rgba(130, 195, 65, 0)');
+            const gradAc = ctx.createLinearGradient(0, 0, 0, 300);
+            gradAc.addColorStop(0, 'rgba(59, 130, 246, 0.25)'); gradAc.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Eventos', data: DATA.tendencia_ev, borderColor: '#82C341', backgroundColor: gradEv, tension: 0.4, fill: true, pointRadius: 5, pointBackgroundColor: '#82C341', pointBorderColor: '#0f1729', pointBorderWidth: 2 },
+                        { label: 'Acciones Correctivas', data: DATA.tendencia_ac, borderColor: '#3b82f6', backgroundColor: gradAc, tension: 0.4, fill: true, pointRadius: 5, pointBackgroundColor: '#3b82f6', pointBorderColor: '#0f1729', pointBorderWidth: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: true,
+                    scales: {
+                        x: { grid: { color: 'rgba(55, 65, 81, 0.3)' }, ticks: { font: { size: 11 } } },
+                        y: { beginAtZero: true, grid: { color: 'rgba(55, 65, 81, 0.3)' }, ticks: { stepSize: 1, font: { size: 11 } } }
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { size: 11 }, padding: 14 } },
+                        tooltip: { backgroundColor: '#1e293b', titleColor: '#f3f4f6', bodyColor: '#d1d5db', borderColor: '#374151', borderWidth: 1, cornerRadius: 8, padding: 10 }
+                    }
+                }
+            });
+        })();
+
+        // 7. Tipos Evento
+        makeDonut('chartTipos', DATA.ev_tipos, null);
+
+        // 8. Metodología ACR
+        makeDonut('chartMetodo', DATA.metodo_counts, METODO_COLORS);
+    </script>
+</body>
+
+</html>

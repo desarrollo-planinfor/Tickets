@@ -2,6 +2,9 @@
 Sistema de Gestión de Tickets de Soporte
 Flask Application - Planinfor
 """
+import sys
+# Alias para evitar inicialización doble cuando se ejecuta como `python app.py` y luego se importa
+sys.modules['app'] = sys.modules[__name__]
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, g
 from flask_sqlalchemy import SQLAlchemy
@@ -2980,7 +2983,7 @@ def eventos_lista():
     eventos = Evento.query.order_by(Evento.fecha_registro.desc()).all()
     return render_template('eventos/lista_eventos.html', eventos=eventos)
 
-@app.route('/eventos/nuevo', methods=['GET', 'POST'])
+@app.route('/eventos_old/nuevo', methods=['GET', 'POST'])
 @login_required
 def eventos_nuevo():
     """Registrar nuevo evento"""
@@ -3134,6 +3137,167 @@ def exportar_inventario():
     output.seek(0)
     
     return send_file(output, download_name="inventario_reporte.xlsx", as_attachment=True)
+
+
+# ==================== MÓDULO HALLAZGOS ====================
+
+class HallazgoSistemaNormativo(db.Model):
+    __tablename__ = 'hallazgo_sistema_normativo'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False, unique=True)
+    activo = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+class HallazgoTipoEvento(db.Model):
+    __tablename__ = 'hallazgo_tipo_evento'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False, unique=True)
+    activo = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+class HallazgoClasificacion(db.Model):
+    __tablename__ = 'hallazgo_clasificacion'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False, unique=True)
+    activo = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+class HallazgoOrigenACR(db.Model):
+    __tablename__ = 'hallazgo_origen_acr'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False, unique=True)
+    activo = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+class HallazgoEvento(db.Model):
+    __tablename__ = 'hallazgo_evento'
+    id = db.Column(db.Integer, primary_key=True)
+    codigo = db.Column(db.String(20), nullable=False, unique=True)
+    
+    area_id = db.Column(db.Integer, db.ForeignKey('area.id'), nullable=True)
+    responsable_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=True)
+    sistema_normativo_id = db.Column(db.Integer, db.ForeignKey('hallazgo_sistema_normativo.id'), nullable=True)
+    tipo_evento_id = db.Column(db.Integer, db.ForeignKey('hallazgo_tipo_evento.id'), nullable=True)
+    
+    area = db.relationship('Area', foreign_keys=[area_id])
+    sistema_normativo = db.relationship('HallazgoSistemaNormativo', foreign_keys=[sistema_normativo_id])
+    tipo_evento = db.relationship('HallazgoTipoEvento', foreign_keys=[tipo_evento_id])
+    
+    descripcion = db.Column(db.Text, nullable=True)
+    fecha_registro = db.Column(db.DateTime, default=datetime.now)
+    
+    accion_contencion = db.Column(db.Text, nullable=True)
+    impacto = db.Column(db.Integer, nullable=True)
+    recurrencia = db.Column(db.Integer, nullable=True)
+    potencialidad = db.Column(db.Integer, nullable=True)
+    
+    evaluacion = db.Column(db.String(50), nullable=True)
+    accion_correctiva_id = db.Column(db.Integer, db.ForeignKey('hallazgo_accion_correctiva.id'), nullable=True)
+    accion_correctiva = db.relationship('HallazgoAccionCorrectiva', foreign_keys=[accion_correctiva_id], backref=db.backref('evento_asociado', uselist=False))
+    
+    estado = db.Column(db.String(20), default='Abierto')
+    estado_cierre = db.Column(db.String(20), default='Pendiente')
+    firma_cierre = db.Column(db.String(150), nullable=True)
+    pdf_cierre = db.Column(db.String(500), nullable=True)
+    fecha_cierre = db.Column(db.DateTime, nullable=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    historial = db.relationship('HallazgoHistorial', backref='evento', lazy='dynamic', cascade='all, delete-orphan')
+
+class HallazgoHistorial(db.Model):
+    __tablename__ = 'hallazgo_historial'
+    id = db.Column(db.Integer, primary_key=True)
+    evento_id = db.Column(db.Integer, db.ForeignKey('hallazgo_evento.id'), nullable=False)
+    accion = db.Column(db.String(100), nullable=False)
+    detalles = db.Column(db.Text, nullable=True)
+    usuario = db.Column(db.String(150), default='Sistema')
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+class HallazgoAccionCorrectiva(db.Model):
+    __tablename__ = 'hallazgo_accion_correctiva'
+    id = db.Column(db.Integer, primary_key=True)
+    codigo = db.Column(db.String(20), nullable=False, unique=True)
+    
+    evento_id = db.Column(db.Integer, db.ForeignKey('hallazgo_evento.id'), nullable=True)
+    origen = db.Column(db.String(100), default='Externa')
+    
+    area_id = db.Column(db.Integer, db.ForeignKey('area.id'), nullable=True)
+    responsable_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=True)
+    sistema_normativo_id = db.Column(db.Integer, db.ForeignKey('hallazgo_sistema_normativo.id'), nullable=True)
+    tipo_evento_id = db.Column(db.Integer, db.ForeignKey('hallazgo_tipo_evento.id'), nullable=True)
+    clasificacion_id = db.Column(db.Integer, db.ForeignKey('hallazgo_clasificacion.id'), nullable=True)
+    
+    clasificacion = db.relationship('HallazgoClasificacion')
+    responsable = db.relationship('Usuario', foreign_keys=[responsable_id])
+    evento = db.relationship('HallazgoEvento', foreign_keys=[evento_id])
+    area = db.relationship('Area', foreign_keys=[area_id])
+    sistema_normativo = db.relationship('HallazgoSistemaNormativo', foreign_keys=[sistema_normativo_id])
+    tipo_evento = db.relationship('HallazgoTipoEvento', foreign_keys=[tipo_evento_id])
+    
+    descripcion = db.Column(db.Text, nullable=True)
+    accion_contencion = db.Column(db.Text, nullable=True)
+    consulta_trabajador = db.Column(db.Text, nullable=True)
+    fecha_registro = db.Column(db.DateTime, default=datetime.now)
+    
+    fecha_plazo = db.Column(db.Date, nullable=True)
+    fecha_verificacion = db.Column(db.Date, nullable=True)
+    
+    iteracion_actual = db.Column(db.Integer, default=0)
+    resultado_eficacia = db.Column(db.String(20), default='Pendiente')
+    
+    estado = db.Column(db.String(20), default='Abierto')
+    estado_cierre = db.Column(db.String(20), default='Pendiente')
+    firma_cierre = db.Column(db.String(150), nullable=True)
+    pdf_cierre = db.Column(db.String(500), nullable=True)
+    fecha_cierre = db.Column(db.DateTime, nullable=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+class HallazgoACRIteracion(db.Model):
+    __tablename__ = 'hallazgo_acr_iteracion'
+    id = db.Column(db.Integer, primary_key=True)
+    accion_id = db.Column(db.Integer, db.ForeignKey('hallazgo_accion_correctiva.id'), nullable=False)
+    numero_iteracion = db.Column(db.Integer, nullable=False, default=1)
+    
+    metodologia = db.Column(db.String(30), nullable=True)
+    datos_acr = db.Column(db.JSON, nullable=True)
+    
+    causa_raiz = db.Column(db.Text, nullable=True)
+    texto_accion_correctiva = db.Column(db.Text, nullable=True)
+    evaluacion_nuevos_riesgos = db.Column(db.Text, nullable=True)
+    
+    pdf_acr = db.Column(db.String(500), nullable=True)
+    congelado = db.Column(db.Boolean, default=False)
+    
+    eficacia_q1 = db.Column(db.Boolean, nullable=True)
+    eficacia_q2 = db.Column(db.Boolean, nullable=True)
+    resultado_eficacia = db.Column(db.String(20), nullable=True)
+    evaluado_por = db.Column(db.String(150), nullable=True)
+    motivo_falla = db.Column(db.Text, nullable=True)
+    fecha_evaluacion = db.Column(db.DateTime, nullable=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+class HallazgoArchivo(db.Model):
+    __tablename__ = 'hallazgo_archivo'
+    id = db.Column(db.Integer, primary_key=True)
+    accion_id = db.Column(db.Integer, db.ForeignKey('hallazgo_accion_correctiva.id'), nullable=True)
+    accion = db.relationship('HallazgoAccionCorrectiva', backref=db.backref('archivos', lazy=True, cascade='all, delete-orphan'))
+    evento_id = db.Column(db.Integer, db.ForeignKey('hallazgo_evento.id'), nullable=True)
+    evento = db.relationship('HallazgoEvento', backref=db.backref('archivos', lazy=True, cascade='all, delete-orphan'))
+    nombre_original = db.Column(db.String(300), nullable=False)
+    nombre_almacenado = db.Column(db.String(300), nullable=False)
+    mime_type = db.Column(db.String(100))
+    tamano = db.Column(db.Integer)
+    fecha_subida = db.Column(db.DateTime, default=datetime.now)
+    subido_por = db.Column(db.String(150), default='Sistema')
+
+from modulos.rutas_hallazgos import hallazgos_bp
+app.register_blueprint(hallazgos_bp, url_prefix='/eventos')
 
 if __name__ == '__main__':
     asegurar_base_de_datos()

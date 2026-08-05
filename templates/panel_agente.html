@@ -32,23 +32,24 @@
         .luz .num { font-size: 2.8rem; font-weight: 700; line-height: 1; margin-bottom: 5px; }
         .luz .label { font-size: 0.95rem; color: #e5e7eb; font-weight: 500; display: flex; align-items: center; gap: 8px; }
         /* Columnas */
-        .columnas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .columna { background: #1f2937; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #374151; display: flex; flex-direction: column; }
-        .columna h2 { padding-bottom: 15px; margin-bottom: 20px; border-bottom: 2px solid; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+        .columnas { display: grid; grid-template-columns: repeat(3, minmax(280px, 1fr)); gap: 20px; }
+        .columna { background: #1f2937; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #374151; display: flex; flex-direction: column; }
+        .columna h2 { padding-bottom: 16px; margin-bottom: 22px; border-bottom: 2px solid; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
         .columna-roja h2 { border-color: rgba(239, 68, 68, 0.5); color: #f87171; }
         .columna-amarilla h2 { border-color: rgba(245, 158, 11, 0.5); color: #fbbf24; }
         .columna-verde h2 { border-color: rgba(16, 185, 129, 0.5); color: #34d399; }
         /* Tickets */
-        .ticket-card { background: #111827; border: 1px solid #374151; border-radius: 10px; padding: 18px; margin-bottom: 15px; transition: all 0.2s; }
+        .ticket-card { background: #111827; border: 1px solid #374151; border-radius: 10px; padding: 20px 18px; margin-bottom: 16px; transition: all 0.2s; }
         .ticket-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .ticket-card.rojo { border-left: 4px solid #ef4444; }
         .ticket-card.amarillo { border-left: 4px solid #f59e0b; }
         .ticket-card.verde { border-left: 4px solid #10b981; }
-        .ticket-header { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
+        .ticket-header { margin-bottom: 12px; }
+        .ticket-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
         .ticket-id { font-weight: 700; color: #f3f4f6; font-size: 1.1rem; }
-        .ticket-fecha { font-size: 0.8rem; color: #9ca3af; background: #1f2937; padding: 2px 8px; border-radius: 4px; border: 1px solid #374151; }
-        .ticket-asunto { font-weight: 500; color: #ffffff; margin-bottom: 8px; font-size: 1.05rem; }
-        .ticket-cliente { font-size: 0.9rem; color: #9ca3af; margin-bottom: 15px; display: flex; align-items: center; gap: 6px; }
+        .ticket-fecha { font-size: 0.75rem; color: #9ca3af; background: #111827; padding: 3px 8px; border-radius: 4px; border: 1px solid #374151; line-height: 1.4; text-align: right; max-width: 120px; }
+        .ticket-asunto { font-weight: 500; color: #ffffff; margin-bottom: 10px; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ticket-cliente { font-size: 0.85rem; color: #9ca3af; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         /* Botones */
         .btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-family: inherit; }
         .btn:hover { transform: translateY(-1px); }
@@ -66,6 +67,7 @@
         .btn-outline:hover { background: rgba(255,255,255,0.05); color: #ffffff; border-color: #6b7280; }
         .btn-sm { padding: 6px 12px; font-size: 0.85rem; }
         .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .actions .btn { flex: 1; min-width: 80px; justify-content: center; }
         /* Formularios */
         .form-inline { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .form-inline input, .form-inline select { padding: 8px 12px; background: #1f2937; border: 1px solid #4b5563; border-radius: 6px; color: white; font-family: inherit; font-size: 0.9rem; }
@@ -186,36 +188,38 @@
                     {% for ticket in tickets_rojos %}
                         <div class="ticket-card rojo">
                             <div class="ticket-header">
-                                <span class="ticket-id">#{{ ticket.id }}</span>
-                                {% if ticket.estado == 'ATRASADO' %}
-                                <span class="ticket-fecha" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); color: #f87171; font-weight: 700;">ATRASADO</span>
-                                {% else %}
-                                <span class="ticket-fecha">{{ ticket.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</span>
-                                {% endif %}
+                                <div class="ticket-top">
+                                    <span class="ticket-id">#{{ ticket.id }}</span>
+                                    {% if ticket.estado == 'ATRASADO' %}
+                                    <span class="ticket-fecha" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); color: #f87171; font-weight: 700;">ATRASADO</span>
+                                    {% else %}
+                                    <span class="ticket-fecha">{{ ticket.fecha_creacion.strftime('%d/%m/%Y') }}</span>
+                                    {% endif %}
+                                </div>
                             </div>
                             <div class="ticket-asunto">{{ ticket.asunto }}</div>
                             <div class="ticket-cliente">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                                 {{ ticket.usuario.email }}
                             </div>
-                            <form method="POST" action="/agente/recibir/{{ ticket.id }}" class="form-inline" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px; align-items: stretch;">
+                            <form method="POST" action="/agente/recibir/{{ ticket.id }}" style="margin-top: 16px; display: flex; flex-direction: column; gap: 10px; align-items: stretch;">
                                 <div style="display: flex; gap: 8px; width: 100%;">
-                                    <select name="prioridad" class="form-control" style="flex: 1; padding: 6px; font-size: 0.85rem;" required>
-                                        <option value="" disabled>Prioridad</option>
+                                    <select name="prioridad" class="form-control" style="flex: 1; padding: 7px 8px; font-size: 0.82rem; min-width: 0;" required>
+                                        <option value="" disabled selected>Prioridad</option>
                                         <option value="Baja" {% if ticket.prioridad == 'Baja' %}selected{% endif %}>Baja</option>
                                         <option value="Media" {% if ticket.prioridad == 'Media' %}selected{% endif %}>Media</option>
                                         <option value="Alta" {% if ticket.prioridad == 'Alta' %}selected{% endif %}>Alta</option>
                                         <option value="Urgente" {% if ticket.prioridad == 'Urgente' %}selected{% endif %}>Urgente</option>
                                     </select>
-                                    <select name="departamento" class="form-control" style="flex: 1; padding: 6px; font-size: 0.85rem;" required>
-                                        <option value="" disabled>Dpto.</option>
+                                    <select name="departamento" class="form-control" style="flex: 1; padding: 7px 8px; font-size: 0.82rem; min-width: 0;" required>
+                                        <option value="" disabled selected>Depto.</option>
                                         <option value="soporte" {% if ticket.departamento == 'soporte' %}selected{% endif %}>Soporte</option>
                                         <option value="desarrollo" {% if ticket.departamento == 'desarrollo' %}selected{% endif %}>Desarrollo</option>
                                     </select>
                                 </div>
                                 <div style="display: flex; gap: 8px; width: 100%;">
-                                    <input type="text" name="hora_atencion" class="datetimepicker form-control" placeholder="dd/mm/aaaa HH:MM" required style="flex-grow: 1; padding: 6px; font-size: 0.85rem;">
-                                    <button type="submit" class="btn btn-primary btn-sm">Recibir</button>
+                                    <input type="text" name="hora_atencion" class="datetimepicker form-control" placeholder="dd/mm/aaaa HH:MM" required style="flex: 1; padding: 7px 8px; font-size: 0.82rem; min-width: 0;">
+                                    <button type="submit" class="btn btn-primary btn-sm" style="white-space: nowrap; flex-shrink: 0;">Recibir</button>
                                 </div>
                             </form>
                         </div>
@@ -235,10 +239,12 @@
                     {% for ticket in tickets_amarillos %}
                         <div class="ticket-card amarillo">
                             <div class="ticket-header">
-                                <span class="ticket-id">#{{ ticket.id }}</span>
-                                <span class="ticket-fecha" style="background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); color: #fbbf24;">
-                                    {{ ticket.fecha_atencion_programada.strftime('%d/%m/%Y %H:%M') }}
-                                </span>
+                                <div class="ticket-top">
+                                    <span class="ticket-id">#{{ ticket.id }}</span>
+                                    <span class="ticket-fecha" style="background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); color: #fbbf24;">
+                                        {{ ticket.fecha_atencion_programada.strftime('%d/%m/%Y %H:%M') }}
+                                    </span>
+                                </div>
                             </div>
                             <div class="ticket-asunto">{{ ticket.asunto }}</div>
                             <div class="ticket-cliente">
@@ -266,10 +272,12 @@
                     {% for ticket in tickets_verdes %}
                         <div class="ticket-card verde">
                             <div class="ticket-header">
-                                <span class="ticket-id">#{{ ticket.id }}</span>
-                                <span class="ticket-fecha" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: #34d399;">
-                                    Inicio: {{ ticket.fecha_inicio_atencion.strftime('%d/%m/%Y %H:%M') if ticket.fecha_inicio_atencion else '-' }}
-                                </span>
+                                <div class="ticket-top">
+                                    <span class="ticket-id">#{{ ticket.id }}</span>
+                                    <span class="ticket-fecha" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: #34d399;">
+                                        {{ ticket.fecha_inicio_atencion.strftime('%d/%m/%Y %H:%M') if ticket.fecha_inicio_atencion else '-' }}
+                                    </span>
+                                </div>
                             </div>
                             <div class="ticket-asunto">{{ ticket.asunto }}</div>
                             <div class="ticket-cliente">

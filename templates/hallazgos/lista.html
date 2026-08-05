@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='P.ico') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Eventos - HUB Planinfor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+            background: #111827;
+            color: #f3f4f6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-primary {
+            background: #82C341;
+            color: #111827;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #90d648;
+        }
+
+        .card {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th {
+            position: sticky;
+            top: 175px;
+            background: #1f2937;
+            z-index: 90;
+            text-align: left;
+            padding: 12px 15px;
+            color: #9ca3af;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            transition: all 0.4s ease;
+        }
+
+        th::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            border-bottom: 2px solid #374151;
+            transition: all 0.4s ease;
+        }
+        
+        /* Animación cuando los encabezados están flotando */
+        thead.is-stuck th {
+            background: rgba(26, 35, 50, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            color: #e2e8f0; /* Texto más brillante */
+        }
+        
+        thead.is-stuck th::after {
+            border-bottom: 2px solid rgba(130, 195, 65, 0.4); /* Línea verde sutil brillante */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #374151;
+            color: #d1d5db;
+            font-size: 0.95rem;
+        }
+
+        /* Efecto de Enfoque de Filas (Row Focus) */
+        tbody tr {
+            transition: all 0.2s ease;
+        }
+        tbody:hover tr {
+            opacity: 0.4; /* Oscurecer filas inactivas */
+        }
+        tbody tr:hover {
+            opacity: 1; /* Iluminar fila activa */
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: inset 4px 0 0 #82C341;
+        }
+        
+        /* Sticky summary bar style */
+        .summary-sticky-bar {
+            position: sticky;
+            top: 100px; /* Mayor separación del header */
+            z-index: 100;
+            background: transparent;
+            padding: 10px 0;
+        }
+        
+        .summary-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(26, 35, 50, 0.85); /* Fondo semitransparente */
+            backdrop-filter: blur(12px); /* Efecto de desenfoque de fondo (glassmorphism) */
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(45, 58, 77, 0.6);
+            border-radius: 12px;
+            padding: 15px 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Animación elástica suave */
+        }
+        
+        /* Animación cuando el recuadro queda flotando (stuck) */
+        .summary-box.is-stuck {
+            background: rgba(26, 35, 50, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-color: rgba(130, 195, 65, 0.5); /* Borde verde sutil */
+            box-shadow: 0 25px 40px -10px rgba(0, 0, 0, 0.5), 0 0 25px rgba(130, 195, 65, 0.15); /* Sombra 3D y resplandor */
+            transform: translateY(-4px) scale(0.985); /* Efecto de despegue */
+        }
+        
+        .summary-stats {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #9ca3af;
+        }
+        
+        .summary-title {
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            color: #cbd5e1;
+            margin-right: 10px;
+        }
+        
+        .summary-stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #f3f4f6;
+        }
+        
+        .summary-stat-badge {
+            background: #374151;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            display: inline-block;
+            min-width: 25px;
+            text-align: center;
+        }
+        
+        .summary-stat-badge.abiertos { background: rgba(59, 130, 246, 0.25); color: #93c5fd; }
+        .summary-stat-badge.proceso { background: rgba(245, 158, 11, 0.25); color: #fcd34d; }
+        .summary-stat-badge.cerrados { background: rgba(16, 185, 129, 0.25); color: #6ee7b7; }
+        .summary-stat-badge.escalados { background: rgba(239, 68, 68, 0.25); color: #fca5a5; }
+        
+        .summary-divider {
+            color: #4b5563;
+        }
+        
+        .summary-divider-special {
+            height: 20px;
+            width: 2px;
+            background: #4b5563;
+            margin: 0 8px;
+        }
+    </style>
+</head>
+
+<body>
+    {% set vista = 'hallazgos' %}
+    {% include 'header_unificado.html' %}
+
+    <div class="container">
+        {% set sub_vista = 'lista' %}
+        {% include 'hallazgos/sub_nav.html' %}
+
+        <div class="page-title" style="margin-bottom: 10px;">
+            Lista de Eventos
+        </div>
+
+        <div class="summary-sticky-bar">
+            <div class="summary-box">
+                <div class="summary-stats">
+                    <span class="summary-title">Resumen de Eventos:</span>
+                    <span class="summary-stat-item">Abiertos: <span class="summary-stat-badge abiertos">{{ abiertos }}</span></span>
+                    <span class="summary-divider">|</span>
+                    <span class="summary-stat-item">En Proceso: <span class="summary-stat-badge proceso">{{ en_proceso }}</span></span>
+                    <span class="summary-divider">|</span>
+                    <span class="summary-stat-item">Cerrados: <span class="summary-stat-badge cerrados">{{ cerrados }}</span></span>
+                    
+                    <span class="summary-divider-special"></span>
+                    
+                    <span class="summary-stat-item">Escalados: <span class="summary-stat-badge escalados">{{ escalados }}</span></span>
+                </div>
+                <div>
+                    <a href="{{ url_for('hallazgos.nuevo') }}" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Crear Evento
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID Evento</th>
+                        <th>Fecha</th>
+                        <th>Área</th>
+                        <th>Sistema Normativo</th>
+                        <th>Tipo</th>
+                        <th>Escalado</th>
+                        <th>Estado</th>
+                        <th>Riesgo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ev in eventos %}
+                    <tr>
+                        <td style="font-weight: 600;">
+                            <a href="{{ url_for('hallazgos.editar', id=ev.id) }}"
+                                style="color: #82C341; text-decoration: none;">{{ ev.codigo }}</a>
+                        </td>
+                        <td>{{ ev.fecha_registro.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ ev.area.nombre if ev.area else '--' }}</td>
+                        <td>{{ ev.sistema_normativo.nombre if ev.sistema_normativo else '--' }}</td>
+                        <td>{{ ev.tipo_evento.nombre if ev.tipo_evento else '--' }}</td>
+                        <td>
+                            {% if ev.evaluacion == 'Escalado' %}
+                            <span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Sí</span>
+                            {% else %}
+                            <span style="background: rgba(107, 114, 128, 0.2); color: #9ca3af; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">No</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if ev.estado == 'Abierto' %}
+                            <span
+                                style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Abierto</span>
+                            {% elif ev.estado == 'En Proceso' %}
+                            <span
+                                style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">En Proceso</span>
+                            {% elif ev.estado == 'Cerrado' %}
+                            <span
+                                style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Cerrado</span>
+                            {% else %}
+                            <span
+                                style="background: rgba(107, 114, 128, 0.2); color: #9ca3af; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">{{ ev.estado }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% set risk = (ev.impacto or 0) + (ev.recurrencia or 0) + (ev.potencialidad or 0) %}
+                            {% if risk >= 9 %}
+                            <span style="color: #ef4444; font-weight: 600;">Alto ({{ risk }})</span>
+                            {% elif risk >= 6 %}
+                            <span style="color: #f59e0b; font-weight: 600;">Medio ({{ risk }})</span>
+                            {% elif risk > 0 %}
+                            <span style="color: #10b981; font-weight: 600;">Bajo ({{ risk }})</span>
+                            {% else %}
+                            <span style="color: #9ca3af;">Sin Evaluar</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 30px; color: #6b7280;">
+                            No hay eventos registrados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        // Observador para activar la animación de "flotación" cuando la barra se pega arriba
+        document.addEventListener("DOMContentLoaded", function() {
+            const stickyEl = document.querySelector('.summary-sticky-bar');
+            const summaryBox = document.querySelector('.summary-box');
+            
+            // Creamos un observer que se dispara cuando la barra toca el borde top: 100px
+            const observer = new IntersectionObserver(
+                ([e]) => {
+                    // Si intersectionRatio es menor a 1, significa que empezó a esconderse (es decir, chocó y se pegó)
+                    summaryBox.classList.toggle('is-stuck', e.intersectionRatio < 1);
+                },
+                { threshold: [1], rootMargin: "-101px 0px 0px 0px" }
+            );
+            
+            if (stickyEl) {
+                observer.observe(stickyEl);
+            }
+            
+            // Observer para los encabezados de la tabla (thead)
+            const theadEl = document.querySelector('thead');
+            const theadObserver = new IntersectionObserver(
+                ([e]) => {
+                    theadEl.classList.toggle('is-stuck', e.intersectionRatio < 1);
+                },
+                { threshold: [1], rootMargin: "-176px 0px 0px 0px" } // Top 175px
+            );
+            
+            if (theadEl) {
+                theadObserver.observe(theadEl);
+            }
+        });
+    </script>
+</body>
+
+</html>

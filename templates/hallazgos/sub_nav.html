@@ -1,0 +1,14 @@
+<style>
+    .sub-nav { display: flex; gap: 20px; margin-bottom: 25px; border-bottom: 1px solid #374151; padding-bottom: 0px; margin-top: 10px; }
+    .sub-nav-link { color: #9ca3af; text-decoration: none; font-weight: 500; font-size: 0.95rem; padding: 10px 5px; transition: color 0.2s; position: relative; top: 1px; border-bottom: 2px solid transparent; }
+    .sub-nav-link:hover { color: #f3f4f6; }
+    .sub-nav-link.active { color: #82C341; border-bottom: 2px solid #82C341; }
+</style>
+<div class="sub-nav">
+    <a href="{{ url_for('hallazgos.dashboard') }}" class="sub-nav-link {% if sub_vista == 'dashboard' %}active{% endif %}">Dashboard</a>
+    <a href="{{ url_for('hallazgos.lista') }}" class="sub-nav-link {% if sub_vista == 'lista' %}active{% endif %}">Eventos</a>
+    <a href="{{ url_for('hallazgos.acciones_correctivas') }}" class="sub-nav-link {% if sub_vista == 'acciones' %}active{% endif %}">Acciones Correctivas</a>
+    {% if g.usuario.rol == 'admin' %}
+    <a href="{{ url_for('hallazgos.configuraciones') }}" class="sub-nav-link {% if sub_vista == 'configuraciones' %}active{% endif %}">Configuraciones</a>
+    {% endif %}
+</div>

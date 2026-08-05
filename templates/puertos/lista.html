@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='P.ico') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HUB Planinfor - Puertos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .table-container {
+            overflow-x: auto;
+            background: #1f2937;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+        th, td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            background: rgba(17, 24, 39, 0.5);
+            font-weight: 600;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        td {
+            color: var(--text-main);
+        }
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    {% set vista = 'puertos' %}
+    {% include 'header_unificado.html' %}
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+            <h1 class="page-title">Gestión de Puertos Abiertos</h1>
+            <div style="display: flex; gap: 10px;">
+                <a href="{{ url_for('nuevo_puerto') }}" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Nuevo Registro
+                </a>
+            </div>
+        </div>
+
+        <div class="filters-card" style="margin-bottom: 20px; background: #1f2937; padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
+            <form method="GET" action="{{ url_for('puertos') }}" style="display: flex; gap: 15px; align-items: flex-end;">
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 0.9rem;">Buscar</label>
+                    <input type="text" name="q" class="form-control" style="width: 100%;" placeholder="Buscar por servicio, puerto o descripción..." value="{{ q }}">
+                </div>
+                <div>
+                    <button type="submit" class="btn btn-primary" style="height: 42px;">Filtrar</button>
+                    <a href="{{ url_for('puertos') }}" class="btn btn-secondary" style="height: 42px; display: inline-flex; align-items: center;" title="Limpiar Filtros">Limpiar</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre del Servicio</th>
+                        <th>Número(s) del Puerto</th>
+                        <th>Descripción</th>
+                        <th>Fecha Registro</th>
+                        <th style="width: 150px; text-align: center;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in puertos %}
+                    <tr>
+                        <td>{{ p.id }}</td>
+                        <td><strong>{{ p.nombre_servicio }}</strong></td>
+                        <td><span style="background: rgba(130, 195, 65, 0.2); color: #82C341; padding: 4px 8px; border-radius: 4px; font-family: monospace;">{{ p.numeros_puerto }}</span></td>
+                        <td>{{ p.descripcion or '-' }}</td>
+                        <td>{{ p.fecha_registro.strftime('%d/%m/%Y') }}</td>
+                        <td style="text-align: center;">
+                            <div style="display: flex; gap: 8px; justify-content: center;">
+                                <a href="{{ url_for('editar_puerto', id=p.id) }}" class="btn btn-secondary btn-sm" title="Editar">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                </a>
+                                <form action="{{ url_for('eliminar_puerto', id=p.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar este puerto?');">
+                                    <button type="submit" class="btn btn-sm" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);" title="Eliminar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            No se encontraron puertos registrados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

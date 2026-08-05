@@ -432,6 +432,16 @@ class HistorialResponsable(db.Model):
     fecha_inicio = db.Column(db.DateTime, default=datetime.now, nullable=False)
     fecha_fin = db.Column(db.DateTime, nullable=True)
 
+class Puerto(db.Model):
+    """Modelo para Gestión de Puertos Abiertos"""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre_servicio = db.Column(db.String(200), nullable=False)
+    numeros_puerto = db.Column(db.String(200), nullable=False)
+    descripcion = db.Column(db.Text, nullable=True)
+    fecha_registro = db.Column(db.DateTime, default=datetime.now)
 class Licencia(db.Model):
     """Modelo para Gestión de Licencias (SSL, Software, SaaS)"""
     def __init__(self, **kwargs):
@@ -2657,6 +2667,74 @@ def cron_alertas_licencias():
             db.session.commit()
     except Exception as e:
         print(f'Error en cron_alertas_licencias: {e}')
+
+
+# ==================== GESTIÓN DE PUERTOS ====================
+
+@app.route('/puertos')
+@login_required
+def puertos():
+    search_query = request.args.get('q', '').strip()
+    query = Puerto.query
+    if search_query:
+        query = query.filter(
+            Puerto.nombre_servicio.ilike(f'%{search_query}%') |
+            Puerto.numeros_puerto.ilike(f'%{search_query}%') |
+            Puerto.descripcion.ilike(f'%{search_query}%')
+        )
+    puertos_list = query.order_by(Puerto.nombre_servicio.asc()).all()
+    return render_template('puertos/lista.html', puertos=puertos_list, q=search_query)
+
+@app.route('/puertos/nuevo', methods=['GET', 'POST'])
+@login_required
+def nuevo_puerto():
+    if request.method == 'POST':
+        try:
+            nuevo_p = Puerto(
+                nombre_servicio=request.form.get('nombre_servicio'),
+                numeros_puerto=request.form.get('numeros_puerto'),
+                descripcion=request.form.get('descripcion')
+            )
+            db.session.add(nuevo_p)
+            db.session.commit()
+            flash('Puerto registrado exitosamente', 'success')
+            return redirect(url_for('puertos'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al registrar puerto: {str(e)}', 'error')
+    
+    return render_template('puertos/formulario.html', puerto=None)
+
+@app.route('/puertos/editar/<int:id>', methods=['GET', 'POST'])
+@login_required
+def editar_puerto(id):
+    puerto = Puerto.query.get_or_404(id)
+    if request.method == 'POST':
+        try:
+            puerto.nombre_servicio = request.form.get('nombre_servicio')
+            puerto.numeros_puerto = request.form.get('numeros_puerto')
+            puerto.descripcion = request.form.get('descripcion')
+            db.session.commit()
+            flash('Puerto actualizado exitosamente', 'success')
+            return redirect(url_for('puertos'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al actualizar puerto: {str(e)}', 'error')
+            
+    return render_template('puertos/formulario.html', puerto=puerto)
+
+@app.route('/puertos/eliminar/<int:id>', methods=['POST'])
+@login_required
+def eliminar_puerto(id):
+    puerto = Puerto.query.get_or_404(id)
+    try:
+        db.session.delete(puerto)
+        db.session.commit()
+        flash('Puerto eliminado exitosamente', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al eliminar puerto: {str(e)}', 'error')
+    return redirect(url_for('puertos'))
 
 # ==================== GESTIÓN DE LICENCIAS ====================
 

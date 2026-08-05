@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='P.ico') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HUB Planinfor - {% if puerto %}Editar Puerto{% else %}Nuevo Puerto{% endif %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-card {
+            background: #1f2937;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .form-label {
+            font-size: 0.9rem;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+    {% set vista = 'puertos' %}
+    {% include 'header_unificado.html' %}
+
+    <div class="form-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+            <h1 class="page-title">{% if puerto %}Editar Puerto{% else %}Nuevo Puerto{% endif %}</h1>
+            <a href="{{ url_for('puertos') }}" class="btn btn-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                Volver al listado
+            </a>
+        </div>
+
+        <div class="form-card">
+            <form method="POST">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Nombre del Servicio <span style="color: #ef4444;">*</span></label>
+                        <input type="text" name="nombre_servicio" class="form-control" value="{{ puerto.nombre_servicio if puerto else '' }}" required placeholder="Ej. Servidor Web, Base de Datos">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Número(s) del Puerto <span style="color: #ef4444;">*</span></label>
+                        <input type="text" name="numeros_puerto" class="form-control" value="{{ puerto.numeros_puerto if puerto else '' }}" required placeholder="Ej. 80, 443 o 8080-8085">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Descripción</label>
+                        <textarea name="descripcion" class="form-control" rows="4" placeholder="Detalles adicionales sobre el uso del puerto...">{{ puerto.descripcion if puerto else '' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a href="{{ url_for('puertos') }}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                        Guardar Registro
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

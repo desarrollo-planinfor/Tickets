@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acciones Correctivas - Planinfor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --border: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #5b9e3b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background: #111827; color: var(--text-main); min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .page-title { font-size: 1.75rem; font-weight: 700; color: #ffffff; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1f2937; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #374151; }
+        th { background: #374151; color: #9ca3af; font-weight: 500; text-transform: uppercase; font-size: 0.85rem; }
+        tr:hover { background: #374151; }
+
+        .btn-sm { background: #374151; color: #fff; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.8rem; }
+        .btn-sm:hover { background: #4b5563; }
+    </style>
+</head>
+<body>
+    {% set vista = 'acciones' %}
+    {% include 'header_unificado.html' %}
+
+    <div class="container">
+        {% include 'eventos/sub_nav.html' %}
+        <div class="page-header">
+            <h1 class="page-title">Acciones Correctivas</h1>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Área</th>
+                    <th>Origen</th>
+                    <th>Estado</th>
+                    <th>Fecha Registro</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for accion in acciones %}
+                <tr>
+                    <td>{{ accion.codigo }}</td>
+                    <td>{{ accion.area.nombre if accion.area else 'N/A' }}</td>
+                    <td>{{ accion.origen }}</td>
+                    <td>{{ accion.estado }}</td>
+                    <td>{{ accion.fecha_registro.strftime('%d/%m/%Y') if accion.fecha_registro else '' }}</td>
+                    <td>
+                        <a href="{{ url_for('acciones_acr', id=accion.id) }}" class="btn-sm">ACR</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted);">No hay acciones correctivas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

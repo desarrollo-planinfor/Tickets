@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Eventos - Planinfor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --border: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #5b9e3b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background: #111827; color: var(--text-main); min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .page-title { font-size: 1.75rem; font-weight: 700; color: #ffffff; }
+
+        .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .dash-card { background: #1f2937; border-radius: 12px; padding: 20px; border: 1px solid #374151; }
+        .dash-card h3 { font-size: 1rem; color: #9ca3af; margin-bottom: 10px; }
+        .dash-card .value { font-size: 2rem; font-weight: 700; color: #fff; }
+    </style>
+</head>
+<body>
+    {% set vista = 'dashboard_eventos' %}
+    {% include 'header_unificado.html' %}
+
+    <div class="container">
+        {% include 'eventos/sub_nav.html' %}
+        <div class="page-header">
+            <h1 class="page-title">Métricas de Eventos</h1>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="dash-card">
+                <h3>Eventos Abiertos</h3>
+                <div class="value">--</div>
+            </div>
+            <div class="dash-card">
+                <h3>Acciones Correctivas Pendientes</h3>
+                <div class="value">--</div>
+            </div>
+            <div class="dash-card">
+                <h3>Eventos Críticos</h3>
+                <div class="value">--</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

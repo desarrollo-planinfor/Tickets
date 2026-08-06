@@ -7,3 +7,10 @@ scratch/
 reportes/
 *.bak
 Log/
+
+# Scripts locales/temporales
+diff.txt
+migrate_db*.py
+resolve.py
+seed_eventos.py
+test*.py

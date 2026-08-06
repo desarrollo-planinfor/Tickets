@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='P.ico') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuraciones Eventos - HUB Planinfor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+            background: #111827;
+            color: #f3f4f6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #82C341;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed #374151;
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    {% set vista = 'hallazgos' %}
+    {% include 'header_unificado.html' %}
+
+    <div class="container">
+        {% set sub_vista = 'configuraciones' %}
+        {% include 'hallazgos/sub_nav.html' %}
+
+        <style>
+            .settings-layout {
+                display: flex;
+                gap: 30px;
+                margin-top: 20px;
+                align-items: flex-start;
+            }
+
+            /* Sidebar styles */
+            .settings-sidebar {
+                width: 280px;
+                background: #1f2937;
+                border: 1px solid #374151;
+                border-radius: 12px;
+                padding: 15px;
+                flex-shrink: 0;
+            }
+
+            .sidebar-title {
+                font-size: 0.9rem;
+                text-transform: uppercase;
+                color: #9ca3af;
+                font-weight: 600;
+                margin-bottom: 15px;
+                padding-left: 10px;
+                letter-spacing: 0.5px;
+            }
+
+            .sidebar-nav {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .nav-item {
+                padding: 12px 15px;
+                border-radius: 8px;
+                color: #d1d5db;
+                cursor: pointer;
+                transition: 0.2s;
+                font-weight: 500;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .nav-item:hover {
+                background: #374151;
+                color: #f3f4f6;
+            }
+
+            .nav-item.active {
+                background: rgba(130, 195, 65, 0.1);
+                color: #82C341;
+                border-left: 3px solid #82C341;
+            }
+
+            /* Main content styles */
+            .settings-content {
+                flex-grow: 1;
+                background: #1f2937;
+                border: 1px solid #374151;
+                border-radius: 12px;
+                overflow: hidden;
+                min-height: 400px;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .content-header {
+                padding: 20px 25px;
+                border-bottom: 1px solid #374151;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .content-title {
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: #f9fafb;
+                margin: 0;
+            }
+
+            .catalog-view {
+                display: none;
+                flex-direction: column;
+                height: 100%;
+            }
+
+            .catalog-view.active {
+                display: flex;
+            }
+
+            /* Table styles */
+            .table-container {
+                flex-grow: 1;
+                overflow-y: scroll;
+                max-height: 500px;
+            }
+
+            .catalog-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .catalog-table th,
+            .catalog-table td {
+                padding: 15px 25px;
+                text-align: left;
+                border-bottom: 1px solid #374151;
+            }
+
+            .catalog-table th {
+                font-size: 0.85rem;
+                color: #9ca3af;
+                text-transform: uppercase;
+                position: sticky;
+                top: 0;
+                background: #1f2937;
+                z-index: 1;
+            }
+
+            .catalog-table td {
+                font-size: 0.95rem;
+                color: #e5e7eb;
+            }
+
+            /* Footer / Add new */
+            .catalog-footer {
+                padding: 20px 25px;
+                background: #111827;
+                border-top: 1px solid #374151;
+                display: flex;
+                gap: 15px;
+            }
+
+            .form-input {
+                flex-grow: 1;
+                background: #374151;
+                border: 1px solid #4b5563;
+                color: #f3f4f6;
+                padding: 12px 15px;
+                border-radius: 8px;
+                font-size: 0.95rem;
+                font-family: 'Outfit', sans-serif;
+                transition: 0.2s;
+            }
+
+            .form-input:focus {
+                outline: none;
+                border-color: #82C341;
+            }
+
+            .btn {
+                padding: 12px 25px;
+                border-radius: 8px;
+                font-weight: 600;
+                font-size: 0.95rem;
+                cursor: pointer;
+                border: none;
+                font-family: 'Outfit', sans-serif;
+                background: #82C341;
+                color: #111827;
+                transition: 0.2s;
+                white-space: nowrap;
+            }
+
+            .btn:hover {
+                background: #90d648;
+            }
+
+            /* Toggle Switch */
+            .switch {
+                position: relative;
+                display: inline-block;
+                width: 44px;
+                height: 24px;
+            }
+
+            .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+            .slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #4b5563;
+                transition: .4s;
+                border-radius: 24px;
+            }
+
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 18px;
+                width: 18px;
+                left: 3px;
+                bottom: 3px;
+                background-color: white;
+                transition: .4s;
+                border-radius: 50%;
+            }
+
+            input:checked+.slider {
+                background-color: #82C341;
+            }
+
+            input:checked+.slider:before {
+                transform: translateX(20px);
+            }
+
+            /* Badges */
+            .badge {
+                padding: 5px 10px;
+                border-radius: 6px;
+                font-size: 0.8rem;
+                font-weight: 600;
+                display: inline-block;
+                text-align: center;
+                width: 60px;
+            }
+
+            .badge-active {
+                background: rgba(130, 195, 65, 0.15);
+                color: #82C341;
+                border: 1px solid rgba(130, 195, 65, 0.3);
+            }
+
+            .badge-inactive {
+                background: rgba(239, 68, 68, 0.15);
+                color: #ef4444;
+                border: 1px solid rgba(239, 68, 68, 0.3);
+            }
+        </style>
+
+        <h1 class="page-title">Configuraciones de Catálogos</h1>
+
+        <div class="settings-layout">
+            <!-- SIDEBAR -->
+            <div class="settings-sidebar">
+                <div class="sidebar-title">Catálogos de Eventos</div>
+                <div class="sidebar-nav">
+                    <div class="nav-item active" onclick="showCatalog('sistema', this)">Sistemas Normativos <span
+                            style="background: #374151; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem;">{{
+                            sistemas|length }}</span></div>
+                    <div class="nav-item" onclick="showCatalog('tipo_evento', this)">Tipos de Evento <span
+                            style="background: #374151; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem;">{{
+                            tipos|length }}</span></div>
+                    <div class="nav-item" onclick="showCatalog('clasificacion', this)">Clasificaciones <span
+                            style="background: #374151; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem;">{{
+                            clasificaciones|length }}</span></div>
+                    <div class="nav-item" onclick="showCatalog('origen', this)">Orígenes (ACR) <span
+                            style="background: #374151; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem;">{{
+                            origenes|length }}</span></div>
+                </div>
+            </div>
+
+            <!-- MAIN CONTENT -->
+            <div class="settings-content">
+
+                <!-- SISTEMAS NORMATIVOS -->
+                <div class="catalog-view active" id="view-sistema">
+                    <div class="content-header">
+                        <h2 class="content-title">Sistemas Normativos</h2>
+                        <span style="color: #9ca3af; font-size: 0.9rem;">Gestiona las normativas (ej. ISO 9001)</span>
+                    </div>
+                    <div class="table-container">
+                        <table class="catalog-table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre del Sistema</th>
+                                    <th style="width: 100px;">Estado</th>
+                                    <th style="width: 80px;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in sistemas %}
+                                <tr>
+                                    <td style="font-weight: 500;">{{ item.nombre }}</td>
+                                    <td><span
+                                            class="badge {% if item.activo %}badge-active{% else %}badge-inactive{% endif %}"
+                                            id="badge-sistema-{{ item.id }}">{% if item.activo %}Activo{% else
+                                            %}Inactivo{% endif %}</span></td>
+                                    <td>
+                                        <label class="switch">
+                                            <input type="checkbox" onchange="toggleStatus('sistema', {{ item.id }})" {%
+                                                if item.activo %}checked{% endif %}>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="catalog-footer">
+                        <input type="text" id="input-sistema" class="form-input"
+                            placeholder="Nombre del nuevo sistema normativo...">
+                        <button class="btn" onclick="addItem('sistema')">Guardar Sistema</button>
+                    </div>
+                </div>
+
+                <!-- TIPOS DE EVENTO -->
+                <div class="catalog-view" id="view-tipo_evento">
+                    <div class="content-header">
+                        <h2 class="content-title">Tipos de Evento</h2>
+                        <span style="color: #9ca3af; font-size: 0.9rem;">Categorías de eventos reportados</span>
+                    </div>
+                    <div class="table-container">
+                        <table class="catalog-table">
+                            <thead>
+                                <tr>
+                                    <th>Tipo de Evento</th>
+                                    <th style="width: 100px;">Estado</th>
+                                    <th style="width: 80px;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in tipos %}
+                                <tr>
+                                    <td style="font-weight: 500;">{{ item.nombre }}</td>
+                                    <td><span
+                                            class="badge {% if item.activo %}badge-active{% else %}badge-inactive{% endif %}"
+                                            id="badge-tipo_evento-{{ item.id }}">{% if item.activo %}Activo{% else
+                                            %}Inactivo{% endif %}</span></td>
+                                    <td>
+                                        <label class="switch">
+                                            <input type="checkbox" onchange="toggleStatus('tipo_evento', {{ item.id }})"
+                                                {% if item.activo %}checked{% endif %}>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="catalog-footer">
+                        <input type="text" id="input-tipo_evento" class="form-input"
+                            placeholder="Nombre del nuevo tipo de evento...">
+                        <button class="btn" onclick="addItem('tipo_evento')">Guardar Tipo</button>
+                    </div>
+                </div>
+
+                <!-- CLASIFICACIONES -->
+                <div class="catalog-view" id="view-clasificacion">
+                    <div class="content-header">
+                        <h2 class="content-title">Clasificaciones</h2>
+                        <span style="color: #9ca3af; font-size: 0.9rem;">Niveles o categorías de gravedad</span>
+                    </div>
+                    <div class="table-container">
+                        <table class="catalog-table">
+                            <thead>
+                                <tr>
+                                    <th>Clasificación</th>
+                                    <th style="width: 100px;">Estado</th>
+                                    <th style="width: 80px;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in clasificaciones %}
+                                <tr>
+                                    <td style="font-weight: 500;">{{ item.nombre }}</td>
+                                    <td><span
+                                            class="badge {% if item.activo %}badge-active{% else %}badge-inactive{% endif %}"
+                                            id="badge-clasificacion-{{ item.id }}">{% if item.activo %}Activo{% else
+                                            %}Inactivo{% endif %}</span></td>
+                                    <td>
+                                        <label class="switch">
+                                            <input type="checkbox"
+                                                onchange="toggleStatus('clasificacion', {{ item.id }})" {% if
+                                                item.activo %}checked{% endif %}>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="catalog-footer">
+                        <input type="text" id="input-clasificacion" class="form-input"
+                            placeholder="Nombre de la nueva clasificación...">
+                        <button class="btn" onclick="addItem('clasificacion')">Guardar Clasificación</button>
+                    </div>
+                </div>
+
+                <!-- ORIGENES ACR -->
+                <div class="catalog-view" id="view-origen">
+                    <div class="content-header">
+                        <h2 class="content-title">Orígenes de ACR</h2>
+                        <span style="color: #9ca3af; font-size: 0.9rem;">Fuentes que detonan una Acción
+                            Correctiva</span>
+                    </div>
+                    <div class="table-container">
+                        <table class="catalog-table">
+                            <thead>
+                                <tr>
+                                    <th>Origen</th>
+                                    <th style="width: 100px;">Estado</th>
+                                    <th style="width: 80px;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in origenes %}
+                                <tr>
+                                    <td style="font-weight: 500;">{{ item.nombre }}</td>
+                                    <td><span
+                                            class="badge {% if item.activo %}badge-active{% else %}badge-inactive{% endif %}"
+                                            id="badge-origen-{{ item.id }}">{% if item.activo %}Activo{% else
+                                            %}Inactivo{% endif %}</span></td>
+                                    <td>
+                                        <label class="switch">
+                                            <input type="checkbox" onchange="toggleStatus('origen', {{ item.id }})" {%
+                                                if item.activo %}checked{% endif %}>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="catalog-footer">
+                        <input type="text" id="input-origen" class="form-input"
+                            placeholder="Nombre del nuevo origen...">
+                        <button class="btn" onclick="addItem('origen')">Guardar Origen</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching logic
+        function showCatalog(catalogId, el) {
+            // Update active state in sidebar
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            el.classList.add('active');
+
+            // Show corresponding view
+            document.querySelectorAll('.catalog-view').forEach(view => view.classList.remove('active'));
+            document.getElementById('view-' + catalogId).classList.add('active');
+
+            // Save state to localStorage so we stay on the same tab after reload
+            localStorage.setItem('activeCatalogTab', catalogId);
+        }
+
+        // Restore tab on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const activeTab = localStorage.getItem('activeCatalogTab');
+            if (activeTab) {
+                const views = document.querySelectorAll('.catalog-view');
+                const items = document.querySelectorAll('.nav-item');
+
+                // Need to find the correct index based on ID mapping
+                const idMap = ['sistema', 'tipo_evento', 'clasificacion', 'origen'];
+                const index = idMap.indexOf(activeTab);
+
+                if (index !== -1 && items[index]) {
+                    showCatalog(activeTab, items[index]);
+                }
+            }
+        });
+
+        async function toggleStatus(tipo, id) {
+            try {
+                const response = await fetch("{{ url_for('hallazgos.configuraciones_toggle') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tipo_catalogo: tipo, id: id })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    const badge = document.getElementById(`badge-${tipo}-${id}`);
+                    if (data.nuevo_estado) {
+                        badge.className = 'badge badge-active';
+                        badge.innerText = 'Activo';
+                    } else {
+                        badge.className = 'badge badge-inactive';
+                        badge.innerText = 'Inactivo';
+                    }
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Error de conexión');
+            }
+        }
+
+        async function addItem(tipo) {
+            const input = document.getElementById(`input-${tipo}`);
+            const nombre = input.value.trim();
+            if (!nombre) return;
+
+            const formData = new FormData();
+            formData.append('tipo_catalogo', tipo);
+            formData.append('nombre', nombre);
+
+            try {
+                const response = await fetch("{{ url_for('hallazgos.configuraciones_agregar') }}", {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    // Limpiar input y recargar la página para que aplique los estilos correctos fácilmente
+                    input.value = '';
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Error de conexión');
+            }
+        }
+    </script>
+</body>
+
+</html>

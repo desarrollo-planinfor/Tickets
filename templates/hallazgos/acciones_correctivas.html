@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='P.ico') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acciones Correctivas - HUB Planinfor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; font-family: 'Outfit', sans-serif; background: #111827; color: #f3f4f6; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+        .page-title { font-size: 1.5rem; font-weight: 600; color: #ffffff; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .btn-primary { background: #82C341; color: #111827; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: 0.2s; }
+        .btn-primary:hover { background: #90d648; }
+
+        .card { background: #1f2937; border: 1px solid #374151; border-radius: 12px; padding: 20px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; padding: 12px 15px; color: #9ca3af; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; border-bottom: 1px solid #374151; }
+        td { padding: 12px 15px; border-bottom: 1px solid #374151; color: #d1d5db; font-size: 0.95rem; }
+        
+        /* Efecto de Enfoque de Filas (Row Focus) */
+        tbody tr { transition: all 0.2s ease; }
+        tbody:hover tr { opacity: 0.4; }
+        tbody tr:hover { 
+            opacity: 1; 
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: inset 4px 0 0 #82C341; 
+        }
+    </style>
+</head>
+<body>
+    {% set vista = 'hallazgos' %}
+    {% include 'header_unificado.html' %}
+
+    <div class="container">
+        {% set sub_vista = 'acciones' %}
+        {% include 'hallazgos/sub_nav.html' %}
+        
+        <div class="page-title">
+            Lista de Acciones Correctivas
+            <a href="#" class="btn-primary">Nueva Acción</a>
+        </div>
+        
+        <div class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID Acción</th>
+                        <th>Origen</th>
+                        <th>Clasificación</th>
+                        <th>Responsable</th>
+                        <th>Fecha Límite</th>
+                        <th>Fecha Verificación</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ac in acciones %}
+                    <tr>
+                        <td style="font-weight: 600;">
+                            <a href="{{ url_for('hallazgos.acciones_correctivas_editar', id=ac.id) }}" style="color: #82C341; text-decoration: none;">{{ ac.codigo }}</a>
+                        </td>
+                        <td>{{ ac.origen }}</td>
+                        <td>{{ ac.clasificacion.nombre if ac.clasificacion else '--' }}</td>
+                        <td>{{ ac.responsable.nombre if ac.responsable else '--' }}</td>
+                        <td>{{ ac.fecha_plazo.strftime('%d/%m/%Y') if ac.fecha_plazo else '--' }}</td>
+                        <td>{{ ac.fecha_verificacion.strftime('%d/%m/%Y') if ac.fecha_verificacion else '--' }}</td>
+                        <td>
+                            {% if ac.estado == 'Abierto' %}
+                                <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 500;">Abierto</span>
+                            {% elif ac.estado == 'En Revisión' %}
+                                <span style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 500;">En Revisión</span>
+                            {% elif ac.estado == 'Cerrado Parcial' %}
+                                <span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 500;">Cerrado Parcial</span>
+                            {% elif ac.estado == 'Cerrado' %}
+                                <span style="background: rgba(16, 185, 129, 0.2); color: #059669; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Cerrado (Eficaz)</span>
+                            {% else %}
+                                <span style="background: rgba(107, 114, 128, 0.1); color: #9ca3af; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 500;">{{ ac.estado }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 30px; color: #6b7280;">
+                            Aún no se han registrado acciones correctivas.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

@@ -2,6 +2,9 @@
 Sistema de Gestión de Tickets de Soporte
 Flask Application - Planinfor
 """
+import sys
+# Alias para evitar inicialización doble cuando se ejecuta como `python app.py` y luego se importa
+sys.modules['app'] = sys.modules[__name__]
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, g
 from flask_sqlalchemy import SQLAlchemy
@@ -177,11 +180,14 @@ def load_user():
 
 class Area(db.Model):
     """Modelo de Área (para usuarios)"""
+    __tablename__ = 'area'
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False, unique=True)
+    activa = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
 class AreaEquipo(db.Model):
     """Modelo de Área para Equipos (inventario)"""
@@ -477,6 +483,192 @@ class Licencia(db.Model):
             return 'Amarillo'
         else:
             return 'Verde'
+
+# ==================== MODELOS SISTEMA DE EVENTOS ====================
+
+class SistemaNormativo(db.Model):
+    __tablename__ = 'sistema_normativo'
+    def __init__(self, **kwargs):
+        super(SistemaNormativo, self).__init__(**kwargs)
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False, unique=True)
+    activo = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+class TipoEvento(db.Model):
+    __tablename__ = 'tipo_evento'
+    def __init__(self, **kwargs):
+        super(TipoEvento, self).__init__(**kwargs)
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False, unique=True)
+    activo = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+class Clasificacion(db.Model):
+    __tablename__ = 'clasificacion'
+    def __init__(self, **kwargs):
+        super(Clasificacion, self).__init__(**kwargs)
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False, unique=True)
+    activo = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+class OrigenACR(db.Model):
+    __tablename__ = 'origen_acr'
+    def __init__(self, **kwargs):
+        super(OrigenACR, self).__init__(**kwargs)
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False, unique=True)
+    activo = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+class Evento(db.Model):
+    __tablename__ = 'evento'
+    def __init__(self, **kwargs):
+        super(Evento, self).__init__(**kwargs)
+    id = db.Column(db.Integer, primary_key=True)
+    codigo = db.Column(db.String(20), nullable=False, unique=True)
+    area_id = db.Column(db.Integer, db.ForeignKey('area.id'))
+    area = db.relationship('Area')
+    responsable_id = db.Column(db.Integer, db.ForeignKey('usuario.id'))
+    responsable = db.relationship('Usuario', foreign_keys=[responsable_id])
+    sistema_normativo_id = db.Column(db.Integer, db.ForeignKey('sistema_normativo.id'))
+    sistema_normativo = db.relationship('SistemaNormativo')
+    tipo_evento_id = db.Column(db.Integer, db.ForeignKey('tipo_evento.id'))
+    tipo_evento = db.relationship('TipoEvento')
+    descripcion = db.Column(db.Text)
+    fecha_registro = db.Column(db.DateTime, default=datetime.now)
+    accion_contencion = db.Column(db.Text)
+    impacto = db.Column(db.Integer)
+    recurrencia = db.Column(db.Integer)
+    potencialidad = db.Column(db.Integer)
+    evaluacion = db.Column(db.String(30))
+    accion_correctiva_id = db.Column(db.Integer, db.ForeignKey('accion_correctiva.id'), nullable=True)
+    estado = db.Column(db.String(20), default='Abierto')
+    estado_cierre = db.Column(db.String(20), default='Pendiente')
+    firma_cierre = db.Column(db.String(150))
+    fecha_cierre = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+class AccionCorrectiva(db.Model):
+    __tablename__ = 'accion_correctiva'
+    def __init__(self, **kwargs):
+        super(AccionCorrectiva, self).__init__(**kwargs)
+    id = db.Column(db.Integer, primary_key=True)
+    codigo = db.Column(db.String(20), nullable=False, unique=True)
+    evento_id = db.Column(db.Integer, db.ForeignKey('evento.id'))
+    evento = db.relationship('Evento', foreign_keys=[evento_id], backref='acciones_correctivas')
+    origen = db.Column(db.String(100), default='Externa')
+    area_id = db.Column(db.Integer, db.ForeignKey('area.id'))
+    area = db.relationship('Area')
+    responsable_id = db.Column(db.Integer, db.ForeignKey('usuario.id'))
+    responsable = db.relationship('Usuario', foreign_keys=[responsable_id])
+    sistema_normativo_id = db.Column(db.Integer, db.ForeignKey('sistema_normativo.id'))
+    sistema_normativo = db.relationship('SistemaNormativo')
+    tipo_evento_id = db.Column(db.Integer, db.ForeignKey('tipo_evento.id'))
+    tipo_evento = db.relationship('TipoEvento')
+    clasificacion_id = db.Column(db.Integer, db.ForeignKey('clasificacion.id'))
+    clasificacion = db.relationship('Clasificacion')
+    descripcion = db.Column(db.Text)
+    accion_contencion = db.Column(db.Text)
+    consulta_trabajador = db.Column(db.Text)
+    fecha_registro = db.Column(db.DateTime, default=datetime.now)
+    fecha_plazo = db.Column(db.Date)
+    fecha_verificacion = db.Column(db.Date)
+    iteracion_actual = db.Column(db.Integer, default=0)
+    resultado_eficacia = db.Column(db.String(20), default='Pendiente')
+    estado = db.Column(db.String(20), default='Abierto')
+    estado_cierre = db.Column(db.String(20), default='Pendiente')
+    firma_cierre = db.Column(db.String(150))
+    fecha_cierre = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+class IteracionACR(db.Model):
+    __tablename__ = 'iteracion_acr'
+    def __init__(self, **kwargs):
+        super(IteracionACR, self).__init__(**kwargs)
+    id = db.Column(db.Integer, primary_key=True)
+    accion_id = db.Column(db.Integer, db.ForeignKey('accion_correctiva.id'), nullable=False)
+    accion_correctiva = db.relationship('AccionCorrectiva', backref=db.backref('iteraciones_acr', lazy=True, cascade='all, delete-orphan'))
+    numero_iteracion = db.Column(db.Integer, nullable=False, default=1)
+    metodologia = db.Column(db.String(30))
+    datos_acr = db.Column(db.JSON)
+    causa_raiz = db.Column(db.Text)
+    texto_accion_correctiva = db.Column(db.Text)
+    evaluacion_nuevos_riesgos = db.Column(db.Text)
+    congelado = db.Column(db.Boolean, default=False)
+    eficacia_p1 = db.Column(db.Boolean)
+    eficacia_p2 = db.Column(db.Boolean)
+    resultado_eficacia = db.Column(db.String(20))
+    evaluado_por = db.Column(db.String(150))
+    motivo_falla = db.Column(db.Text)
+    fecha_evaluacion = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+class EvaluacionEficacia(db.Model):
+    __tablename__ = 'evaluacion_eficacia'
+    def __init__(self, **kwargs):
+        super(EvaluacionEficacia, self).__init__(**kwargs)
+    id = db.Column(db.Integer, primary_key=True)
+    iteracion_id = db.Column(db.Integer, db.ForeignKey('iteracion_acr.id'), nullable=False)
+    iteracion = db.relationship('IteracionACR', backref=db.backref('evaluaciones', lazy=True, cascade='all, delete-orphan'))
+    clave_pregunta = db.Column(db.String(50), nullable=False)
+    texto_pregunta = db.Column(db.Text, nullable=False)
+    respuesta = db.Column(db.Boolean)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+class ArchivoEvento(db.Model):
+    __tablename__ = 'archivo_evento'
+    def __init__(self, **kwargs):
+        super(ArchivoEvento, self).__init__(**kwargs)
+    id = db.Column(db.Integer, primary_key=True)
+    evento_id = db.Column(db.Integer, db.ForeignKey('evento.id'), nullable=False)
+    evento = db.relationship('Evento', backref=db.backref('archivos', lazy=True, cascade='all, delete-orphan'))
+    nombre_original = db.Column(db.String(300), nullable=False)
+    nombre_almacenado = db.Column(db.String(300), nullable=False)
+    mime_type = db.Column(db.String(100))
+    tamano = db.Column(db.Integer)
+    fecha_subida = db.Column(db.DateTime, default=datetime.now)
+
+class ArchivoAC(db.Model):
+    __tablename__ = 'archivo_ac'
+    def __init__(self, **kwargs):
+        super(ArchivoAC, self).__init__(**kwargs)
+    id = db.Column(db.Integer, primary_key=True)
+    accion_id = db.Column(db.Integer, db.ForeignKey('accion_correctiva.id'), nullable=False)
+    accion = db.relationship('AccionCorrectiva', backref=db.backref('archivos', lazy=True, cascade='all, delete-orphan'))
+    nombre_original = db.Column(db.String(300), nullable=False)
+    nombre_almacenado = db.Column(db.String(300), nullable=False)
+    mime_type = db.Column(db.String(100))
+    tamano = db.Column(db.Integer)
+    fecha_subida = db.Column(db.DateTime, default=datetime.now)
+
+class HistorialEvento(db.Model):
+    __tablename__ = 'historial_evento'
+    def __init__(self, **kwargs):
+        super(HistorialEvento, self).__init__(**kwargs)
+    id = db.Column(db.Integer, primary_key=True)
+    evento_id = db.Column(db.Integer, db.ForeignKey('evento.id'), nullable=False)
+    evento = db.relationship('Evento', backref=db.backref('historial', lazy=True, cascade='all, delete-orphan'))
+    nombre_usuario = db.Column(db.String(150), nullable=False, default='Sistema')
+    accion = db.Column(db.String(50), nullable=False)
+    detalles = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+class HistorialAC(db.Model):
+    __tablename__ = 'historial_ac'
+    def __init__(self, **kwargs):
+        super(HistorialAC, self).__init__(**kwargs)
+    id = db.Column(db.Integer, primary_key=True)
+    accion_id = db.Column(db.Integer, db.ForeignKey('accion_correctiva.id'), nullable=False)
+    accion = db.relationship('AccionCorrectiva', backref=db.backref('historial', lazy=True, cascade='all, delete-orphan'))
+    nombre_usuario = db.Column(db.String(150), nullable=False, default='Sistema')
+    accion_texto = db.Column(db.String(50), nullable=False)
+    detalles = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
 # ==================== RUTAS DE LA APLICACIÓN ====================
 
@@ -2903,6 +3095,89 @@ def eliminar_licencia(id):
         flash('Licencia eliminada.', 'success')
     return redirect(url_for('licencias'))
 
+# ---------- EVENTOS Y ACCIONES CORRECTIVAS ----------
+
+@app.route('/eventos/dashboard')
+@login_required
+def dashboard_eventos():
+    """Dashboard de métricas para Eventos"""
+    return render_template('eventos/dashboard.html')
+
+@app.route('/eventos')
+@login_required
+def eventos_lista():
+    """Lista de eventos registrados"""
+    eventos = Evento.query.order_by(Evento.fecha_registro.desc()).all()
+    return render_template('eventos/lista_eventos.html', eventos=eventos)
+
+@app.route('/eventos_old/nuevo', methods=['GET', 'POST'])
+@login_required
+def eventos_nuevo():
+    """Registrar nuevo evento"""
+    if request.method == 'POST':
+        area_id = request.form.get('area_id')
+        tipo_evento_id = request.form.get('tipo_evento_id')
+        descripcion = request.form.get('descripcion')
+        
+        # Generar código único para el evento
+        from datetime import datetime
+        year = datetime.now().year
+        ultimo_evento = Evento.query.order_by(Evento.id.desc()).first()
+        numero = (ultimo_evento.id + 1) if ultimo_evento else 1
+        codigo = f"EV-{year}-{numero:04d}"
+
+        nuevo_evento = Evento(
+            codigo=codigo,
+            area_id=area_id,
+            tipo_evento_id=tipo_evento_id,
+            descripcion=descripcion,
+            responsable_id=g.usuario.id
+        )
+        try:
+            db.session.add(nuevo_evento)
+            db.session.commit()
+            flash('Evento registrado.', 'success')
+            return redirect(url_for('eventos_lista'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al registrar el evento: {str(e)}', 'error')
+    
+    areas = Area.query.filter_by(activa=True).all()
+    tipos = TipoEvento.query.filter_by(activo=True).all()
+    sistemas = SistemaNormativo.query.filter_by(activo=True).all()
+    
+    return render_template('eventos/formulario_evento.html', areas=areas, tipos=tipos, sistemas=sistemas)
+
+@app.route('/eventos/<int:id>')
+@login_required
+def ver_evento(id):
+    """Detalle de evento"""
+    evento = db.session.get(Evento, id)
+    return render_template('eventos/ver_evento.html', evento=evento)
+
+@app.route('/acciones_correctivas')
+@login_required
+def acciones_lista():
+    """Lista de Acciones Correctivas"""
+    acciones = AccionCorrectiva.query.order_by(AccionCorrectiva.fecha_registro.desc()).all()
+    return render_template('eventos/lista_acciones.html', acciones=acciones)
+
+@app.route('/acciones_correctivas/<int:id>/acr')
+@login_required
+def acciones_acr(id):
+    """Análisis de Causa Raíz (ACR) iterativo"""
+    accion = db.session.get(AccionCorrectiva, id)
+    return render_template('eventos/acr.html', accion=accion)
+
+@app.route('/configuraciones/eventos', methods=['GET', 'POST'])
+@login_required
+def configuraciones_eventos():
+    """Catálogos y configuraciones del sistema de eventos"""
+    if g.usuario.rol != 'admin':
+        flash('Acceso denegado', 'error')
+        return redirect(url_for('index'))
+    return render_template('eventos/configuraciones.html')
+
 from io import BytesIO
 from flask import send_file
 from openpyxl.styles import Font, PatternFill
@@ -2989,6 +3264,167 @@ def exportar_inventario():
     output.seek(0)
     
     return send_file(output, download_name="inventario_reporte.xlsx", as_attachment=True)
+
+
+# ==================== MÓDULO HALLAZGOS ====================
+
+class HallazgoSistemaNormativo(db.Model):
+    __tablename__ = 'hallazgo_sistema_normativo'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False, unique=True)
+    activo = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+class HallazgoTipoEvento(db.Model):
+    __tablename__ = 'hallazgo_tipo_evento'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False, unique=True)
+    activo = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+class HallazgoClasificacion(db.Model):
+    __tablename__ = 'hallazgo_clasificacion'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False, unique=True)
+    activo = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+class HallazgoOrigenACR(db.Model):
+    __tablename__ = 'hallazgo_origen_acr'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False, unique=True)
+    activo = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+class HallazgoEvento(db.Model):
+    __tablename__ = 'hallazgo_evento'
+    id = db.Column(db.Integer, primary_key=True)
+    codigo = db.Column(db.String(20), nullable=False, unique=True)
+    
+    area_id = db.Column(db.Integer, db.ForeignKey('area.id'), nullable=True)
+    responsable_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=True)
+    sistema_normativo_id = db.Column(db.Integer, db.ForeignKey('hallazgo_sistema_normativo.id'), nullable=True)
+    tipo_evento_id = db.Column(db.Integer, db.ForeignKey('hallazgo_tipo_evento.id'), nullable=True)
+    
+    area = db.relationship('Area', foreign_keys=[area_id])
+    sistema_normativo = db.relationship('HallazgoSistemaNormativo', foreign_keys=[sistema_normativo_id])
+    tipo_evento = db.relationship('HallazgoTipoEvento', foreign_keys=[tipo_evento_id])
+    
+    descripcion = db.Column(db.Text, nullable=True)
+    fecha_registro = db.Column(db.DateTime, default=datetime.now)
+    
+    accion_contencion = db.Column(db.Text, nullable=True)
+    impacto = db.Column(db.Integer, nullable=True)
+    recurrencia = db.Column(db.Integer, nullable=True)
+    potencialidad = db.Column(db.Integer, nullable=True)
+    
+    evaluacion = db.Column(db.String(50), nullable=True)
+    accion_correctiva_id = db.Column(db.Integer, db.ForeignKey('hallazgo_accion_correctiva.id'), nullable=True)
+    accion_correctiva = db.relationship('HallazgoAccionCorrectiva', foreign_keys=[accion_correctiva_id], backref=db.backref('evento_asociado', uselist=False))
+    
+    estado = db.Column(db.String(20), default='Abierto')
+    estado_cierre = db.Column(db.String(20), default='Pendiente')
+    firma_cierre = db.Column(db.String(150), nullable=True)
+    pdf_cierre = db.Column(db.String(500), nullable=True)
+    fecha_cierre = db.Column(db.DateTime, nullable=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    historial = db.relationship('HallazgoHistorial', backref='evento', lazy='dynamic', cascade='all, delete-orphan')
+
+class HallazgoHistorial(db.Model):
+    __tablename__ = 'hallazgo_historial'
+    id = db.Column(db.Integer, primary_key=True)
+    evento_id = db.Column(db.Integer, db.ForeignKey('hallazgo_evento.id'), nullable=False)
+    accion = db.Column(db.String(100), nullable=False)
+    detalles = db.Column(db.Text, nullable=True)
+    usuario = db.Column(db.String(150), default='Sistema')
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+class HallazgoAccionCorrectiva(db.Model):
+    __tablename__ = 'hallazgo_accion_correctiva'
+    id = db.Column(db.Integer, primary_key=True)
+    codigo = db.Column(db.String(20), nullable=False, unique=True)
+    
+    evento_id = db.Column(db.Integer, db.ForeignKey('hallazgo_evento.id'), nullable=True)
+    origen = db.Column(db.String(100), default='Externa')
+    
+    area_id = db.Column(db.Integer, db.ForeignKey('area.id'), nullable=True)
+    responsable_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=True)
+    sistema_normativo_id = db.Column(db.Integer, db.ForeignKey('hallazgo_sistema_normativo.id'), nullable=True)
+    tipo_evento_id = db.Column(db.Integer, db.ForeignKey('hallazgo_tipo_evento.id'), nullable=True)
+    clasificacion_id = db.Column(db.Integer, db.ForeignKey('hallazgo_clasificacion.id'), nullable=True)
+    
+    clasificacion = db.relationship('HallazgoClasificacion')
+    responsable = db.relationship('Usuario', foreign_keys=[responsable_id])
+    evento = db.relationship('HallazgoEvento', foreign_keys=[evento_id])
+    area = db.relationship('Area', foreign_keys=[area_id])
+    sistema_normativo = db.relationship('HallazgoSistemaNormativo', foreign_keys=[sistema_normativo_id])
+    tipo_evento = db.relationship('HallazgoTipoEvento', foreign_keys=[tipo_evento_id])
+    
+    descripcion = db.Column(db.Text, nullable=True)
+    accion_contencion = db.Column(db.Text, nullable=True)
+    consulta_trabajador = db.Column(db.Text, nullable=True)
+    fecha_registro = db.Column(db.DateTime, default=datetime.now)
+    
+    fecha_plazo = db.Column(db.Date, nullable=True)
+    fecha_verificacion = db.Column(db.Date, nullable=True)
+    
+    iteracion_actual = db.Column(db.Integer, default=0)
+    resultado_eficacia = db.Column(db.String(20), default='Pendiente')
+    
+    estado = db.Column(db.String(20), default='Abierto')
+    estado_cierre = db.Column(db.String(20), default='Pendiente')
+    firma_cierre = db.Column(db.String(150), nullable=True)
+    pdf_cierre = db.Column(db.String(500), nullable=True)
+    fecha_cierre = db.Column(db.DateTime, nullable=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+class HallazgoACRIteracion(db.Model):
+    __tablename__ = 'hallazgo_acr_iteracion'
+    id = db.Column(db.Integer, primary_key=True)
+    accion_id = db.Column(db.Integer, db.ForeignKey('hallazgo_accion_correctiva.id'), nullable=False)
+    numero_iteracion = db.Column(db.Integer, nullable=False, default=1)
+    
+    metodologia = db.Column(db.String(30), nullable=True)
+    datos_acr = db.Column(db.JSON, nullable=True)
+    
+    causa_raiz = db.Column(db.Text, nullable=True)
+    texto_accion_correctiva = db.Column(db.Text, nullable=True)
+    evaluacion_nuevos_riesgos = db.Column(db.Text, nullable=True)
+    
+    pdf_acr = db.Column(db.String(500), nullable=True)
+    congelado = db.Column(db.Boolean, default=False)
+    
+    eficacia_q1 = db.Column(db.Boolean, nullable=True)
+    eficacia_q2 = db.Column(db.Boolean, nullable=True)
+    resultado_eficacia = db.Column(db.String(20), nullable=True)
+    evaluado_por = db.Column(db.String(150), nullable=True)
+    motivo_falla = db.Column(db.Text, nullable=True)
+    fecha_evaluacion = db.Column(db.DateTime, nullable=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+class HallazgoArchivo(db.Model):
+    __tablename__ = 'hallazgo_archivo'
+    id = db.Column(db.Integer, primary_key=True)
+    accion_id = db.Column(db.Integer, db.ForeignKey('hallazgo_accion_correctiva.id'), nullable=True)
+    accion = db.relationship('HallazgoAccionCorrectiva', backref=db.backref('archivos', lazy=True, cascade='all, delete-orphan'))
+    evento_id = db.Column(db.Integer, db.ForeignKey('hallazgo_evento.id'), nullable=True)
+    evento = db.relationship('HallazgoEvento', backref=db.backref('archivos', lazy=True, cascade='all, delete-orphan'))
+    nombre_original = db.Column(db.String(300), nullable=False)
+    nombre_almacenado = db.Column(db.String(300), nullable=False)
+    mime_type = db.Column(db.String(100))
+    tamano = db.Column(db.Integer)
+    fecha_subida = db.Column(db.DateTime, default=datetime.now)
+    subido_por = db.Column(db.String(150), default='Sistema')
+
+from modulos.rutas_hallazgos import hallazgos_bp
+app.register_blueprint(hallazgos_bp, url_prefix='/eventos')
 
 if __name__ == '__main__':
     asegurar_base_de_datos()

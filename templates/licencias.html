@@ -49,22 +49,22 @@
         .form-panel-title { font-size: 1rem; font-weight: 600; color: #ffffff; display: flex; align-items: center; gap: 10px; }
         .form-panel-chevron { color: #9ca3af; transition: transform 0.3s ease; }
         .form-panel-chevron.open { transform: rotate(180deg); }
-        .form-panel-
+        .form-panel-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
         .form-panel-body.open { max-height: 600px; }
         .form-panel-inner { padding: 0 25px 25px; }
         .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
         .form-grid .span-2 { grid-column: span 2; }
         .form-grid .span-full { grid-column: 1 / -1; }
         /* ===== Table ===== */
-        .table-container { background: #1f2937; border-radius: 12px; overflow: hidden; border: 1px solid #374151; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .table-container { background: #1f2937; border-radius: 12px; border: 1px solid #374151; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .table-header { padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #374151; }
         .table-title { font-size: 1.05rem; font-weight: 600; color: #ffffff; display: flex; align-items: center; gap: 10px; }
         .table-count { font-size: 0.85rem; color: #9ca3af; font-weight: 400; }
-        .table-scroll { overflow-x: auto; }
+        .table-scroll { overflow-x: auto; overflow-y: visible; }
         table { width: 100%; border-collapse: collapse; }
         th { padding: 14px 16px; text-align: left; background: rgba(17, 24, 39, 0.5); color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.75rem; border-bottom: 1px solid #374151; white-space: normal; }
         td { padding: 14px 16px; text-align: left; font-size: 0.9rem; color: #f3f4f6; border-bottom: 1px solid rgba(55, 65, 81, 0.5); }
-        th:last-child, td:last-child { padding-right: 25px; width: 1%; white-space: nowrap; text-align: right; }
+        th:last-child, td:last-child { padding-right: 20px; min-width: 100px; white-space: nowrap; text-align: right; }
         tbody tr { transition: background 0.15s ease; }
         tbody tr:hover { background: rgba(55, 65, 81, 0.3); }
         tbody tr:last-child td { border-bottom: none; }
@@ -96,9 +96,28 @@
         /* ===== Auto-renew indicator ===== */
         .renew-indicator { display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; color: #34d399; background: rgba(16, 185, 129, 0.08); padding: 2px 8px; border-radius: 10px; margin-top: 4px; }
         /* ===== Actions Cell ===== */
-        .action-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid #4b5563; color: #9ca3af; cursor: pointer; transition: all 0.2s; }
-        .action-btn:hover { background: rgba(255,255,255,0.05); color: #ffffff; border-color: #6b7280; }
-        .action-btn.danger:hover { background: rgba(239, 68, 68, 0.1); color: #f87171; border-color: rgba(239, 68, 68, 0.3); }
+        /* ===== Actions Cell ===== */
+        .actions-cell { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
+        /* Rediseño botones de acción */
+        .action-btn {
+            width: 34px; height: 34px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #818cf8;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .action-btn:hover {
+            background: #6366f1;
+            border-color: #6366f1;
+            color: white;
+            transform: scale(1.08);
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.45);
+        }
+        /* Permitir que el tooltip del btn-delete-animated no quede cortado */
+        table, tbody, tr, td { overflow: visible !important; }
         /* ===== Alerts ===== */
         .alert { padding: 16px; border-radius: 12px; margin-bottom: 24px; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 10px; }
         .alert-success { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #34d399; }
@@ -472,11 +491,13 @@
                                             data-estado="{{ lic.estado or 'Activo' }}"
                                             data-renovacion="{{ 'true' if lic.renovacion_automatica else 'false' }}"
                                             onclick="openEditModal(this)">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                                        </svg>
                                     </button>
                                     <form action="{{ url_for('eliminar_licencia', id=lic.id) }}" method="POST" style="margin:0;" onsubmit="return confirm('¿Eliminar esta licencia permanentemente?');">
-                                        <button type="submit" class="action-btn danger" title="Eliminar licencia">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                        <button type="submit" class="btn-delete-animated" title="Eliminar licencia">
+                                            <svg viewBox="0 0 448 512" class="svgIconDelete"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path></svg>
                                         </button>
                                     </form>
                                 </div>

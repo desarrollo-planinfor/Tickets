@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuraciones de Eventos - Planinfor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --border: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #5b9e3b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background: #111827; color: var(--text-main); min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .page-title { font-size: 1.75rem; font-weight: 700; color: #ffffff; }
+    </style>
+</head>
+<body>
+    {% set vista = 'configuraciones_eventos' %}
+    {% include 'header_unificado.html' %}
+
+    <div class="container">
+        {% include 'eventos/sub_nav.html' %}
+        <div class="page-header">
+            <h1 class="page-title">Configuraciones de Eventos</h1>
+        </div>
+        
+        <p style="color: var(--text-muted);">Módulo de configuración de catálogos (Áreas, Tipos de Eventos, Sistemas Normativos, etc).</p>
+    </div>
+</body>
+</html>

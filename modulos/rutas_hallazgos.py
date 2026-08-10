@@ -288,10 +288,10 @@ def nuevo():
             nuevo_hallazgo = HallazgoEvento(
                 codigo=nuevo_codigo,
                 fecha_registro=fecha_reg if fecha_reg else datetime.now(),
-                area_id=request.form.get('area_id'),
-                responsable_id=request.form.get('responsable_id'),
-                sistema_normativo_id=request.form.get('sistema_normativo_id'),
-                tipo_evento_id=request.form.get('tipo_evento_id'),
+                area_id=request.form.get('area_id') or None,
+                responsable_id=request.form.get('responsable_id') or None,
+                sistema_normativo_id=request.form.get('sistema_normativo_id') or None,
+                tipo_evento_id=request.form.get('tipo_evento_id') or None,
                 descripcion=request.form.get('descripcion'),
                 accion_contencion=request.form.get('accion_contencion'),
                 impacto=request.form.get('impacto', type=int),
@@ -407,10 +407,10 @@ def editar(id):
                 except ValueError:
                     pass
                     
-            evento.area_id = request.form.get('area_id')
-            evento.responsable_id = request.form.get('responsable_id')
-            evento.sistema_normativo_id = request.form.get('sistema_normativo_id')
-            evento.tipo_evento_id = request.form.get('tipo_evento_id')
+            evento.area_id = request.form.get('area_id') or None
+            evento.responsable_id = request.form.get('responsable_id') or None
+            evento.sistema_normativo_id = request.form.get('sistema_normativo_id') or None
+            evento.tipo_evento_id = request.form.get('tipo_evento_id') or None
             evento.descripcion = request.form.get('descripcion')
             evento.accion_contencion = request.form.get('accion_contencion')
             
@@ -557,11 +557,11 @@ def acciones_correctivas_nuevo():
             nueva_ac = HallazgoAccionCorrectiva(
                 codigo=nuevo_codigo_ac,
                 origen=request.form.get('origen') or 'Manual',
-                area_id=request.form.get('area_id'),
-                responsable_id=request.form.get('responsable_id'),
-                sistema_normativo_id=request.form.get('sistema_normativo_id'),
-                tipo_evento_id=request.form.get('tipo_evento_id'),
-                clasificacion_id=request.form.get('clasificacion_id'),
+                area_id=request.form.get('area_id') or None,
+                responsable_id=request.form.get('responsable_id') or None,
+                sistema_normativo_id=request.form.get('sistema_normativo_id') or None,
+                tipo_evento_id=request.form.get('tipo_evento_id') or None,
+                clasificacion_id=request.form.get('clasificacion_id') or None,
                 descripcion=request.form.get('descripcion'),
                 accion_contencion=request.form.get('accion_contencion'),
                 consulta_trabajador=request.form.get('consulta_trabajador'),
@@ -679,11 +679,11 @@ def acciones_correctivas_editar(id):
         try:
             if request.form.get('origen'):
                 ac.origen = request.form.get('origen')
-            ac.area_id = request.form.get('area_id')
-            ac.responsable_id = request.form.get('responsable_id')
-            ac.sistema_normativo_id = request.form.get('sistema_normativo_id')
-            ac.tipo_evento_id = request.form.get('tipo_evento_id')
-            ac.clasificacion_id = request.form.get('clasificacion_id')
+            ac.area_id = request.form.get('area_id') or None
+            ac.responsable_id = request.form.get('responsable_id') or None
+            ac.sistema_normativo_id = request.form.get('sistema_normativo_id') or None
+            ac.tipo_evento_id = request.form.get('tipo_evento_id') or None
+            ac.clasificacion_id = request.form.get('clasificacion_id') or None
             ac.descripcion = request.form.get('descripcion')
             ac.accion_contencion = request.form.get('accion_contencion')
             ac.consulta_trabajador = request.form.get('consulta_trabajador')

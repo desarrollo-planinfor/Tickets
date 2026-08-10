@@ -119,7 +119,7 @@ def dashboard():
     # --- Estado de Eventos (Donut) ---
     ev_estados = {}
     for e in eventos:
-        st = e.evaluacion if e.evaluacion == 'Escalado' else e.estado
+        st = e.estado
         ev_estados[st] = ev_estados.get(st, 0) + 1
 
     # --- Estado de AC (Donut) ---
@@ -246,7 +246,7 @@ def lista():
     elif filtro == 'En Proceso':
         query = query.filter_by(estado='En Proceso')
     elif filtro == 'Cerrados':
-        query = query.filter(HallazgoEvento.estado == 'Cerrado', (HallazgoEvento.evaluacion != 'Escalado') | (HallazgoEvento.evaluacion.is_(None)))
+        query = query.filter_by(estado='Cerrado')
     elif filtro == 'Escalados':
         query = query.filter_by(evaluacion='Escalado')
         
@@ -255,7 +255,7 @@ def lista():
     # Conteos para el Resumen de Eventos
     abiertos = HallazgoEvento.query.filter_by(estado='Abierto').count()
     en_proceso = HallazgoEvento.query.filter_by(estado='En Proceso').count()
-    cerrados = HallazgoEvento.query.filter(HallazgoEvento.estado == 'Cerrado', (HallazgoEvento.evaluacion != 'Escalado') | (HallazgoEvento.evaluacion.is_(None))).count()
+    cerrados = HallazgoEvento.query.filter_by(estado='Cerrado').count()
     escalados = HallazgoEvento.query.filter_by(evaluacion='Escalado').count()
     
     return render_template('hallazgos/lista.html', 
@@ -442,7 +442,8 @@ def editar(id):
                             sistema_normativo_id=evento.sistema_normativo_id,
                             tipo_evento_id=evento.tipo_evento_id,
                             descripcion=evento.descripcion,
-                            accion_contencion=evento.accion_contencion
+                            accion_contencion=evento.accion_contencion,
+                            fecha_registro=evento.fecha_registro
                         )
                         db.session.add(nueva_ac)
                         db.session.flush() # Para obtener el ID
@@ -570,6 +571,12 @@ def acciones_correctivas_nuevo():
             
             if request.form.get('fecha_plazo'):
                 nueva_ac.fecha_plazo = datetime.strptime(request.form.get('fecha_plazo'), '%Y-%m-%d')
+                
+            if request.form.get('fecha_registro'):
+                try:
+                    nueva_ac.fecha_registro = datetime.strptime(request.form.get('fecha_registro'), '%Y-%m-%d')
+                except ValueError:
+                    pass
             
             db.session.add(nueva_ac)
             db.session.commit()
@@ -684,6 +691,12 @@ def acciones_correctivas_editar(id):
             fecha_plazo_str = request.form.get('fecha_plazo')
             if fecha_plazo_str:
                 ac.fecha_plazo = datetime.strptime(fecha_plazo_str, '%Y-%m-%d').date()
+                
+            if request.form.get('fecha_registro'):
+                try:
+                    ac.fecha_registro = datetime.strptime(request.form.get('fecha_registro'), '%Y-%m-%d')
+                except ValueError:
+                    pass
             
             # --- Análisis de Causa Raíz ---
             metodologia = request.form.get('acr_metodologia')

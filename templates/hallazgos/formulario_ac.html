@@ -101,8 +101,8 @@
                             <input type="text" class="form-input" value="{{ ac.evento.codigo if ac and ac.evento else '--' }}" disabled>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Fecha de Registro</label>
-                            <input type="text" class="form-input" value="{{ ac.fecha_registro.strftime('%Y-%m-%d') if ac else 'Automática' }}" disabled>
+                            <label class="form-label">Fecha de Registro <span style="font-size: 0.8rem; color: #9ca3af; font-weight: 400;">(Modificable temporalmente)</span></label>
+                            <input type="text" name="fecha_registro" class="form-input datepicker" placeholder="YYYY-MM-DD" value="{{ ac.fecha_registro.strftime('%Y-%m-%d') if ac and ac.fecha_registro else '' }}">
                         </div>
                     </div>
 

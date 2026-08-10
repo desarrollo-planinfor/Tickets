@@ -528,13 +528,17 @@
         if (typeof flatpickr !== 'undefined') {
             flatpickr('.datepicker', {
                 locale: 'es',
-                dateFormat: 'd/m/Y',
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'd/m/Y',
                 allowInput: true
             });
             flatpickr('.datetimepicker', {
                 locale: 'es',
                 enableTime: true,
-                dateFormat: 'd/m/Y H:i',
+                dateFormat: 'Y-m-d H:i',
+                altInput: true,
+                altFormat: 'd/m/Y H:i',
                 allowInput: true
             });
         }

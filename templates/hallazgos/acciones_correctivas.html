@@ -30,6 +30,26 @@
             background: rgba(255, 255, 255, 0.05);
             box-shadow: inset 4px 0 0 #82C341; 
         }
+        
+        .summary-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(26, 35, 50, 0.85);
+            border: 1px solid rgba(45, 58, 77, 0.6);
+            border-radius: 12px;
+            padding: 15px 25px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-stats { display: flex; align-items: center; gap: 15px; font-size: 0.9rem; font-weight: 500; color: #9ca3af; }
+        .summary-title { text-transform: uppercase; font-weight: 700; letter-spacing: 0.8px; color: #cbd5e1; margin-right: 10px; }
+        .summary-stat-item { display: flex; align-items: center; gap: 6px; color: #f3f4f6; text-decoration: none; }
+        .summary-stat-badge { background: #374151; padding: 4px 10px; border-radius: 6px; font-weight: 800; }
+        .summary-stat-badge.abiertos { background: rgba(59, 130, 246, 0.25); color: #93c5fd; }
+        .summary-stat-badge.proceso { background: rgba(245, 158, 11, 0.25); color: #fcd34d; }
+        .summary-stat-badge.cerrados { background: rgba(16, 185, 129, 0.25); color: #6ee7b7; }
+        .summary-divider { color: #4b5563; }
     </style>
 </head>
 <body>
@@ -42,7 +62,23 @@
         
         <div class="page-title">
             Lista de Acciones Correctivas
-            <a href="#" class="btn-primary">Nueva Acción</a>
+        </div>
+        
+        <div class="summary-box">
+            <div class="summary-stats">
+                <span class="summary-title">Resumen:</span>
+                <a href="{{ url_for('hallazgos.acciones_correctivas', filtro='Abiertos') }}" class="summary-stat-item">Abiertos: <span class="summary-stat-badge abiertos">{{ abiertos }}</span></a>
+                <span class="summary-divider">|</span>
+                <a href="{{ url_for('hallazgos.acciones_correctivas', filtro='En Proceso') }}" class="summary-stat-item">En Proceso: <span class="summary-stat-badge proceso">{{ en_proceso }}</span></a>
+                <span class="summary-divider">|</span>
+                <a href="{{ url_for('hallazgos.acciones_correctivas', filtro='Cerrados') }}" class="summary-stat-item">Cerrados: <span class="summary-stat-badge cerrados">{{ cerrados }}</span></a>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                {% if request.args.get('filtro') %}
+                <a href="{{ url_for('hallazgos.acciones_correctivas') }}" class="btn-primary" style="background: #374151; color: #f3f4f6;">Quitar Filtro</a>
+                {% endif %}
+                <a href="{{ url_for('hallazgos.acciones_correctivas_nuevo') }}" class="btn-primary">Nueva Acción</a>
+            </div>
         </div>
         
         <div class="card">
@@ -50,12 +86,14 @@
                 <thead>
                     <tr>
                         <th>ID Acción</th>
+                        <th>ID Evento</th>
                         <th>Origen</th>
                         <th>Clasificación</th>
                         <th>Responsable</th>
                         <th>Fecha Límite</th>
                         <th>Fecha Verificación</th>
                         <th>Estado</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -63,6 +101,13 @@
                     <tr>
                         <td style="font-weight: 600;">
                             <a href="{{ url_for('hallazgos.acciones_correctivas_editar', id=ac.id) }}" style="color: #82C341; text-decoration: none;">{{ ac.codigo }}</a>
+                        </td>
+                        <td style="font-weight: 600;">
+                            {% if ac.evento %}
+                                <a href="{{ url_for('hallazgos.editar', id=ac.evento.id) }}" style="color: #60a5fa; text-decoration: none;">{{ ac.evento.codigo }}</a>
+                            {% else %}
+                                <span style="color:#9ca3af;">-</span>
+                            {% endif %}
                         </td>
                         <td>{{ ac.origen }}</td>
                         <td>{{ ac.clasificacion.nombre if ac.clasificacion else '--' }}</td>
@@ -81,6 +126,13 @@
                             {% else %}
                                 <span style="background: rgba(107, 114, 128, 0.1); color: #9ca3af; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 500;">{{ ac.estado }}</span>
                             {% endif %}
+                        </td>
+                        <td>
+                            <form action="{{ url_for('hallazgos.eliminar_ac', id=ac.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Está seguro de que desea eliminar esta Acción Correctiva?');">
+                                <button type="submit" style="background:none; border:none; cursor:pointer; color:#ef4444;" title="Eliminar AC">
+                                    <svg viewBox="0 0 448 512" style="width:16px; height:16px; fill:currentColor;"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path></svg>
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     {% else %}

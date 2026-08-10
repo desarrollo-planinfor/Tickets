@@ -21,8 +21,9 @@ def calcular_recurrencia():
     from datetime import datetime, timedelta
     tipo_evento_id = request.args.get('tipo_evento_id', type=int)
     evento_id = request.args.get('evento_id', type=int)
+    area_id = request.args.get('area_id', type=int)
     
-    if not tipo_evento_id:
+    if not tipo_evento_id or not area_id:
         return jsonify({'recurrencia': 1, 'count_12m': 0, 'count_6m': 0, 'count_1m': 0})
         
     ahora = datetime.now()
@@ -30,7 +31,7 @@ def calcular_recurrencia():
     hace_6m = ahora - timedelta(days=180)
     hace_12m = ahora - timedelta(days=365)
     
-    query = HallazgoEvento.query.filter(HallazgoEvento.tipo_evento_id == tipo_evento_id)
+    query = HallazgoEvento.query.filter(HallazgoEvento.tipo_evento_id == tipo_evento_id, HallazgoEvento.area_id == area_id)
     if evento_id:
         query = query.filter(HallazgoEvento.id != evento_id)
         
@@ -238,7 +239,18 @@ def dashboard():
 @local_login_required
 def lista():
     from app import HallazgoEvento, Area, HallazgoSistemaNormativo, HallazgoTipoEvento
-    eventos = HallazgoEvento.query.order_by(HallazgoEvento.fecha_registro.desc()).all()
+    filtro = request.args.get('filtro')
+    query = HallazgoEvento.query
+    if filtro == 'Abiertos':
+        query = query.filter_by(estado='Abierto')
+    elif filtro == 'En Proceso':
+        query = query.filter_by(estado='En Proceso')
+    elif filtro == 'Cerrados':
+        query = query.filter(HallazgoEvento.estado == 'Cerrado', (HallazgoEvento.evaluacion != 'Escalado') | (HallazgoEvento.evaluacion.is_(None)))
+    elif filtro == 'Escalados':
+        query = query.filter_by(evaluacion='Escalado')
+        
+    eventos = query.order_by(HallazgoEvento.fecha_registro.desc()).all()
     
     # Conteos para el Resumen de Eventos
     abiertos = HallazgoEvento.query.filter_by(estado='Abierto').count()
@@ -297,6 +309,7 @@ def nuevo():
                     nueva_ac = HallazgoAccionCorrectiva(
                         codigo=nuevo_codigo_ac,
                         evento_id=nuevo_hallazgo.id,
+                        origen='Evaluación de Evento',
                         area_id=nuevo_hallazgo.area_id,
                         responsable_id=nuevo_hallazgo.responsable_id,
                         sistema_normativo_id=nuevo_hallazgo.sistema_normativo_id,
@@ -316,6 +329,30 @@ def nuevo():
                     else:
                         nuevo_hallazgo.estado = "Abierto"
                         nuevo_hallazgo.estado_cierre = "Pendiente"
+            
+            archivos = request.files.getlist('evidencias_nuevas')
+            if archivos:
+                from werkzeug.utils import secure_filename
+                import os
+                UPLOAD_FOLDER = os.path.join('static', 'uploads', 'hallazgos')
+                if not os.path.exists(UPLOAD_FOLDER):
+                    os.makedirs(UPLOAD_FOLDER)
+                for file in archivos:
+                    if file and file.filename:
+                        filename = secure_filename(file.filename)
+                        unique_name = f"ev_{nuevo_hallazgo.id}_{int(datetime.now().timestamp())}_{filename}"
+                        filepath = os.path.join(UPLOAD_FOLDER, unique_name)
+                        file.save(filepath)
+                        from app import HallazgoArchivo
+                        nuevo_archivo = HallazgoArchivo(
+                            evento_id=nuevo_hallazgo.id,
+                            nombre_original=filename,
+                            nombre_almacenado=unique_name,
+                            mime_type=file.content_type,
+                            tamano=os.path.getsize(filepath),
+                            subido_por=session.get('user_name', 'Sistema')
+                        )
+                        db.session.add(nuevo_archivo)
             
             from app import HallazgoHistorial
             hist = HallazgoHistorial(
@@ -358,9 +395,13 @@ def editar(id):
             evento.tipo_evento_id = request.form.get('tipo_evento_id')
             evento.descripcion = request.form.get('descripcion')
             evento.accion_contencion = request.form.get('accion_contencion')
-            evento.impacto = request.form.get('impacto', type=int)
-            evento.recurrencia = request.form.get('recurrencia', type=int)
-            evento.potencialidad = request.form.get('potencialidad', type=int)
+            
+            # Solo actualizar puntajes si no estaban definidos (0 o None)
+            if not evento.impacto and not evento.recurrencia and not evento.potencialidad:
+                evento.impacto = request.form.get('impacto', type=int)
+                evento.recurrencia = request.form.get('recurrencia', type=int)
+                evento.potencialidad = request.form.get('potencialidad', type=int)
+                
             evento.firma_cierre = request.form.get('firma_cierre')
             
             # Lógica para crear Acción Correctiva si el riesgo es alto (score >= 9)
@@ -377,6 +418,7 @@ def editar(id):
                         nueva_ac = HallazgoAccionCorrectiva(
                             codigo=nuevo_codigo_ac,
                             evento_id=evento.id,
+                            origen='Evaluación de Evento',
                             area_id=evento.area_id,
                             responsable_id=evento.responsable_id,
                             sistema_normativo_id=evento.sistema_normativo_id,
@@ -424,12 +466,132 @@ def editar(id):
                            usuarios=usuarios,
                            evento=evento)
 
+@hallazgos_bp.route('/eliminar/<int:id>', methods=['POST'])
+@local_login_required
+def eliminar(id):
+    from app import db, HallazgoEvento
+    evento = HallazgoEvento.query.get_or_404(id)
+    try:
+        db.session.delete(evento)
+        db.session.commit()
+        flash('Evento eliminado exitosamente.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al eliminar el evento: {str(e)}', 'error')
+    return redirect(url_for('hallazgos.lista'))
+
 @hallazgos_bp.route('/acciones_correctivas')
 @local_login_required
 def acciones_correctivas():
     from app import HallazgoAccionCorrectiva
-    acciones = HallazgoAccionCorrectiva.query.order_by(HallazgoAccionCorrectiva.fecha_registro.desc()).all()
-    return render_template('hallazgos/acciones_correctivas.html', acciones=acciones)
+    filtro = request.args.get('filtro')
+    query = HallazgoAccionCorrectiva.query
+    
+    if filtro == 'Abiertos':
+        query = query.filter_by(estado='Abierto')
+    elif filtro == 'En Proceso':
+        query = query.filter_by(estado='En Proceso')
+    elif filtro == 'Cerrados':
+        query = query.filter_by(estado='Cerrado')
+        
+    acciones = query.order_by(HallazgoAccionCorrectiva.fecha_registro.desc()).all()
+    
+    abiertos = HallazgoAccionCorrectiva.query.filter_by(estado='Abierto').count()
+    en_proceso = HallazgoAccionCorrectiva.query.filter_by(estado='En Proceso').count()
+    cerrados = HallazgoAccionCorrectiva.query.filter_by(estado='Cerrado').count()
+    
+    return render_template('hallazgos/acciones_correctivas.html', acciones=acciones, abiertos=abiertos, en_proceso=en_proceso, cerrados=cerrados)
+
+@hallazgos_bp.route('/acciones_correctivas/nuevo', methods=['GET', 'POST'])
+@local_login_required
+def acciones_correctivas_nuevo():
+    from app import db, HallazgoAccionCorrectiva, Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion
+    from datetime import datetime
+    
+    if request.method == 'POST':
+        try:
+            conteo = HallazgoAccionCorrectiva.query.count() + 1
+            nuevo_codigo_ac = f"AC-{conteo:03d}"
+            
+            nueva_ac = HallazgoAccionCorrectiva(
+                codigo=nuevo_codigo_ac,
+                origen=request.form.get('origen') or 'Manual',
+                area_id=request.form.get('area_id'),
+                responsable_id=request.form.get('responsable_id'),
+                sistema_normativo_id=request.form.get('sistema_normativo_id'),
+                tipo_evento_id=request.form.get('tipo_evento_id'),
+                clasificacion_id=request.form.get('clasificacion_id'),
+                descripcion=request.form.get('descripcion'),
+                accion_contencion=request.form.get('accion_contencion'),
+                consulta_trabajador=request.form.get('consulta_trabajador'),
+                estado='Abierto',
+                estado_cierre='Pendiente'
+            )
+            
+            if request.form.get('fecha_plazo'):
+                nueva_ac.fecha_plazo = datetime.strptime(request.form.get('fecha_plazo'), '%Y-%m-%d')
+            
+            db.session.add(nueva_ac)
+            db.session.commit()
+            
+            archivos = request.files.getlist('evidencias_nuevas')
+            if archivos:
+                from werkzeug.utils import secure_filename
+                import os
+                UPLOAD_FOLDER = os.path.join('static', 'uploads', 'hallazgos')
+                if not os.path.exists(UPLOAD_FOLDER):
+                    os.makedirs(UPLOAD_FOLDER)
+                for file in archivos:
+                    if file and file.filename:
+                        filename = secure_filename(file.filename)
+                        unique_name = f"ac_{nueva_ac.id}_{int(datetime.now().timestamp())}_{filename}"
+                        filepath = os.path.join(UPLOAD_FOLDER, unique_name)
+                        file.save(filepath)
+                        from app import HallazgoArchivo
+                        nuevo_archivo = HallazgoArchivo(
+                            accion_id=nueva_ac.id,
+                            nombre_original=filename,
+                            nombre_almacenado=unique_name,
+                            mime_type=file.content_type,
+                            tamano=os.path.getsize(filepath),
+                            subido_por=session.get('user_name', 'Sistema')
+                        )
+                        db.session.add(nuevo_archivo)
+                db.session.commit()
+                
+            flash('Acción Correctiva registrada exitosamente', 'success')
+            return redirect(url_for('hallazgos.acciones_correctivas'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al registrar AC: {str(e)}', 'error')
+            
+    areas = Area.query.filter_by(activa=True).all()
+    sistemas_normativos = HallazgoSistemaNormativo.query.filter_by(activo=True).all()
+    tipos_evento = HallazgoTipoEvento.query.filter_by(activo=True).all()
+    clasificaciones = HallazgoClasificacion.query.filter_by(activo=True).all()
+    usuarios = Usuario.query.filter_by(activo=True).all()
+    
+    return render_template('hallazgos/formulario_ac.html', 
+                           ac=None,
+                           areas=areas, 
+                           sistemas=sistemas_normativos, 
+                           tipos=tipos_evento, 
+                           clasificaciones=clasificaciones,
+                           usuarios=usuarios)
+
+@hallazgos_bp.route('/acciones_correctivas/eliminar/<int:id>', methods=['POST'])
+@local_login_required
+def eliminar_ac(id):
+    from app import db, HallazgoAccionCorrectiva
+    ac = HallazgoAccionCorrectiva.query.get_or_404(id)
+    try:
+        db.session.delete(ac)
+        db.session.commit()
+        flash('Acción Correctiva eliminada exitosamente.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al eliminar la Acción Correctiva: {str(e)}', 'error')
+    return redirect(url_for('hallazgos.acciones_correctivas'))
 
 @hallazgos_bp.route('/configuraciones')
 @local_login_required
@@ -452,6 +614,10 @@ def acciones_correctivas_editar(id):
     ac = HallazgoAccionCorrectiva.query.get_or_404(id)
     
     if request.method == 'POST':
+        if ac.estado == 'Cerrado':
+            flash('La Acción Correctiva está cerrada y no puede ser modificada.', 'error')
+            return redirect(url_for('hallazgos.acciones_correctivas_editar', id=ac.id))
+            
         try:
             if request.form.get('origen'):
                 ac.origen = request.form.get('origen')

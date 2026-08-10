@@ -221,17 +221,20 @@
             <div class="summary-box">
                 <div class="summary-stats">
                     <span class="summary-title">Resumen de Eventos:</span>
-                    <span class="summary-stat-item">Abiertos: <span class="summary-stat-badge abiertos">{{ abiertos }}</span></span>
+                    <a href="{{ url_for('hallazgos.lista', filtro='Abiertos') }}" class="summary-stat-item" style="text-decoration:none;">Abiertos: <span class="summary-stat-badge abiertos">{{ abiertos }}</span></a>
                     <span class="summary-divider">|</span>
-                    <span class="summary-stat-item">En Proceso: <span class="summary-stat-badge proceso">{{ en_proceso }}</span></span>
+                    <a href="{{ url_for('hallazgos.lista', filtro='En Proceso') }}" class="summary-stat-item" style="text-decoration:none;">En Proceso: <span class="summary-stat-badge proceso">{{ en_proceso }}</span></a>
                     <span class="summary-divider">|</span>
-                    <span class="summary-stat-item">Cerrados: <span class="summary-stat-badge cerrados">{{ cerrados }}</span></span>
+                    <a href="{{ url_for('hallazgos.lista', filtro='Cerrados') }}" class="summary-stat-item" style="text-decoration:none;">Cerrados: <span class="summary-stat-badge cerrados">{{ cerrados }}</span></a>
                     
                     <span class="summary-divider-special"></span>
                     
-                    <span class="summary-stat-item">Escalados: <span class="summary-stat-badge escalados">{{ escalados }}</span></span>
+                    <a href="{{ url_for('hallazgos.lista', filtro='Escalados') }}" class="summary-stat-item" style="text-decoration:none;">Escalados: <span class="summary-stat-badge escalados">{{ escalados }}</span></a>
                 </div>
-                <div>
+                <div style="display: flex; gap: 10px;">
+                    {% if request.args.get('filtro') %}
+                    <a href="{{ url_for('hallazgos.lista') }}" class="btn-primary" style="background: #374151; color: #f3f4f6;">Quitar Filtro</a>
+                    {% endif %}
                     <a href="{{ url_for('hallazgos.nuevo') }}" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                         Crear Evento
@@ -250,8 +253,10 @@
                         <th>Sistema Normativo</th>
                         <th>Tipo</th>
                         <th>Escalado</th>
+                        <th>Acción Correctiva</th>
                         <th>Estado</th>
                         <th>Riesgo</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -273,12 +278,22 @@
                             {% endif %}
                         </td>
                         <td>
+                            {% if ev.accion_correctiva_id %}
+                            <a href="{{ url_for('hallazgos.acciones_correctivas_editar', id=ev.accion_correctiva_id) }}" style="color: #60a5fa; text-decoration: none; font-weight: 600;">{{ ev.accion_correctiva.codigo if ev.accion_correctiva else ev.accion_correctiva_id }}</a>
+                            {% else %}
+                            <span style="color:#9ca3af;">--</span>
+                            {% endif %}
+                        </td>
+                        <td>
                             {% if ev.estado == 'Abierto' %}
                             <span
                                 style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Abierto</span>
                             {% elif ev.estado == 'En Proceso' %}
                             <span
                                 style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">En Proceso</span>
+                            {% elif ev.estado == 'Cerrado' and ev.evaluacion == 'Escalado' %}
+                            <span
+                                style="background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Escalado</span>
                             {% elif ev.estado == 'Cerrado' %}
                             <span
                                 style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Cerrado</span>
@@ -298,6 +313,13 @@
                             {% else %}
                             <span style="color: #9ca3af;">Sin Evaluar</span>
                             {% endif %}
+                        </td>
+                        <td>
+                            <form action="{{ url_for('hallazgos.eliminar', id=ev.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Está seguro de que desea eliminar este evento y todos sus datos asociados?');">
+                                <button type="submit" style="background:none; border:none; cursor:pointer; color:#ef4444;" title="Eliminar Evento">
+                                    <svg viewBox="0 0 448 512" style="width:16px; height:16px; fill:currentColor;"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path></svg>
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     {% else %}

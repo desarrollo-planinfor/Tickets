@@ -3470,7 +3470,7 @@ if __name__ == '__main__':
     try:
         print("Iniciando Sistema de Tickets...")
         
-        # Usamos el puerto 5500 que está libre
+        # Usamos el puerto 5500
         app.run(host='127.0.0.1', port=5500, debug=True, use_reloader=False)
         
     finally:

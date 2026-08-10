@@ -135,7 +135,7 @@
                 <button type="button" class="tab-btn" onclick="switchTab('history')">Historial</button>
             </div>
 
-            <form method="POST" action="{{ url_for('hallazgos.editar', id=evento.id) if evento else url_for('hallazgos.nuevo') }}" id="form-hallazgo">
+            <form method="POST" action="{{ url_for('hallazgos.editar', id=evento.id) if evento else url_for('hallazgos.nuevo') }}" id="form-hallazgo" enctype="multipart/form-data">
                 <input type="hidden" name="impacto" id="val-impacto" value="{{ evento.impacto or 0 if evento else 0 }}">
                 <input type="hidden" name="recurrencia" id="val-recurrencia" value="{{ evento.recurrencia or 0 if evento else 0 }}">
                 <input type="hidden" name="potencialidad" id="val-potencialidad" value="{{ evento.potencialidad or 0 if evento else 0 }}">
@@ -155,10 +155,10 @@
                         
                         <div class="form-group">
                             <label class="form-label">Área <span class="required">*</span></label>
-                            <select name="area_id" class="form-select" required>
-                                <option value="">Seleccionar...</option>
+                            <select name="area_id" class="form-select" required onchange="checkRecurrence(); autoSelectResponsable(this)">
+                                <option value="" data-jefe-id="">Seleccionar...</option>
                                 {% for area in areas %}
-                                <option value="{{ area.id }}" {% if evento and evento.area_id == area.id %}selected{% endif %}>{{ area.nombre }}</option>
+                                <option value="{{ area.id }}" data-jefe-id="{{ area.jefe_id if area.jefe_id else '' }}" {% if evento and evento.area_id == area.id %}selected{% endif %}>{{ area.nombre }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -212,7 +212,7 @@
                                 <!-- Column 1 -->
                                 <div>
                                     <div class="likert-title">Impacto</div>
-                                    <div class="likert-group" id="likert-impact">
+                                    <div class="likert-group" id="likert-impact" {% if evento and evento.impacto %}style="pointer-events: none; opacity: 0.8;"{% endif %}>
                                         <div class="likert-btn val-1" onclick="selectLikert('impact', 1)" onmouseover="showDesc('impact', 1)" onmouseout="showDesc('impact', 0)" data-tooltip="Impacto insignificante, sin consecuencias">1</div>
                                         <div class="likert-btn val-2" onclick="selectLikert('impact', 2)" onmouseover="showDesc('impact', 2)" onmouseout="showDesc('impact', 0)" data-tooltip="Impacto menor, localizado">2</div>
                                         <div class="likert-btn val-3" onclick="selectLikert('impact', 3)" onmouseover="showDesc('impact', 3)" onmouseout="showDesc('impact', 0)" data-tooltip="Impacto moderado, requiere atención">3</div>
@@ -223,7 +223,7 @@
 
                                     <div style="margin-top: 25px;">
                                         <div class="likert-title">Potencialidad</div>
-                                        <div class="likert-group" id="likert-potentiality">
+                                        <div class="likert-group" id="likert-potentiality" {% if evento and evento.potencialidad %}style="pointer-events: none; opacity: 0.8;"{% endif %}>
                                             <div class="likert-btn val-1" onclick="selectLikert('potentiality', 1)" onmouseover="showDesc('potentiality', 1)" onmouseout="showDesc('potentiality', 0)" data-tooltip="Potencialidad improbable">1</div>
                                             <div class="likert-btn val-2" onclick="selectLikert('potentiality', 2)" onmouseover="showDesc('potentiality', 2)" onmouseout="showDesc('potentiality', 0)" data-tooltip="Potencialidad remota">2</div>
                                             <div class="likert-btn val-3" onclick="selectLikert('potentiality', 3)" onmouseover="showDesc('potentiality', 3)" onmouseout="showDesc('potentiality', 0)" data-tooltip="Potencialidad posible">3</div>
@@ -284,39 +284,33 @@
                 <!-- TAB 2: EVIDENCIAS -->
                 <div id="tab-evidence" class="tab-content">
                     <div class="section-title" style="margin-top:0">Evidencias Adjuntas</div>
-                    {% if evento %}
-                    <div style="background: #1f2937; border: 1px dashed #4b5563; padding: 30px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
+                    <div id="drop_zone" style="background: #1f2937; border: 1px dashed #4b5563; padding: 30px; border-radius: 8px; text-align: center; margin-bottom: 20px; transition: all 0.2s;">
                         <p style="color: #9ca3af; margin-bottom: 15px;">Arrastra archivos aquí o haz clic para seleccionar</p>
-                        <input type="file" id="file_upload" style="display:none;" multiple onchange="uploadFiles(event)">
+                        <input type="file" name="evidencias_nuevas" id="file_upload" style="display:none;" multiple onchange="uploadFiles(event)">
                         <button type="button" class="btn btn-secondary" onclick="document.getElementById('file_upload').click()">Seleccionar Archivos</button>
                     </div>
                     
                     <div id="file_list" style="display: flex; flex-direction: column; gap: 10px;">
-                        {% for file in evento.archivos %}
-                        <div class="file-item" id="file-{{ file.id }}" style="display:flex; justify-content:space-between; align-items:center; background:#374151; padding:10px 15px; border-radius:6px;">
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                <svg style="width:20px; color:#9ca3af;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-                                <a href="{{ url_for('static', filename='uploads/hallazgos/' ~ file.nombre_almacenado) }}" target="_blank" style="color:#60a5fa; text-decoration:none;">{{ file.nombre_original }}</a>
-                                <span style="font-size:0.8rem; color:#9ca3af;">({{ (file.tamano / 1024)|round(1) }} KB)</span>
+                        {% if evento %}
+                            {% for file in evento.archivos %}
+                            <div class="file-item" id="file-{{ file.id }}" style="display:flex; justify-content:space-between; align-items:center; background:#374151; padding:10px 15px; border-radius:6px;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <svg style="width:20px; color:#9ca3af;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                                    <a href="{{ url_for('static', filename='uploads/hallazgos/' ~ file.nombre_almacenado) }}" target="_blank" style="color:#60a5fa; text-decoration:none;">{{ file.nombre_original }}</a>
+                                    <span style="font-size:0.8rem; color:#9ca3af;">({{ (file.tamano / 1024)|round(1) }} KB)</span>
+                                </div>
+                                <div style="display:flex; gap:10px; align-items:center;">
+                                    {% if file.mime_type.startswith('image/') or file.mime_type == 'application/pdf' %}
+                                    <button type="button" class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="previewFile('{{ url_for('static', filename='uploads/hallazgos/' ~ file.nombre_almacenado) }}', '{{ file.mime_type }}')">Previsualizar</button>
+                                    {% endif %}
+                                    <button type="button" class="btn-delete-animated" onclick="deleteFile({{ file.id }})" title="Eliminar">
+                                        <svg viewBox="0 0 448 512" class="svgIconDelete"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path></svg>
+                                    </button>
+                                </div>
                             </div>
-                            <div style="display:flex; gap:10px; align-items:center;">
-                                {% if file.mime_type.startswith('image/') or file.mime_type == 'application/pdf' %}
-                                <button type="button" class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="previewFile('{{ url_for('static', filename='uploads/hallazgos/' ~ file.nombre_almacenado) }}', '{{ file.mime_type }}')">Previsualizar</button>
-                                {% endif %}
-                                <button type="button" class="btn-delete-animated" onclick="deleteFile({{ file.id }})" title="Eliminar">
-                                    <svg viewBox="0 0 448 512" class="svgIconDelete"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path></svg>
-                                </button>
-                            </div>
-                        </div>
-                        {% endfor %}
+                            {% endfor %}
+                        {% endif %}
                     </div>
-                    {% else %}
-                    <div class="file-upload-box">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                        <p style="margin:0;font-size:1.1rem;font-weight:500">Guarde el evento primero para adjuntar evidencia.</p>
-                        <p style="margin-top:5px;font-size:0.9rem">Podrá subir imágenes, PDFs o documentos una vez registrado.</p>
-                    </div>
-                    {% endif %}
                 </div>
 
                 <!-- TAB 3: REGISTRO DE CIERRE -->
@@ -338,8 +332,8 @@
                                 Firma bloqueada. Complete los campos requeridos en todas las pestañas primero.
                             </div>
                             <div style="margin-top: 10px; display: flex; gap: 10px;">
-                                <input type="text" name="firma_cierre" class="form-input" style="background: #0f172a; border-color: #1e293b;" placeholder="Nombre del firmante" value="{{ evento.firma_cierre if evento and evento.firma_cierre else '' }}" required disabled>
-                                <button type="submit" class="btn" style="background: #10b981; color: white;" disabled>Firmar y Cerrar</button>
+                                <input type="text" name="firma_cierre" class="form-input" style="background: #0f172a; border-color: #1e293b;" placeholder="Nombre del firmante" value="{{ evento.firma_cierre if evento and evento.firma_cierre else g.usuario.nombre }}" required readonly>
+                                <button type="submit" class="btn" style="background: #10b981; color: white;" {% if evento and evento.estado == 'Cerrado' %}disabled{% else %}id="btn-firmar"{% endif %}>Firmar y Cerrar</button>
                             </div>
                         </div>
                     </div>
@@ -493,10 +487,16 @@
         }
 
         async function checkRecurrence() {
+            {% if evento and evento.recurrencia %}
+            return; // No recalcular si el evento ya tiene recurrencia guardada
+            {% endif %}
+            
             const evTypeId = document.getElementById('ev-type').value;
+            const areaSelect = document.getElementsByName('area_id')[0];
+            const areaId = areaSelect ? areaSelect.value : null;
             const hint = document.getElementById('recurrence-hint');
-            if (!evTypeId) {
-                if (hint) hint.textContent = "(Seleccione Tipo de Evento)";
+            if (!evTypeId || !areaId) {
+                if (hint) hint.textContent = "(Seleccione Área y Tipo de Evento)";
                 return;
             }
             if (hint) hint.textContent = "(Calculando recurrencia...)";
@@ -506,7 +506,7 @@
                 const eventId = pathParts[pathParts.length - 1];
                 const isEdit = !isNaN(eventId) && eventId !== '';
                 
-                let url = "{{ url_for('hallazgos.calcular_recurrencia') }}?tipo_evento_id=" + evTypeId;
+                let url = "{{ url_for('hallazgos.calcular_recurrencia') }}?tipo_evento_id=" + evTypeId + "&area_id=" + areaId;
                 if (isEdit) {
                     url += "&evento_id=" + eventId;
                 }
@@ -532,6 +532,21 @@
             }
         }
 
+        function autoSelectResponsable(selectElement) {
+            const selectedOption = selectElement.options[selectElement.selectedIndex];
+            const jefeId = selectedOption.getAttribute('data-jefe-id');
+            const responsableSelect = document.getElementsByName('responsable_id')[0];
+            
+            if (jefeId && responsableSelect) {
+                responsableSelect.value = jefeId;
+            } else if (responsableSelect) {
+                responsableSelect.value = '';
+            }
+            if (responsableSelect) {
+                responsableSelect.dispatchEvent(new Event('change'));
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const initialImpact = parseInt(document.getElementById('val-impacto').value) || 0;
             const initialRecurrence = parseInt(document.getElementById('val-recurrencia').value) || 0;
@@ -546,7 +561,12 @@
             showDesc('potentiality', 0);
             
             if (document.getElementById('ev-type').value) {
+                {% if not (evento and evento.recurrencia) %}
                 checkRecurrence();
+                {% else %}
+                const hint = document.getElementById('recurrence-hint');
+                if (hint) hint.textContent = "(Puntaje de recurrencia fijado histórico)";
+                {% endif %}
             }
 
             // Realizar validación inicial de los requisitos de firma de cierre
@@ -565,6 +585,31 @@
                 if (el) el.addEventListener('input', checkRequirementsForClosure);
                 if (el) el.addEventListener('change', checkRequirementsForClosure);
             });
+
+            // Drag and drop for evidence
+            const dropZone = document.getElementById('drop_zone');
+            if (dropZone) {
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dropZone.style.borderColor = '#82C341';
+                    dropZone.style.background = 'rgba(130, 195, 65, 0.05)';
+                });
+                dropZone.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    dropZone.style.borderColor = '#4b5563';
+                    dropZone.style.background = '#1f2937';
+                });
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.style.borderColor = '#4b5563';
+                    dropZone.style.background = '#1f2937';
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        const fileUpload = document.getElementById('file_upload');
+                        fileUpload.files = e.dataTransfer.files;
+                        uploadFiles({target: fileUpload});
+                    }
+                });
+            }
         });
 
         function checkRequirementsForClosure() {
@@ -634,6 +679,50 @@
             
             const pathParts = window.location.pathname.split('/');
             const eventId = pathParts[pathParts.length - 1];
+            const isNew = eventId === 'nuevo' || isNaN(eventId) || eventId === '';
+            
+            if (isNew) {
+                const fileList = document.getElementById('file_list');
+                fileList.innerHTML = '';
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    
+                    let inlinePreview = '';
+                    if (file.type.startsWith('image/')) {
+                        const fileUrl = URL.createObjectURL(file);
+                        inlinePreview = `<div style="margin-top: 15px; text-align: center;"><img src="${fileUrl}" style="max-height: 700px; max-width: 100%; border-radius: 6px; border: 1px solid #4b5563;" /></div>`;
+                    } else if (file.type === 'application/pdf') {
+                        const fileUrl = URL.createObjectURL(file);
+                        inlinePreview = `<div style="margin-top: 15px;"><iframe src="${fileUrl}" style="width: 100%; height: 600px; border: 1px solid #4b5563; border-radius: 6px;"></iframe></div>`;
+                    } else if (file.name.toLowerCase().endsWith('.xls') || file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.csv') || file.type.includes('spreadsheet') || file.type.includes('excel')) {
+                        inlinePreview = `<div style="margin-top: 15px; padding: 30px; text-align: center; background: #1f2937; border: 1px dashed #4b5563; border-radius: 6px; color: #9ca3af;">
+                            <svg style="width: 40px; margin: 0 auto 10px auto; color: #10b981; display: block;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            Vista previa no disponible para documentos de Excel en el navegador.<br><span style="font-size: 0.9rem;">El archivo está listo y se adjuntará correctamente al guardar.</span>
+                        </div>`;
+                    } else {
+                        inlinePreview = `<div style="margin-top: 15px; padding: 20px; text-align: center; background: #1f2937; border: 1px dashed #4b5563; border-radius: 6px; color: #9ca3af; font-size: 0.9rem;">
+                            Vista previa no disponible para este tipo de archivo.
+                        </div>`;
+                    }
+                    
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    fileItem.style = 'display:flex; flex-direction:column; background:#374151; padding:15px; border-radius:6px; margin-bottom: 10px;';
+                    fileItem.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; width: 100%;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <svg style="width:20px; color:#9ca3af;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                                <span style="color:#60a5fa; font-weight:500;">${file.name} (Se subirá al guardar)</span>
+                                <span style="font-size:0.8rem; color:#9ca3af;">(${(file.size / 1024).toFixed(1)} KB)</span>
+                            </div>
+                        </div>
+                        ${inlinePreview}
+                    `;
+                    fileList.appendChild(fileItem);
+                }
+                checkRequirementsForClosure();
+                return;
+            }
             
             for (let i = 0; i < files.length; i++) {
                 const formData = new FormData();

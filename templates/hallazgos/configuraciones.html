@@ -319,6 +319,9 @@
                     <div class="nav-item" onclick="showCatalog('origen', this)">Orígenes (ACR) <span
                             style="background: #374151; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem;">{{
                             origenes|length }}</span></div>
+                    <div class="nav-item" onclick="showCatalog('area', this)">Áreas <span
+                            style="background: #374151; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem;">{{
+                            areas|length }}</span></div>
                 </div>
             </div>
 
@@ -337,7 +340,7 @@
                                 <tr>
                                     <th>Nombre del Sistema</th>
                                     <th style="width: 100px;">Estado</th>
-                                    <th style="width: 80px;">Acción</th>
+                                    <th style="width: 120px;">Acción</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -349,11 +352,17 @@
                                             id="badge-sistema-{{ item.id }}">{% if item.activo %}Activo{% else
                                             %}Inactivo{% endif %}</span></td>
                                     <td>
-                                        <label class="switch">
-                                            <input type="checkbox" onchange="toggleStatus('sistema', {{ item.id }})" {%
-                                                if item.activo %}checked{% endif %}>
-                                            <span class="slider"></span>
-                                        </label>
+                                        <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-start;">
+                                            <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background: #374151; color: #fff;" onclick="openEditModal('sistema', {{ item.id }}, '{{ item.nombre|escape }}')" title="Editar">✏️</button>
+                                            <button class="btn-delete-animated" onclick="deleteItem('sistema', {{ item.id }})" title="Eliminar" style="background: transparent; border: none; padding: 0;">
+                                                <svg viewBox="0 0 448 512" class="svgIconDelete" style="width: 15px; height: 15px; fill: #ef4444;"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path></svg>
+                                            </button>
+                                            <label class="switch" style="margin: 0;">
+                                                <input type="checkbox" onchange="toggleStatus('sistema', {{ item.id }})" {%
+                                                    if item.activo %}checked{% endif %}>
+                                                <span class="slider"></span>
+                                            </label>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -379,7 +388,7 @@
                                 <tr>
                                     <th>Tipo de Evento</th>
                                     <th style="width: 100px;">Estado</th>
-                                    <th style="width: 80px;">Acción</th>
+                                    <th style="width: 120px;">Acción</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -391,11 +400,17 @@
                                             id="badge-tipo_evento-{{ item.id }}">{% if item.activo %}Activo{% else
                                             %}Inactivo{% endif %}</span></td>
                                     <td>
-                                        <label class="switch">
-                                            <input type="checkbox" onchange="toggleStatus('tipo_evento', {{ item.id }})"
-                                                {% if item.activo %}checked{% endif %}>
-                                            <span class="slider"></span>
-                                        </label>
+                                        <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-start;">
+                                            <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background: #374151; color: #fff;" onclick="openEditModal('tipo_evento', {{ item.id }}, '{{ item.nombre|escape }}')" title="Editar">✏️</button>
+                                            <button class="btn-delete-animated" onclick="deleteItem('tipo_evento', {{ item.id }})" title="Eliminar" style="background: transparent; border: none; padding: 0;">
+                                                <svg viewBox="0 0 448 512" class="svgIconDelete" style="width: 15px; height: 15px; fill: #ef4444;"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path></svg>
+                                            </button>
+                                            <label class="switch" style="margin: 0;">
+                                                <input type="checkbox" onchange="toggleStatus('tipo_evento', {{ item.id }})"
+                                                    {% if item.activo %}checked{% endif %}>
+                                                <span class="slider"></span>
+                                            </label>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -421,7 +436,7 @@
                                 <tr>
                                     <th>Clasificación</th>
                                     <th style="width: 100px;">Estado</th>
-                                    <th style="width: 80px;">Acción</th>
+                                    <th style="width: 120px;">Acción</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -433,12 +448,18 @@
                                             id="badge-clasificacion-{{ item.id }}">{% if item.activo %}Activo{% else
                                             %}Inactivo{% endif %}</span></td>
                                     <td>
-                                        <label class="switch">
-                                            <input type="checkbox"
-                                                onchange="toggleStatus('clasificacion', {{ item.id }})" {% if
-                                                item.activo %}checked{% endif %}>
-                                            <span class="slider"></span>
-                                        </label>
+                                        <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-start;">
+                                            <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background: #374151; color: #fff;" onclick="openEditModal('clasificacion', {{ item.id }}, '{{ item.nombre|escape }}')" title="Editar">✏️</button>
+                                            <button class="btn-delete-animated" onclick="deleteItem('clasificacion', {{ item.id }})" title="Eliminar" style="background: transparent; border: none; padding: 0;">
+                                                <svg viewBox="0 0 448 512" class="svgIconDelete" style="width: 15px; height: 15px; fill: #ef4444;"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path></svg>
+                                            </button>
+                                            <label class="switch" style="margin: 0;">
+                                                <input type="checkbox"
+                                                    onchange="toggleStatus('clasificacion', {{ item.id }})" {% if
+                                                    item.activo %}checked{% endif %}>
+                                                <span class="slider"></span>
+                                            </label>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -465,7 +486,7 @@
                                 <tr>
                                     <th>Origen</th>
                                     <th style="width: 100px;">Estado</th>
-                                    <th style="width: 80px;">Acción</th>
+                                    <th style="width: 120px;">Acción</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -477,11 +498,17 @@
                                             id="badge-origen-{{ item.id }}">{% if item.activo %}Activo{% else
                                             %}Inactivo{% endif %}</span></td>
                                     <td>
-                                        <label class="switch">
-                                            <input type="checkbox" onchange="toggleStatus('origen', {{ item.id }})" {%
-                                                if item.activo %}checked{% endif %}>
-                                            <span class="slider"></span>
-                                        </label>
+                                        <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-start;">
+                                            <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background: #374151; color: #fff;" onclick="openEditModal('origen', {{ item.id }}, '{{ item.nombre|escape }}')" title="Editar">✏️</button>
+                                            <button class="btn-delete-animated" onclick="deleteItem('origen', {{ item.id }})" title="Eliminar" style="background: transparent; border: none; padding: 0;">
+                                                <svg viewBox="0 0 448 512" class="svgIconDelete" style="width: 15px; height: 15px; fill: #ef4444;"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path></svg>
+                                            </button>
+                                            <label class="switch" style="margin: 0;">
+                                                <input type="checkbox" onchange="toggleStatus('origen', {{ item.id }})" {%
+                                                    if item.activo %}checked{% endif %}>
+                                                <span class="slider"></span>
+                                            </label>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -494,6 +521,95 @@
                         <button class="btn" onclick="addItem('origen')">Guardar Origen</button>
                     </div>
                 </div>
+
+                <!-- AREAS -->
+                <div class="catalog-view" id="view-area">
+                    <div class="content-header">
+                        <h2 class="content-title">Áreas</h2>
+                        <span style="color: #9ca3af; font-size: 0.9rem;">Áreas o departamentos de la empresa</span>
+                    </div>
+                    <div class="table-container">
+                        <table class="catalog-table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre del Área</th>
+                                    <th>Jefe de Área</th>
+                                    <th style="width: 100px;">Estado</th>
+                                    <th style="width: 120px;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in areas %}
+                                <tr>
+                                    <td style="font-weight: 500;">{{ item.nombre }}</td>
+                                    <td style="color: #9ca3af;">
+                                        {% if item.jefe %}
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="display: inline-flex; width: 24px; height: 24px; border-radius: 50%; background: #374151; align-items: center; justify-content: center; font-size: 0.7rem; color: #fff;">{{ item.jefe.nombre[:1] | upper }}</span>
+                                            {{ item.jefe.nombre }}
+                                        </div>
+                                        {% else %}
+                                        <span style="font-style: italic;">Sin asignar</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><span
+                                            class="badge {% if item.activa %}badge-active{% else %}badge-inactive{% endif %}"
+                                            id="badge-area-{{ item.id }}">{% if item.activa %}Activo{% else
+                                            %}Inactivo{% endif %}</span></td>
+                                    <td>
+                                        <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-start;">
+                                            <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background: #374151; color: #fff;" onclick="openEditModal('area', {{ item.id }}, '{{ item.nombre|escape }}', '{{ item.jefe_id or '' }}')" title="Editar">✏️</button>
+                                            <button class="btn-delete-animated" onclick="deleteItem('area', {{ item.id }})" title="Eliminar" style="background: transparent; border: none; padding: 0;">
+                                                <svg viewBox="0 0 448 512" class="svgIconDelete" style="width: 15px; height: 15px; fill: #ef4444;"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path></svg>
+                                            </button>
+                                            <label class="switch" style="margin: 0;">
+                                                <input type="checkbox" onchange="toggleStatus('area', {{ item.id }})" {%
+                                                    if item.activa %}checked{% endif %}>
+                                                <span class="slider"></span>
+                                            </label>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="catalog-footer" style="gap: 10px;">
+                        <input type="text" id="input-area" class="form-input"
+                            placeholder="Nombre de la nueva área..." style="flex: 1;">
+                        <select id="input-area-jefe" class="form-input" style="flex: 1; max-width: 250px;">
+                            <option value="">-- Sin Jefe de Área --</option>
+                            {% for u in usuarios %}
+                            <option value="{{ u.id }}">{{ u.nombre }} ({{ u.rol }})</option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn" onclick="addItem('area')">Guardar Área</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="modal-content" style="background: #1f2937; padding: 20px; border-radius: 8px; width: 400px; max-width: 90%;">
+            <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 1.1rem; color: #f3f4f6;">Editar Nombre</h3>
+            <input type="hidden" id="editModal-tipo">
+            <input type="hidden" id="editModal-id">
+            <input type="hidden" id="editModal-oldName">
+            <input type="text" id="editModal-input" class="form-input" style="width: 100%; box-sizing: border-box; margin-bottom: 10px;">
+            <div id="editModal-jefe-container" style="display: none; margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; color: #9ca3af; font-size: 0.9rem;">Jefe de Área</label>
+                <select id="editModal-jefe" class="form-input" style="width: 100%; box-sizing: border-box;">
+                    <option value="">-- Sin Jefe de Área --</option>
+                    {% for u in usuarios %}
+                    <option value="{{ u.id }}">{{ u.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn" style="background: #374151; color: #fff;" onclick="closeEditModal()">Cancelar</button>
+                <button class="btn" onclick="submitEdit()">Guardar</button>
             </div>
         </div>
     </div>
@@ -521,7 +637,7 @@
                 const items = document.querySelectorAll('.nav-item');
 
                 // Need to find the correct index based on ID mapping
-                const idMap = ['sistema', 'tipo_evento', 'clasificacion', 'origen'];
+                const idMap = ['sistema', 'tipo_evento', 'clasificacion', 'origen', 'area'];
                 const index = idMap.indexOf(activeTab);
 
                 if (index !== -1 && items[index]) {
@@ -529,6 +645,84 @@
                 }
             }
         });
+
+        function openEditModal(tipo, id, currentName, currentJefeId) {
+            document.getElementById('editModal-tipo').value = tipo;
+            document.getElementById('editModal-id').value = id;
+            document.getElementById('editModal-oldName').value = currentName;
+            document.getElementById('editModal-input').value = currentName;
+            
+            const jefeContainer = document.getElementById('editModal-jefe-container');
+            const jefeSelect = document.getElementById('editModal-jefe');
+            if (tipo === 'area') {
+                jefeContainer.style.display = 'block';
+                jefeSelect.value = currentJefeId || '';
+            } else {
+                jefeContainer.style.display = 'none';
+                jefeSelect.value = '';
+            }
+            
+            const modal = document.getElementById('editModal');
+            modal.style.display = 'flex';
+            document.getElementById('editModal-input').focus();
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        async function submitEdit() {
+            const tipo = document.getElementById('editModal-tipo').value;
+            const id = document.getElementById('editModal-id').value;
+            const currentName = document.getElementById('editModal-oldName').value;
+            const newName = document.getElementById('editModal-input').value;
+            const jefeId = document.getElementById('editModal-jefe').value;
+
+            if (!newName || newName.trim() === '') {
+                closeEditModal();
+                return;
+            }
+
+            try {
+                const response = await fetch("{{ url_for('hallazgos.configuraciones_editar') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tipo_catalogo: tipo, id: id, nombre: newName.trim(), jefe_id: jefeId })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Error de conexión');
+            }
+        }
+
+        async function deleteItem(tipo, id) {
+            if (!confirm(`¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer y podría afectar los registros que ya lo utilizan.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch("{{ url_for('hallazgos.configuraciones_eliminar') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tipo_catalogo: tipo, id: id })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error al eliminar: ' + data.error);
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Error de conexión');
+            }
+        }
 
         async function toggleStatus(tipo, id) {
             try {
@@ -564,6 +758,13 @@
             const formData = new FormData();
             formData.append('tipo_catalogo', tipo);
             formData.append('nombre', nombre);
+            
+            if (tipo === 'area') {
+                const jefeSelect = document.getElementById('input-area-jefe');
+                if (jefeSelect && jefeSelect.value) {
+                    formData.append('jefe_id', jefeSelect.value);
+                }
+            }
 
             try {
                 const response = await fetch("{{ url_for('hallazgos.configuraciones_agregar') }}", {

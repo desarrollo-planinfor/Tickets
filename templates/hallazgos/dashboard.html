@@ -51,13 +51,13 @@
         .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
         .kpi-card {
             background: linear-gradient(135deg, #1a2332 0%, #1f2937 100%);
-            border: 1px solid #2d3a4d; border-radius: 16px; padding: 20px 24px;
+            border: 1px solid #2d3a4d; border-radius: 12px; padding: 14px 18px;
             position: relative; overflow: hidden; transition: all 0.3s ease;
         }
         .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); }
         .kpi-card::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-            border-radius: 16px 16px 0 0;
+            border-radius: 12px 12px 0 0;
         }
         .kpi-card.emerald::before { background: linear-gradient(90deg, #10b981, #34d399); }
         .kpi-card.blue::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
@@ -68,8 +68,8 @@
         .kpi-card.rose::before { background: linear-gradient(90deg, #f43f5e, #fb7185); }
 
         .kpi-icon {
-            width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
-            margin-bottom: 12px; font-size: 1.2rem;
+            width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            margin-bottom: 8px; font-size: 1rem;
         }
         .kpi-icon.emerald { background: rgba(16, 185, 129, 0.12); color: #10b981; }
         .kpi-icon.blue { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
@@ -79,8 +79,8 @@
         .kpi-icon.cyan { background: rgba(6, 182, 212, 0.12); color: #06b6d4; }
         .kpi-icon.rose { background: rgba(244, 63, 94, 0.12); color: #f43f5e; }
 
-        .kpi-label { font-size: 0.78rem; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; }
-        .kpi-value { font-size: 2rem; font-weight: 700; margin-top: 4px; line-height: 1.1; }
+        .kpi-label { font-size: 0.72rem; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-value { font-size: 1.6rem; font-weight: 700; margin-top: 2px; line-height: 1.1; }
         .kpi-value.emerald { color: #10b981; } .kpi-value.blue { color: #3b82f6; }
         .kpi-value.amber { color: #f59e0b; } .kpi-value.red { color: #ef4444; }
         .kpi-value.purple { color: #8b5cf6; } .kpi-value.cyan { color: #06b6d4; }
@@ -256,8 +256,8 @@
             </div>
         </div>
 
-        <!-- Secondary KPIs -->
-        <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <!-- Secondary and Tasas KPIs -->
+        <div class="kpi-grid" style="grid-template-columns: repeat(5, 1fr);">
             <div class="kpi-card purple animate-in delay-4">
                 <div class="kpi-icon purple">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -279,22 +279,18 @@
                 <div class="kpi-label">AC Vencidas</div>
                 <div class="kpi-value rose">{{ ac_vencidas }}</div>
             </div>
-        </div>
-
-        <!-- Tasas de Cierre KPIs -->
-        <div class="kpi-grid" style="grid-template-columns: repeat(2, 1fr);">
             <div class="kpi-card emerald animate-in delay-5">
                 <div class="kpi-icon emerald">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                 </div>
-                <div class="kpi-label">Tasa de Cierre de Eventos</div>
+                <div class="kpi-label">Cierre (Eventos)</div>
                 <div class="kpi-value emerald">{{ tasa_cierre_eventos }}%</div>
             </div>
             <div class="kpi-card cyan animate-in delay-6">
                 <div class="kpi-icon cyan">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                 </div>
-                <div class="kpi-label">Tasa de Cierre de Acciones Correctivas</div>
+                <div class="kpi-label">Cierre (AC)</div>
                 <div class="kpi-value cyan">{{ tasa_cierre_ac }}%</div>
             </div>
         </div>

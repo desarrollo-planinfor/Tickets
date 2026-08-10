@@ -256,14 +256,14 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 12px;
+        gap: 8px; /* Reducido de 12px a 8px */
         margin-bottom: 25px;
         margin-top: 20px;
         flex-wrap: wrap;
     }
 
     .nav-link-u {
-        padding: 10px 18px;
+        padding: 10px 14px; /* Reducido de 18px a 14px */
         background: #1f2937;
         border: 1px solid #374151;
         color: #9ca3af;
@@ -274,7 +274,7 @@
         transition: all 0.2s;
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px; /* Reducido de 8px a 6px */
         white-space: nowrap;
     }
 
@@ -501,11 +501,13 @@
                 Gestión de Licencias
             </a>
             {% endif %}
+            {% if g.usuario.rol == 'admin' %}
             <a href="{{ url_for('puertos') }}" class="nav-link-u {% if vista == 'puertos' %}active{% endif %}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
                 Gestión de Puertos
             </a>
-            {% if g.usuario.rol in ['admin', 'agente'] %}
+            {% endif %}
+            {% if g.usuario.tiene_permiso('ver_eventos') %}
             <a href="{{ url_for('hallazgos.lista') }}"
                 class="nav-link-u {% if vista == 'hallazgos' %}active{% endif %}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"

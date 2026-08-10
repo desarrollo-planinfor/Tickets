@@ -187,7 +187,11 @@ class Area(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False, unique=True)
     activa = db.Column(db.Boolean, default=True)
+    jefe_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
+
+    # Relación con Usuario para obtener el jefe
+    jefe = db.relationship('Usuario', foreign_keys=[jefe_id])
 
 class AreaEquipo(db.Model):
     """Modelo de Área para Equipos (inventario)"""
@@ -212,7 +216,7 @@ class Usuario(db.Model):
     
     # Nuevos campos
     area_id = db.Column(db.Integer, db.ForeignKey('area.id'), nullable=True)
-    area = db.relationship('Area', backref='usuarios', lazy=True)
+    area = db.relationship('Area', backref='usuarios', lazy=True, foreign_keys=[area_id])
     permisos = db.Column(db.Text, default='[]')
     
     tickets = db.relationship('Ticket', foreign_keys='Ticket.usuario_id', backref='usuario', lazy=True)
@@ -1380,7 +1384,7 @@ def vista_seguridad():
         flash('Acceso denegado. Solo administradores o usuarios autorizados.', 'error')
         return redirect(url_for('panel_agente'))
     usuarios = Usuario.query.all()
-    areas = Area.query.all()
+    areas = Area.query.filter_by(activa=True).all()
     return render_template('seguridad.html', usuarios=usuarios, areas=areas)
 
 @app.route('/admin/usuario/nuevo', methods=['POST'])
@@ -2866,6 +2870,9 @@ def cron_alertas_licencias():
 @app.route('/puertos')
 @login_required
 def puertos():
+    if g.usuario.rol != 'admin':
+        flash('Acceso denegado. Solo administradores.', 'error')
+        return redirect(url_for('panel_agente'))
     search_query = request.args.get('q', '').strip()
     query = Puerto.query
     if search_query:
@@ -2880,6 +2887,9 @@ def puertos():
 @app.route('/puertos/nuevo', methods=['GET', 'POST'])
 @login_required
 def nuevo_puerto():
+    if g.usuario.rol != 'admin':
+        flash('Acceso denegado. Solo administradores.', 'error')
+        return redirect(url_for('panel_agente'))
     if request.method == 'POST':
         try:
             nuevo_p = Puerto(
@@ -2900,6 +2910,9 @@ def nuevo_puerto():
 @app.route('/puertos/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
 def editar_puerto(id):
+    if g.usuario.rol != 'admin':
+        flash('Acceso denegado. Solo administradores.', 'error')
+        return redirect(url_for('panel_agente'))
     puerto = Puerto.query.get_or_404(id)
     if request.method == 'POST':
         try:
@@ -2918,6 +2931,9 @@ def editar_puerto(id):
 @app.route('/puertos/eliminar/<int:id>', methods=['POST'])
 @login_required
 def eliminar_puerto(id):
+    if g.usuario.rol != 'admin':
+        flash('Acceso denegado. Solo administradores.', 'error')
+        return redirect(url_for('panel_agente'))
     puerto = Puerto.query.get_or_404(id)
     try:
         db.session.delete(puerto)
@@ -3007,8 +3023,18 @@ def nueva_licencia():
         f_inicio = request.form.get('fecha_inicio')
         f_expiracion = request.form.get('fecha_expiracion')
         
-        f_inicio_obj = _dt.datetime.strptime(f_inicio, '%Y-%m-%d').date() if f_inicio else None
-        f_exp_obj = _dt.datetime.strptime(f_expiracion, '%Y-%m-%d').date() if f_expiracion else None
+        def parse_date(d_str):
+            if not d_str:
+                return None
+            for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%d/%m/%y'):
+                try:
+                    return _dt.datetime.strptime(d_str.strip(), fmt).date()
+                except ValueError:
+                    pass
+            raise ValueError(f"Formato de fecha inválido: {d_str}")
+        
+        f_inicio_obj = parse_date(f_inicio)
+        f_exp_obj = parse_date(f_expiracion)
         
         if not f_exp_obj:
             flash('La fecha de expiración es obligatoria.', 'error')
@@ -3054,8 +3080,18 @@ def editar_licencia(id):
         f_inicio = request.form.get('fecha_inicio')
         f_expiracion = request.form.get('fecha_expiracion')
         
-        f_inicio_obj = _dt.datetime.strptime(f_inicio, '%Y-%m-%d').date() if f_inicio else None
-        f_exp_obj = _dt.datetime.strptime(f_expiracion, '%Y-%m-%d').date() if f_expiracion else None
+        def parse_date(d_str):
+            if not d_str:
+                return None
+            for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%d/%m/%y'):
+                try:
+                    return _dt.datetime.strptime(d_str.strip(), fmt).date()
+                except ValueError:
+                    pass
+            raise ValueError(f"Formato de fecha inválido: {d_str}")
+        
+        f_inicio_obj = parse_date(f_inicio)
+        f_exp_obj = parse_date(f_expiracion)
         
         if not f_exp_obj:
             flash('La fecha de expiración es obligatoria.', 'error')

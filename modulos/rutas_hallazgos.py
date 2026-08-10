@@ -434,12 +434,14 @@ def acciones_correctivas():
 @hallazgos_bp.route('/configuraciones')
 @local_login_required
 def configuraciones():
-    from app import HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR
+    from app import HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR, Area, Usuario
     sistemas = HallazgoSistemaNormativo.query.all()
     tipos = HallazgoTipoEvento.query.all()
     clasificaciones = HallazgoClasificacion.query.all()
     origenes = HallazgoOrigenACR.query.all()
-    return render_template('hallazgos/configuraciones.html', sistemas=sistemas, tipos=tipos, clasificaciones=clasificaciones, origenes=origenes)
+    areas = Area.query.all()
+    usuarios = Usuario.query.all()
+    return render_template('hallazgos/configuraciones.html', sistemas=sistemas, tipos=tipos, clasificaciones=clasificaciones, origenes=origenes, areas=areas, usuarios=usuarios)
 
 @hallazgos_bp.route('/acciones_correctivas/editar/<int:id>', methods=['GET', 'POST'])
 @local_login_required
@@ -699,6 +701,10 @@ def configuraciones_agregar():
             nuevo_obj = HallazgoClasificacion(nombre=nombre, activo=True)
         elif tipo_catalogo == 'origen':
             nuevo_obj = HallazgoOrigenACR(nombre=nombre, activo=True)
+        elif tipo_catalogo == 'area':
+            from app import Area
+            jefe_id = request.form.get('jefe_id')
+            nuevo_obj = Area(nombre=nombre, activa=True, jefe_id=jefe_id if jefe_id else None)
         else:
             return jsonify({'error': 'Tipo de catálogo inválido'}), 400
             
@@ -733,13 +739,97 @@ def configuraciones_toggle():
             obj = HallazgoClasificacion.query.get(item_id)
         elif tipo_catalogo == 'origen':
             obj = HallazgoOrigenACR.query.get(item_id)
+        elif tipo_catalogo == 'area':
+            from app import Area
+            obj = Area.query.get(item_id)
             
         if not obj:
             return jsonify({'error': 'Registro no encontrado'}), 404
             
-        obj.activo = not obj.activo
+        if tipo_catalogo == 'area':
+            obj.activa = not obj.activa
+            nuevo_estado = obj.activa
+        else:
+            obj.activo = not obj.activo
+            nuevo_estado = obj.activo
+            
         db.session.commit()
-        return jsonify({'success': True, 'nuevo_estado': obj.activo})
+        return jsonify({'success': True, 'nuevo_estado': nuevo_estado})
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+@hallazgos_bp.route('/configuraciones/editar', methods=['POST'])
+@local_login_required
+def configuraciones_editar():
+    from app import db, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+        
+    tipo_catalogo = data.get('tipo_catalogo')
+    item_id = data.get('id')
+    nuevo_nombre = data.get('nombre')
+    
+    if not tipo_catalogo or not item_id or not nuevo_nombre:
+        return jsonify({'error': 'Faltan datos'}), 400
+        
+    try:
+        obj = None
+        if tipo_catalogo == 'sistema':
+            obj = HallazgoSistemaNormativo.query.get(item_id)
+        elif tipo_catalogo == 'tipo_evento':
+            obj = HallazgoTipoEvento.query.get(item_id)
+        elif tipo_catalogo == 'clasificacion':
+            obj = HallazgoClasificacion.query.get(item_id)
+        elif tipo_catalogo == 'origen':
+            obj = HallazgoOrigenACR.query.get(item_id)
+        elif tipo_catalogo == 'area':
+            from app import Area
+            obj = Area.query.get(item_id)
+            
+        if not obj:
+            return jsonify({'error': 'Registro no encontrado'}), 404
+            
+        obj.nombre = nuevo_nombre
+        if tipo_catalogo == 'area':
+            jefe_id = data.get('jefe_id')
+            obj.jefe_id = jefe_id if jefe_id else None
+
+        db.session.commit()
+        return jsonify({'success': True, 'nombre': obj.nombre})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@hallazgos_bp.route('/configuraciones/eliminar', methods=['POST'])
+@local_login_required
+def configuraciones_eliminar():
+    from app import db, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR
+    try:
+        data = request.get_json()
+        tipo_catalogo = data.get('tipo_catalogo')
+        item_id = data.get('id')
+        
+        obj = None
+        if tipo_catalogo == 'sistema':
+            obj = HallazgoSistemaNormativo.query.get(item_id)
+        elif tipo_catalogo == 'tipo_evento':
+            obj = HallazgoTipoEvento.query.get(item_id)
+        elif tipo_catalogo == 'clasificacion':
+            obj = HallazgoClasificacion.query.get(item_id)
+        elif tipo_catalogo == 'origen':
+            obj = HallazgoOrigenACR.query.get(item_id)
+        elif tipo_catalogo == 'area':
+            from app import Area
+            obj = Area.query.get(item_id)
+            
+        if not obj:
+            return jsonify({'error': 'Registro no encontrado'}), 404
+            
+        db.session.delete(obj)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'No se pudo eliminar el registro. Es posible que esté en uso por otros elementos del sistema.'}), 500

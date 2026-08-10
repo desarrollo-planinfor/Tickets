@@ -7,7 +7,7 @@
         {% if messages %}
         {% for category, message in messages %}
         Toastify({
-            text: "{{ message }}",
+            text: {{ message | tojson | safe }},
             duration: 4000,
             gravity: "top",
             position: "right",

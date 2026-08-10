@@ -146,7 +146,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Fecha Límite</label>
-                            <input type="date" name="fecha_plazo" class="form-input" value="{{ ac.fecha_plazo.strftime('%Y-%m-%d') if ac and ac.fecha_plazo else '' }}">
+                            <input type="text" name="fecha_plazo" class="form-input datepicker" placeholder="YYYY-MM-DD" value="{{ ac.fecha_plazo.strftime('%Y-%m-%d') if ac and ac.fecha_plazo else '' }}">
                         </div>
                     </div>
 
@@ -294,7 +294,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Fecha de Evaluación</label>
-                            <input type="date" class="form-input" name="verif_fecha" value="{{ it.fecha_evaluacion.strftime('%Y-%m-%d') if it and it.fecha_evaluacion else '' }}">
+                            <input type="text" class="form-input datepicker" placeholder="YYYY-MM-DD" name="verif_fecha" value="{{ it.fecha_evaluacion.strftime('%Y-%m-%d') if it and it.fecha_evaluacion else '' }}">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Estado de la Acción</label>

@@ -135,6 +135,12 @@
                 <button type="button" class="tab-btn" onclick="switchTab('history')">Historial</button>
             </div>
 
+            {% if evento and evento.estado in ['Cerrado', 'Escalado'] %}
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: 600;">
+                Este Evento está {{ evento.estado | upper }} y no puede ser modificado.
+            </div>
+            {% endif %}
+
             <form method="POST" action="{{ url_for('hallazgos.editar', id=evento.id) if evento else url_for('hallazgos.nuevo') }}" id="form-hallazgo" enctype="multipart/form-data">
                 <input type="hidden" name="impacto" id="val-impacto" value="{{ evento.impacto or 0 if evento else 0 }}">
                 <input type="hidden" name="recurrencia" id="val-recurrencia" value="{{ evento.recurrencia or 0 if evento else 0 }}">
@@ -150,7 +156,8 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Fecha de Registro</label>
-                            <input class="form-input readonly" value="{{ evento.fecha_registro.strftime('%Y-%m-%d') if evento else '%Y-%m-%d' | strftime(now) if now else 'Automática' }}" disabled>
+                            <input type="text" name="fecha_registro" class="form-input datepicker" placeholder="YYYY-MM-DD" value="{{ evento.fecha_registro.strftime('%Y-%m-%d') if evento and evento.fecha_registro else now.strftime('%Y-%m-%d') if now else '' }}">
+                            <small style="color: #9ca3af; font-size: 0.75rem;">(Modificable temporalmente para agregar datos anteriores)</small>
                         </div>
                         
                         <div class="form-group">
@@ -826,6 +833,22 @@
         function closePreview() {
             document.getElementById('previewModal').style.display = 'none';
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if evento and evento.estado in ['Cerrado', 'Escalado'] %}
+            const form = document.getElementById('form-hallazgo');
+            if (form) {
+                const inputs = form.querySelectorAll('input, select, textarea, button[type="submit"]');
+                inputs.forEach(input => {
+                    input.disabled = true;
+                });
+                const deleteBtns = form.querySelectorAll('.btn-delete-animated');
+                deleteBtns.forEach(btn => btn.style.display = 'none');
+                const dropZone = document.getElementById('drop_zone');
+                if (dropZone) dropZone.style.display = 'none';
+            }
+            {% endif %}
+        });
     </script>
 
     <!-- Modal para Previsualizar Archivos -->

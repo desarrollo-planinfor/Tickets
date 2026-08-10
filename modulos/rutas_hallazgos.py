@@ -277,8 +277,17 @@ def nuevo():
             conteo = HallazgoEvento.query.count() + 1
             nuevo_codigo = f"EV-{conteo:03d}"
             
+            # Procesar fecha personalizada
+            fecha_reg = None
+            if request.form.get('fecha_registro'):
+                try:
+                    fecha_reg = datetime.strptime(request.form.get('fecha_registro'), '%Y-%m-%d')
+                except ValueError:
+                    pass
+            
             nuevo_hallazgo = HallazgoEvento(
                 codigo=nuevo_codigo,
+                fecha_registro=fecha_reg if fecha_reg else datetime.now(),
                 area_id=request.form.get('area_id'),
                 responsable_id=request.form.get('responsable_id'),
                 sistema_normativo_id=request.form.get('sistema_normativo_id'),
@@ -389,6 +398,15 @@ def editar(id):
     
     if request.method == 'POST':
         try:
+            # Procesar fecha personalizada
+            from datetime import datetime
+            if request.form.get('fecha_registro'):
+                try:
+                    fecha_reg = datetime.strptime(request.form.get('fecha_registro'), '%Y-%m-%d')
+                    evento.fecha_registro = fecha_reg
+                except ValueError:
+                    pass
+                    
             evento.area_id = request.form.get('area_id')
             evento.responsable_id = request.form.get('responsable_id')
             evento.sistema_normativo_id = request.form.get('sistema_normativo_id')
@@ -472,6 +490,28 @@ def eliminar(id):
     from app import db, HallazgoEvento
     evento = HallazgoEvento.query.get_or_404(id)
     try:
+        # Eliminar archivos asociados
+        from app import HallazgoArchivo
+        archivos = HallazgoArchivo.query.filter_by(evento_id=evento.id).all()
+        for arch in archivos:
+            db.session.delete(arch)
+            
+        # Si tiene acción correctiva y está vinculada exclusivamente a este evento, se podría desvincular o eliminar.
+        # Por seguridad, desvinculamos o la eliminamos. En este caso eliminaremos la AC si fue generada por este evento.
+        if evento.accion_correctiva_id:
+            from app import HallazgoAccionCorrectiva, HallazgoACRIteracion
+            ac = HallazgoAccionCorrectiva.query.get(evento.accion_correctiva_id)
+            if ac:
+                # Eliminar iteraciones de la AC
+                iters = HallazgoACRIteracion.query.filter_by(accion_id=ac.id).all()
+                for it in iters:
+                    db.session.delete(it)
+                # Eliminar archivos de la AC
+                archs_ac = HallazgoArchivo.query.filter_by(accion_id=ac.id).all()
+                for arch in archs_ac:
+                    db.session.delete(arch)
+                db.session.delete(ac)
+        
         db.session.delete(evento)
         db.session.commit()
         flash('Evento eliminado exitosamente.', 'success')
@@ -585,6 +625,17 @@ def eliminar_ac(id):
     from app import db, HallazgoAccionCorrectiva
     ac = HallazgoAccionCorrectiva.query.get_or_404(id)
     try:
+        from app import HallazgoACRIteracion, HallazgoArchivo
+        # Eliminar iteraciones
+        iters = HallazgoACRIteracion.query.filter_by(accion_id=ac.id).all()
+        for it in iters:
+            db.session.delete(it)
+            
+        # Eliminar archivos asociados
+        archivos = HallazgoArchivo.query.filter_by(accion_id=ac.id).all()
+        for arch in archivos:
+            db.session.delete(arch)
+            
         db.session.delete(ac)
         db.session.commit()
         flash('Acción Correctiva eliminada exitosamente.', 'success')

@@ -216,9 +216,7 @@
                                 <a href="{{ url_for('historial_equipo', id=equipo.id) }}" class="action-icon" title="Historial">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                 </a>
-                                <a href="{{ url_for('editar_equipo', id=equipo.id) }}" class="action-icon" title="Editar">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                </a>
+                                <a class="btn-icon-premium" href="{{ url_for('editar_equipo', id=equipo.id) }}" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></a>
                                 {% if equipo.estado == 'Inactivo' %}
                                 <form method="POST" action="{{ url_for('activar_equipo', id=equipo.id) }}" style="display:inline;" onsubmit="return confirm('¿Está seguro de activar este equipo?');">
                                     <button type="submit" style="background:none; border:none; padding:0; cursor:pointer;" class="action-icon" title="Activar">

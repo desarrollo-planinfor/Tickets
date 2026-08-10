@@ -478,7 +478,7 @@
                             <!-- Actions -->
                             <td>
                                 <div class="actions-cell">
-                                    <button type="button" class="action-btn" title="Editar licencia" 
+                                    <button class="btn-icon-premium" type="button" title="Editar licencia" 
                                             data-id="{{ lic.id }}"
                                             data-nombre="{{ lic.nombre_servicio }}"
                                             data-tipo="{{ lic.tipo }}"
@@ -490,15 +490,9 @@
                                             data-observaciones="{{ lic.observaciones or '' }}"
                                             data-estado="{{ lic.estado or 'Activo' }}"
                                             data-renovacion="{{ 'true' if lic.renovacion_automatica else 'false' }}"
-                                            onclick="openEditModal(this)">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                                        </svg>
-                                    </button>
+                                            onclick="openEditModal(this)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
                                     <form action="{{ url_for('eliminar_licencia', id=lic.id) }}" method="POST" style="margin:0;" onsubmit="return confirm('¿Eliminar esta licencia permanentemente?');">
-                                        <button type="submit" class="btn-delete-animated" title="Eliminar licencia">
-                                            <svg viewBox="0 0 448 512" class="svgIconDelete"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path></svg>
-                                        </button>
+                                        <button class="btn-icon-premium danger" type="submit" title="Eliminar licencia"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                                     </form>
                                 </div>
                             </td>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -353,10 +353,8 @@
                                             %}Inactivo{% endif %}</span></td>
                                     <td>
                                         <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-start;">
-                                            <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background: #374151; color: #fff;" onclick="openEditModal('sistema', {{ item.id }}, '{{ item.nombre|escape }}')" title="Editar">✏️</button>
-                                            <button class="btn-delete-animated" onclick="deleteItem('sistema', {{ item.id }})" title="Eliminar" style="background: transparent; border: none; padding: 0;">
-                                                <svg viewBox="0 0 448 512" class="svgIconDelete" style="width: 15px; height: 15px; fill: #ef4444;"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path></svg>
-                                            </button>
+                                            <button class="btn-icon-premium" onclick="openEditModal('sistema', {{ item.id }}, '{{ item.nombre|escape }}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                            <button class="btn-icon-premium danger" onclick="deleteItem('sistema', {{ item.id }})" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                                             <label class="switch" style="margin: 0;">
                                                 <input type="checkbox" onchange="toggleStatus('sistema', {{ item.id }})" {%
                                                     if item.activo %}checked{% endif %}>
@@ -401,10 +399,8 @@
                                             %}Inactivo{% endif %}</span></td>
                                     <td>
                                         <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-start;">
-                                            <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background: #374151; color: #fff;" onclick="openEditModal('tipo_evento', {{ item.id }}, '{{ item.nombre|escape }}')" title="Editar">✏️</button>
-                                            <button class="btn-delete-animated" onclick="deleteItem('tipo_evento', {{ item.id }})" title="Eliminar" style="background: transparent; border: none; padding: 0;">
-                                                <svg viewBox="0 0 448 512" class="svgIconDelete" style="width: 15px; height: 15px; fill: #ef4444;"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path></svg>
-                                            </button>
+                                            <button class="btn-icon-premium" onclick="openEditModal('sistema', {{ item.id }}, '{{ item.nombre|escape }}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                            <button class="btn-icon-premium danger" onclick="deleteItem('tipo_evento', {{ item.id }})" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                                             <label class="switch" style="margin: 0;">
                                                 <input type="checkbox" onchange="toggleStatus('tipo_evento', {{ item.id }})"
                                                     {% if item.activo %}checked{% endif %}>
@@ -449,10 +445,8 @@
                                             %}Inactivo{% endif %}</span></td>
                                     <td>
                                         <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-start;">
-                                            <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background: #374151; color: #fff;" onclick="openEditModal('clasificacion', {{ item.id }}, '{{ item.nombre|escape }}')" title="Editar">✏️</button>
-                                            <button class="btn-delete-animated" onclick="deleteItem('clasificacion', {{ item.id }})" title="Eliminar" style="background: transparent; border: none; padding: 0;">
-                                                <svg viewBox="0 0 448 512" class="svgIconDelete" style="width: 15px; height: 15px; fill: #ef4444;"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path></svg>
-                                            </button>
+                                            <button class="btn-icon-premium" onclick="openEditModal('sistema', {{ item.id }}, '{{ item.nombre|escape }}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                            <button class="btn-icon-premium danger" onclick="deleteItem('clasificacion', {{ item.id }})" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                                             <label class="switch" style="margin: 0;">
                                                 <input type="checkbox"
                                                     onchange="toggleStatus('clasificacion', {{ item.id }})" {% if
@@ -499,10 +493,8 @@
                                             %}Inactivo{% endif %}</span></td>
                                     <td>
                                         <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-start;">
-                                            <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background: #374151; color: #fff;" onclick="openEditModal('origen', {{ item.id }}, '{{ item.nombre|escape }}')" title="Editar">✏️</button>
-                                            <button class="btn-delete-animated" onclick="deleteItem('origen', {{ item.id }})" title="Eliminar" style="background: transparent; border: none; padding: 0;">
-                                                <svg viewBox="0 0 448 512" class="svgIconDelete" style="width: 15px; height: 15px; fill: #ef4444;"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path></svg>
-                                            </button>
+                                            <button class="btn-icon-premium" onclick="openEditModal('sistema', {{ item.id }}, '{{ item.nombre|escape }}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                            <button class="btn-icon-premium danger" onclick="deleteItem('origen', {{ item.id }})" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                                             <label class="switch" style="margin: 0;">
                                                 <input type="checkbox" onchange="toggleStatus('origen', {{ item.id }})" {%
                                                     if item.activo %}checked{% endif %}>
@@ -558,10 +550,8 @@
                                             %}Inactivo{% endif %}</span></td>
                                     <td>
                                         <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-start;">
-                                            <button class="btn" style="padding: 4px 8px; font-size: 0.8rem; background: #374151; color: #fff;" onclick="openEditModal('area', {{ item.id }}, '{{ item.nombre|escape }}', '{{ item.jefe_id or '' }}')" title="Editar">✏️</button>
-                                            <button class="btn-delete-animated" onclick="deleteItem('area', {{ item.id }})" title="Eliminar" style="background: transparent; border: none; padding: 0;">
-                                                <svg viewBox="0 0 448 512" class="svgIconDelete" style="width: 15px; height: 15px; fill: #ef4444;"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path></svg>
-                                            </button>
+                                            <button class="btn-icon-premium" onclick="openEditModal('sistema', {{ item.id }}, '{{ item.nombre|escape }}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                            <button class="btn-icon-premium danger" onclick="deleteItem('area', {{ item.id }})" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                                             <label class="switch" style="margin: 0;">
                                                 <input type="checkbox" onchange="toggleStatus('area', {{ item.id }})" {%
                                                     if item.activa %}checked{% endif %}>
@@ -693,18 +683,30 @@
                 if (data.success) {
                     location.reload();
                 } else {
-                    alert('Error: ' + data.error);
+                    Swal.fire({ title: 'Error', text: data.error, icon: 'error', background: '#1f2937', color: '#ffffff' });
                 }
             } catch (e) {
                 console.error(e);
-                alert('Error de conexión');
+                Swal.fire({ title: 'Error', text: 'Error de conexión', icon: 'error', background: '#1f2937', color: '#ffffff' });
             }
         }
 
         async function deleteItem(tipo, id) {
-            if (!confirm(`¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer y podría afectar los registros que ya lo utilizan.`)) {
-                return;
-            }
+            const result = await Swal.fire({
+                title: '¿Eliminar elemento?',
+                text: '¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer y podría afectar los registros que ya lo utilizan.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#374151',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                background: '#1f2937',
+                color: '#ffffff',
+                iconColor: '#ef4444'
+            });
+
+            if (!result.isConfirmed) return;
 
             try {
                 const response = await fetch("{{ url_for('hallazgos.configuraciones_eliminar') }}", {
@@ -716,11 +718,11 @@
                 if (data.success) {
                     location.reload();
                 } else {
-                    alert('Error al eliminar: ' + data.error);
+                    Swal.fire({ title: 'Error', text: 'Error al eliminar: ' + data.error, icon: 'error', background: '#1f2937', color: '#ffffff' });
                 }
             } catch (e) {
                 console.error(e);
-                alert('Error de conexión');
+                Swal.fire({ title: 'Error', text: 'Error de conexión', icon: 'error', background: '#1f2937', color: '#ffffff' });
             }
         }
 
@@ -742,11 +744,11 @@
                         badge.innerText = 'Inactivo';
                     }
                 } else {
-                    alert('Error: ' + data.error);
+                    Swal.fire({ title: 'Error', text: data.error, icon: 'error', background: '#1f2937', color: '#ffffff' });
                 }
             } catch (e) {
                 console.error(e);
-                alert('Error de conexión');
+                Swal.fire({ title: 'Error', text: 'Error de conexión', icon: 'error', background: '#1f2937', color: '#ffffff' });
             }
         }
 
@@ -773,18 +775,22 @@
                 });
                 const data = await response.json();
                 if (data.success) {
-                    // Limpiar input y recargar la página para que aplique los estilos correctos fácilmente
                     input.value = '';
                     location.reload();
                 } else {
-                    alert('Error: ' + data.error);
+                    Swal.fire({ title: 'Error', text: data.error, icon: 'error', background: '#1f2937', color: '#ffffff' });
                 }
             } catch (e) {
                 console.error(e);
-                alert('Error de conexión');
+                Swal.fire({ title: 'Error', text: 'Error de conexión', icon: 'error', background: '#1f2937', color: '#ffffff' });
             }
         }
     </script>
 </body>
 
 </html>
+
+
+
+
+

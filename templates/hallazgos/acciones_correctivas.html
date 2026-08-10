@@ -11,7 +11,7 @@
     <style>
         body { margin: 0; font-family: 'Outfit', sans-serif; background: #111827; color: #f3f4f6; }
         .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
-        .page-title { font-size: 1.5rem; font-weight: 600; color: #ffffff; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .page-title { font-size: 1.5rem; font-weight: 600; color: #f9fafb; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         
         .btn-primary { background: #82C341; color: #111827; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: 0.2s; }
         .btn-primary:hover { background: #90d648; }
@@ -128,10 +128,8 @@
                             {% endif %}
                         </td>
                         <td>
-                            <form action="{{ url_for('hallazgos.eliminar_ac', id=ac.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Está seguro de que desea eliminar esta Acción Correctiva?');">
-                                <button type="submit" style="background:none; border:none; cursor:pointer; color:#ef4444;" title="Eliminar AC">
-                                    <svg viewBox="0 0 448 512" style="width:16px; height:16px; fill:currentColor;"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path></svg>
-                                </button>
+                            <form action="{{ url_for('hallazgos.eliminar_ac', id=ac.id) }}" method="POST" style="display:inline;" onsubmit="return confirmDelete(event, '¿Está seguro de que desea eliminar esta Acción Correctiva?');">
+                                <button class="btn-icon-premium danger" type="submit" title="Eliminar AC"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                             </form>
                         </td>
                     </tr>

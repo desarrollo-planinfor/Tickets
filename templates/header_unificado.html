@@ -32,6 +32,44 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
 <style>
+    :root {
+        --bg-dark: #111827;
+        --card-bg: rgba(26, 35, 50, 0.65);
+        --card-border: rgba(255, 255, 255, 0.06);
+        --text-primary: #f9fafb;
+        --text-secondary: #9ca3af;
+        --accent: #82C341;
+        --accent-hover: #94d44f;
+        --focus-ring: rgba(130, 195, 65, 0.25);
+        --danger: #ef4444;
+        --danger-focus: rgba(239, 68, 68, 0.25);
+        --transition-bounce: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    }
+    
+    .glass-card {
+        background: var(--card-bg) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 1px solid var(--card-border) !important;
+        box-shadow: var(--glass-shadow) !important;
+        border-radius: 12px !important;
+    }
+    
+    .btn-premium {
+        transition: var(--transition-bounce) !important;
+    }
+    .btn-premium:active {
+        transform: scale(0.96) !important;
+    }
+    
+    .input-premium:focus, .form-control:focus, .filter-select:focus, .filter-input:focus {
+        box-shadow: 0 0 0 3px var(--focus-ring) !important;
+        border-color: var(--accent) !important;
+        outline: none !important;
+    }
+
     html {
         scrollbar-gutter: stable;
     }
@@ -592,3 +630,22 @@
         });
     })();
 </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.card, .kpi-card, .chart-card, .activity-card').forEach(el => {
+            el.classList.add('glass-card');
+        });
+        document.querySelectorAll('.btn-filter, .btn-action, .btn-primary, .btn-delete-animated, .btn-edit, .btn').forEach(el => {
+            el.classList.add('btn-premium');
+        });
+        document.querySelectorAll('input, select, textarea').forEach(el => {
+            el.classList.add('input-premium');
+        });
+    });
+</script>
+
+<style>
+.btn-icon-premium { background: transparent; border: none; padding: 6px; color: #9ca3af; cursor: pointer; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; }
+.btn-icon-premium:hover { background: rgba(130, 195, 65, 0.15); color: #82C341; transform: translateY(-1px); }
+.btn-icon-premium.danger:hover { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+</style>

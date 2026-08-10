@@ -344,9 +344,7 @@
                                     <a href="{{ url_for('static', filename='uploads/hallazgos/' ~ file.nombre_almacenado) }}" target="_blank" style="color:#60a5fa; text-decoration:none;">{{ file.nombre_original }}</a>
                                     <span style="font-size:0.8rem; color:#9ca3af;">({{ (file.tamano / 1024)|round(1) }} KB)</span>
                                 </div>
-                                <button type="button" class="btn-delete-animated" onclick="deleteFile({{ file.id }})" title="Eliminar">
-                                    <svg viewBox="0 0 448 512" class="svgIconDelete"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path></svg>
-                                </button>
+                                <button class="btn-icon-premium danger" type="button" onclick="deleteFile({{ file.id }})" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                             </div>
                             {% endfor %}
                         {% endif %}
@@ -462,14 +460,34 @@
                     }
                 } catch(e) {
                     console.error("Error al subir:", e);
-                    alert("Hubo un error al subir " + files[i].name);
+                    Swal.fire({
+                        title: 'Error',
+                        text: "Hubo un error al subir " + files[i].name,
+                        icon: 'error',
+                        background: '#1f2937',
+                        color: '#ffffff'
+                    });
                 }
             }
             {% endif %}
         }
         
         async function deleteFile(fileId) {
-            if (!confirm('¿Seguro que deseas eliminar esta evidencia?')) return;
+            const result = await Swal.fire({
+                title: '¿Eliminar archivo?',
+                text: '¿Seguro que deseas eliminar esta evidencia?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#374151',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                background: '#1f2937',
+                color: '#ffffff',
+                iconColor: '#ef4444'
+            });
+
+            if (!result.isConfirmed) return;
             
             try {
                 const response = await fetch(`/hallazgos/evidencias/${fileId}/eliminar`, {
@@ -477,10 +495,24 @@
                 });
                 if (response.ok) {
                     document.getElementById('file-' + fileId).remove();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'No se pudo eliminar el archivo.',
+                        icon: 'error',
+                        background: '#1f2937',
+                        color: '#ffffff'
+                    });
                 }
             } catch(e) {
                 console.error("Error:", e);
-                alert("Error al eliminar el archivo.");
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al eliminar el archivo.',
+                    icon: 'error',
+                    background: '#1f2937',
+                    color: '#ffffff'
+                });
             }
         }
 

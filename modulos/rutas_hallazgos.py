@@ -17,7 +17,7 @@ def local_login_required(f):
 @hallazgos_bp.route('/calcular_recurrencia', methods=['GET'])
 @local_login_required
 def calcular_recurrencia():
-    from app import HallazgoEvento
+    from models import HallazgoEvento
     from datetime import datetime, timedelta
     tipo_evento_id = request.args.get('tipo_evento_id', type=int)
     evento_id = request.args.get('evento_id', type=int)
@@ -62,7 +62,8 @@ def calcular_recurrencia():
 @hallazgos_bp.route('/')
 @local_login_required
 def dashboard():
-    from app import (db, HallazgoEvento, HallazgoAccionCorrectiva, Area,
+    from extensions import db
+    from models import ( HallazgoEvento, HallazgoAccionCorrectiva, Area,
                      HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoACRIteracion)
     from sqlalchemy import func
     import json
@@ -238,7 +239,7 @@ def dashboard():
 @hallazgos_bp.route('/lista')
 @local_login_required
 def lista():
-    from app import HallazgoEvento, Area, HallazgoSistemaNormativo, HallazgoTipoEvento
+    from models import HallazgoEvento, Area, HallazgoSistemaNormativo, HallazgoTipoEvento
     filtro = request.args.get('filtro')
     query = HallazgoEvento.query
     if filtro == 'Abiertos':
@@ -269,7 +270,7 @@ def lista():
 @local_login_required
 def nuevo():
     # Importaciones diferidas para evitar ciclo de dependencias con app.py
-    from app import db, Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoEvento
+    from extensions import db, Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoEvento
     from datetime import datetime
     
     if request.method == 'POST':
@@ -312,7 +313,7 @@ def nuevo():
                     nuevo_hallazgo.estado = "Cerrado"
                     
                     # Generar código AC basado en el código del evento
-                    from app import HallazgoAccionCorrectiva
+                    from models import HallazgoAccionCorrectiva
                     nuevo_codigo_ac = nuevo_hallazgo.codigo.replace('EV-', 'AC-') if 'EV-' in nuevo_hallazgo.codigo else f"AC-{nuevo_hallazgo.codigo}"
                     
                     nueva_ac = HallazgoAccionCorrectiva(
@@ -352,7 +353,7 @@ def nuevo():
                         unique_name = f"ev_{nuevo_hallazgo.id}_{int(datetime.now().timestamp())}_{filename}"
                         filepath = os.path.join(UPLOAD_FOLDER, unique_name)
                         file.save(filepath)
-                        from app import HallazgoArchivo
+                        from models import HallazgoArchivo
                         nuevo_archivo = HallazgoArchivo(
                             evento_id=nuevo_hallazgo.id,
                             nombre_original=filename,
@@ -363,7 +364,7 @@ def nuevo():
                         )
                         db.session.add(nuevo_archivo)
             
-            from app import HallazgoHistorial
+            from models import HallazgoHistorial
             hist = HallazgoHistorial(
                 evento_id=nuevo_hallazgo.id,
                 accion='Creación Inicial',
@@ -393,7 +394,7 @@ def nuevo():
 @hallazgos_bp.route('/editar/<int:id>', methods=['GET', 'POST'])
 @local_login_required
 def editar(id):
-    from app import db, Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoEvento, HallazgoAccionCorrectiva
+    from extensions import db, Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoEvento, HallazgoAccionCorrectiva
     evento = HallazgoEvento.query.get_or_404(id)
     
     if request.method == 'POST':
@@ -458,7 +459,7 @@ def editar(id):
                         evento.estado = "Abierto"
                         evento.estado_cierre = "Pendiente"
             
-            from app import HallazgoHistorial
+            from models import HallazgoHistorial
             hist = HallazgoHistorial(
                 evento_id=evento.id,
                 accion='Actualización de Evento',
@@ -488,11 +489,11 @@ def editar(id):
 @hallazgos_bp.route('/eliminar/<int:id>', methods=['POST'])
 @local_login_required
 def eliminar(id):
-    from app import db, HallazgoEvento
+    from extensions import db, HallazgoEvento
     evento = HallazgoEvento.query.get_or_404(id)
     try:
         # Eliminar archivos asociados
-        from app import HallazgoArchivo
+        from models import HallazgoArchivo
         archivos = HallazgoArchivo.query.filter_by(evento_id=evento.id).all()
         for arch in archivos:
             db.session.delete(arch)
@@ -500,7 +501,7 @@ def eliminar(id):
         # Si tiene acción correctiva y está vinculada exclusivamente a este evento, se podría desvincular o eliminar.
         # Por seguridad, desvinculamos o la eliminamos. En este caso eliminaremos la AC si fue generada por este evento.
         if evento.accion_correctiva_id:
-            from app import HallazgoAccionCorrectiva, HallazgoACRIteracion
+            from models import HallazgoAccionCorrectiva, HallazgoACRIteracion
             ac = HallazgoAccionCorrectiva.query.get(evento.accion_correctiva_id)
             if ac:
                 # Eliminar iteraciones de la AC
@@ -524,7 +525,7 @@ def eliminar(id):
 @hallazgos_bp.route('/acciones_correctivas')
 @local_login_required
 def acciones_correctivas():
-    from app import HallazgoAccionCorrectiva
+    from models import HallazgoAccionCorrectiva
     filtro = request.args.get('filtro')
     query = HallazgoAccionCorrectiva.query
     
@@ -546,7 +547,7 @@ def acciones_correctivas():
 @hallazgos_bp.route('/acciones_correctivas/nuevo', methods=['GET', 'POST'])
 @local_login_required
 def acciones_correctivas_nuevo():
-    from app import db, HallazgoAccionCorrectiva, Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion
+    from extensions import db, HallazgoAccionCorrectiva, Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion
     from datetime import datetime
     
     if request.method == 'POST':
@@ -594,7 +595,7 @@ def acciones_correctivas_nuevo():
                         unique_name = f"ac_{nueva_ac.id}_{int(datetime.now().timestamp())}_{filename}"
                         filepath = os.path.join(UPLOAD_FOLDER, unique_name)
                         file.save(filepath)
-                        from app import HallazgoArchivo
+                        from models import HallazgoArchivo
                         nuevo_archivo = HallazgoArchivo(
                             accion_id=nueva_ac.id,
                             nombre_original=filename,
@@ -629,10 +630,10 @@ def acciones_correctivas_nuevo():
 @hallazgos_bp.route('/acciones_correctivas/eliminar/<int:id>', methods=['POST'])
 @local_login_required
 def eliminar_ac(id):
-    from app import db, HallazgoAccionCorrectiva
+    from extensions import db, HallazgoAccionCorrectiva
     ac = HallazgoAccionCorrectiva.query.get_or_404(id)
     try:
-        from app import HallazgoACRIteracion, HallazgoArchivo
+        from models import HallazgoACRIteracion, HallazgoArchivo
         # Eliminar iteraciones
         iters = HallazgoACRIteracion.query.filter_by(accion_id=ac.id).all()
         for it in iters:
@@ -654,7 +655,7 @@ def eliminar_ac(id):
 @hallazgos_bp.route('/configuraciones')
 @local_login_required
 def configuraciones():
-    from app import HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR, Area, Usuario
+    from models import HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR, Area, Usuario
     sistemas = HallazgoSistemaNormativo.query.all()
     tipos = HallazgoTipoEvento.query.all()
     clasificaciones = HallazgoClasificacion.query.all()
@@ -666,7 +667,7 @@ def configuraciones():
 @hallazgos_bp.route('/acciones_correctivas/editar/<int:id>', methods=['GET', 'POST'])
 @local_login_required
 def acciones_correctivas_editar(id):
-    from app import db, HallazgoAccionCorrectiva, Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoACRIteracion
+    from extensions import db, HallazgoAccionCorrectiva, Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoACRIteracion
     from datetime import datetime
     
     ac = HallazgoAccionCorrectiva.query.get_or_404(id)
@@ -803,7 +804,7 @@ UPLOAD_FOLDER = os.path.join('static', 'uploads', 'hallazgos')
 @hallazgos_bp.route('/<int:id>/subir_evidencia', methods=['POST'])
 @local_login_required
 def subir_evidencia_evento(id):
-    from app import db, HallazgoEvento, HallazgoArchivo
+    from extensions import db, HallazgoEvento, HallazgoArchivo
     ev = HallazgoEvento.query.get_or_404(id)
     
     if 'file' not in request.files:
@@ -849,7 +850,7 @@ def subir_evidencia_evento(id):
 @hallazgos_bp.route('/acciones_correctivas/<int:id>/subir_evidencia', methods=['POST'])
 @local_login_required
 def subir_evidencia_ac(id):
-    from app import db, HallazgoAccionCorrectiva, HallazgoArchivo
+    from extensions import db, HallazgoAccionCorrectiva, HallazgoArchivo
     ac = HallazgoAccionCorrectiva.query.get_or_404(id)
     
     if 'file' not in request.files:
@@ -895,7 +896,7 @@ def subir_evidencia_ac(id):
 @hallazgos_bp.route('/evidencias/<int:file_id>/eliminar', methods=['POST'])
 @local_login_required
 def eliminar_evidencia(file_id):
-    from app import db, HallazgoArchivo
+    from extensions import db, HallazgoArchivo
     archivo = HallazgoArchivo.query.get_or_404(file_id)
     
     try:
@@ -914,7 +915,7 @@ def eliminar_evidencia(file_id):
 @hallazgos_bp.route('/configuraciones/agregar', methods=['POST'])
 @local_login_required
 def configuraciones_agregar():
-    from app import db, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR
+    from extensions import db, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR
     tipo_catalogo = request.form.get('tipo_catalogo')
     nombre = request.form.get('nombre')
     
@@ -932,7 +933,7 @@ def configuraciones_agregar():
         elif tipo_catalogo == 'origen':
             nuevo_obj = HallazgoOrigenACR(nombre=nombre, activo=True)
         elif tipo_catalogo == 'area':
-            from app import Area
+            from models import Area
             jefe_id = request.form.get('jefe_id')
             nuevo_obj = Area(nombre=nombre, activa=True, jefe_id=jefe_id if jefe_id else None)
         else:
@@ -948,7 +949,7 @@ def configuraciones_agregar():
 @hallazgos_bp.route('/configuraciones/toggle', methods=['POST'])
 @local_login_required
 def configuraciones_toggle():
-    from app import db, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR
+    from extensions import db, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR
     data = request.get_json()
     if not data:
         return jsonify({'error': 'No data provided'}), 400
@@ -970,7 +971,7 @@ def configuraciones_toggle():
         elif tipo_catalogo == 'origen':
             obj = HallazgoOrigenACR.query.get(item_id)
         elif tipo_catalogo == 'area':
-            from app import Area
+            from models import Area
             obj = Area.query.get(item_id)
             
         if not obj:
@@ -992,7 +993,7 @@ def configuraciones_toggle():
 @hallazgos_bp.route('/configuraciones/editar', methods=['POST'])
 @local_login_required
 def configuraciones_editar():
-    from app import db, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR
+    from extensions import db, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR
     data = request.get_json()
     if not data:
         return jsonify({'error': 'No data provided'}), 400
@@ -1015,7 +1016,7 @@ def configuraciones_editar():
         elif tipo_catalogo == 'origen':
             obj = HallazgoOrigenACR.query.get(item_id)
         elif tipo_catalogo == 'area':
-            from app import Area
+            from models import Area
             obj = Area.query.get(item_id)
             
         if not obj:
@@ -1035,7 +1036,7 @@ def configuraciones_editar():
 @hallazgos_bp.route('/configuraciones/eliminar', methods=['POST'])
 @local_login_required
 def configuraciones_eliminar():
-    from app import db, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR
+    from extensions import db, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR
     try:
         data = request.get_json()
         tipo_catalogo = data.get('tipo_catalogo')
@@ -1051,7 +1052,7 @@ def configuraciones_eliminar():
         elif tipo_catalogo == 'origen':
             obj = HallazgoOrigenACR.query.get(item_id)
         elif tipo_catalogo == 'area':
-            from app import Area
+            from models import Area
             obj = Area.query.get(item_id)
             
         if not obj:

@@ -36,6 +36,8 @@
         .tab-link { padding: 12px 24px; text-decoration: none; font-weight: 600; font-size: 0.95rem; color: var(--text-muted); border-bottom: 3px solid transparent; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
         .tab-link:hover { color: var(--text-main); }
         .tab-link.active { color: var(--text-main); border-bottom-color: var(--accent); }
+        .tab-link svg { flex-shrink: 0; opacity: 0.85; }
+        .tab-link.active svg { color: var(--accent); opacity: 1; }
         .tab-count { background: #374151; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; }
         /* ===== Filters & Search ===== */
         .filters-card { background: #1f2937; border-radius: 12px; padding: 20px 25px; margin-bottom: 20px; border: 1px solid #374151; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; gap: 15px; align-items: end; flex-wrap: wrap; }
@@ -231,9 +233,9 @@
                                 <label class="form-label">Tipo de Licencia</label>
                                 <select name="tipo" class="form-control" required>
                                     <option value="" disabled selected>Seleccionar...</option>
-                                    <option value="SSL">🔒 Certificado SSL</option>
-                                    <option value="Software">💻 Software / Producto</option>
-                                    <option value="SaaS">☁️ Servicio SaaS</option>
+                                    <option value="SSL">Certificado SSL</option>
+                                    <option value="Software">Software / Producto</option>
+                                    <option value="SaaS">Servicio SaaS</option>
                                 </select>
                             </div>
                             <div class="form-group span-2">
@@ -293,16 +295,20 @@
         <!-- Tabs -->
         <div class="tabs-bar">
             <a href="{{ url_for('infra.licencias', tab='todas') }}" class="tab-link {% if current_tab == 'todas' %}active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 Todas <span class="tab-count">{{ stats.total }}</span>
             </a>
             <a href="{{ url_for('infra.licencias', tab='ssl') }}" class="tab-link {% if current_tab == 'ssl' %}active{% endif %}">
-                🔒 SSL <span class="tab-count">{{ stats.total_ssl }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                SSL <span class="tab-count">{{ stats.total_ssl }}</span>
             </a>
             <a href="{{ url_for('infra.licencias', tab='software') }}" class="tab-link {% if current_tab == 'software' %}active{% endif %}">
-                💻 Software <span class="tab-count">{{ stats.total_software }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                Software <span class="tab-count">{{ stats.total_software }}</span>
             </a>
             <a href="{{ url_for('infra.licencias', tab='saas') }}" class="tab-link {% if current_tab == 'saas' %}active{% endif %}">
-                ☁️ SaaS <span class="tab-count">{{ stats.total_saas }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+                SaaS <span class="tab-count">{{ stats.total_saas }}</span>
             </a>
         </div>
 
@@ -541,9 +547,9 @@
                     <div class="form-group">
                         <label class="form-label">Tipo de Licencia</label>
                         <select name="tipo" id="edit_tipo" class="form-control" required>
-                            <option value="SSL">🔒 Certificado SSL</option>
-                            <option value="Software">💻 Software / Producto</option>
-                            <option value="SaaS">☁️ Servicio SaaS</option>
+                            <option value="SSL">Certificado SSL</option>
+                            <option value="Software">Software / Producto</option>
+                            <option value="SaaS">Servicio SaaS</option>
                         </select>
                     </div>
                     <div class="form-group span-2">

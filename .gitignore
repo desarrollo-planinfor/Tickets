@@ -14,3 +14,4 @@ migrate_db*.py
 resolve.py
 seed_eventos.py
 test*.py
+static/uploads/

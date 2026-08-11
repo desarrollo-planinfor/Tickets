@@ -307,7 +307,7 @@
                 <span>Debe usar un correo corporativo de <strong>Planinfor</strong> para registrarse.</span>
             </div>
 
-            <form method="POST" action="{{ url_for('registro') }}">
+            <form method="POST" action="{{ url_for('auth.registro') }}">
                 <div class="form-group">
                     <label for="nombre">Nombre completo</label>
                     <input type="text" id="nombre" name="nombre" required placeholder="Ej: Sebastian Orellana">
@@ -357,7 +357,7 @@
             </form>
 
             <div class="links">
-                <p>¿Ya tiene cuenta? <a href="{{ url_for('login') }}">Iniciar Sesión</a></p>
+                <p>¿Ya tiene cuenta? <a href="{{ url_for('auth.login') }}">Iniciar Sesión</a></p>
             </div>
         </div>
     </div>

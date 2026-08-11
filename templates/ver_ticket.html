@@ -5,10 +5,11 @@
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='P.ico') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HUB Planinfor</title>
+    <title>Ticket #{{ ticket.id }} — HUB Planinfor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         .navbar {
             background: rgba(15, 23, 42, 0.8);
@@ -31,9 +32,7 @@
             color: #fff;
             text-decoration: none;
         }
-        .nav-brand span {
-            color: var(--primary);
-        }
+        .nav-brand span { color: var(--primary); }
         .back-link {
             display: inline-flex;
             align-items: center;
@@ -41,216 +40,417 @@
             color: var(--text-dim);
             text-decoration: none;
             font-size: 0.9rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
             transition: color 0.2s;
         }
-        .back-link:hover {
-            color: var(--primary);
-        }
+        .back-link:hover { color: var(--primary); }
+
         .ticket-grid {
             display: grid;
-            grid-template-columns: 1.5fr 1fr;
-            gap: 2rem;
+            grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.9fr);
+            gap: 1.5rem;
+            align-items: start;
         }
-        .main-card {
+        .ticket-col {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .td-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 2rem;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
         }
+        .td-section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #9ca3af;
+            margin: 0 0 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #374151;
+        }
+
         .ticket-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 2rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid var(--border);
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        .ticket-id {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin: 0 0 6px;
         }
         .ticket-title h1 {
-            font-size: 1.75rem;
+            font-size: 1.55rem;
             font-weight: 700;
-            margin-bottom: 0.5rem;
+            margin: 0 0 10px;
+            line-height: 1.25;
+            color: #f3f4f6;
         }
+        .ticket-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
         .status-badge {
-            padding: 6px 16px;
+            padding: 6px 14px;
             border-radius: 100px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.4px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         .badge-PENDIENTE {
-            background: rgba(251, 191, 36, 0.1);
+            background: rgba(251, 191, 36, 0.12);
             color: var(--pending);
-            border: 1px solid rgba(251, 191, 36, 0.2);
+            border: 1px solid rgba(251, 191, 36, 0.3);
         }
         .badge-RECIBIDO {
-            background: rgba(96, 165, 250, 0.1);
+            background: rgba(96, 165, 250, 0.12);
             color: var(--received);
-            border: 1px solid rgba(96, 165, 250, 0.2);
+            border: 1px solid rgba(96, 165, 250, 0.3);
         }
         .badge-EN_PROCESO {
-            background: rgba(130, 195, 65, 0.1);
+            background: rgba(130, 195, 65, 0.12);
             color: var(--process);
-            border: 1px solid rgba(130, 195, 65, 0.2);
+            border: 1px solid rgba(130, 195, 65, 0.3);
         }
         .badge-CERRADO {
-            background: rgba(148, 163, 184, 0.1);
+            background: rgba(148, 163, 184, 0.12);
             color: var(--closed);
-            border: 1px solid rgba(148, 163, 184, 0.2);
+            border: 1px solid rgba(148, 163, 184, 0.3);
         }
         .badge-ATRASADO {
-            background: rgba(248, 113, 113, 0.1);
+            background: rgba(248, 113, 113, 0.12);
             color: var(--delayed);
-            border: 1px solid rgba(248, 113, 113, 0.2);
+            border: 1px solid rgba(248, 113, 113, 0.3);
         }
+
         .priority-indicator {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
-            padding: 4px 12px;
+            padding: 4px 10px;
             border-radius: 6px;
-            margin-top: 8px;
         }
         .priority-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
         }
-        .prio-Baja {
-            background: rgba(148, 163, 184, 0.1);
-            color: var(--text-dim);
-        }
-        .prio-Baja .priority-dot {
-            background: var(--text-dim);
-        }
-        .prio-Media {
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--received);
-        }
-        .prio-Media .priority-dot {
-            background: var(--received);
-        }
-        .prio-Alta {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--pending);
-        }
-        .prio-Alta .priority-dot {
-            background: var(--pending);
-        }
-        .prio-Urgente {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--delayed);
-        }
-        .prio-Urgente .priority-dot {
-            background: var(--delayed);
-        }
-        .sla-box {
-            background: rgba(130, 195, 65, 0.05);
-            border: 1px solid rgba(130, 195, 65, 0.2);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-top: 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .sla-time {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-        .description-box {
-            background: rgba(15, 23, 42, 0.3);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            white-space: pre-wrap;
-            color: #e2e8f0;
-        }
+        .prio-Baja { background: rgba(148, 163, 184, 0.12); color: var(--text-dim); }
+        .prio-Baja .priority-dot { background: var(--text-dim); }
+        .prio-Media { background: rgba(59, 130, 246, 0.12); color: var(--received); }
+        .prio-Media .priority-dot { background: var(--received); }
+        .prio-Alta { background: rgba(245, 158, 11, 0.12); color: var(--pending); }
+        .prio-Alta .priority-dot { background: var(--pending); }
+        .prio-Urgente { background: rgba(239, 68, 68, 0.12); color: var(--delayed); }
+        .prio-Urgente .priority-dot { background: var(--delayed); }
+
         .meta-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 1.25rem;
+        }
+        .meta-item {
+            background: rgba(15, 23, 42, 0.45);
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 12px 14px;
         }
         .meta-item label {
             display: block;
-            font-size: 0.8rem;
-            color: var(--text-dim);
+            font-size: 0.7rem;
+            color: #9ca3af;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 4px;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+            font-weight: 600;
         }
         .meta-item p {
+            margin: 0;
             font-weight: 500;
+            font-size: 0.95rem;
+            color: #f3f4f6;
+            word-break: break-word;
+        }
+
+        .description-block { margin-bottom: 0.25rem; }
+        .description-block .td-section-title {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0.75rem;
+        }
+        .description-box {
+            background: rgba(15, 23, 42, 0.45);
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 1rem 1.15rem;
+            white-space: pre-wrap;
+            color: #e5e7eb;
+            line-height: 1.55;
+            font-size: 0.95rem;
+            min-height: 72px;
+        }
+
+        .adjuntos-list {
             display: flex;
-            align-items: center;
+            flex-direction: column;
             gap: 8px;
         }
-        /* --- Timeline Styling --- */
-        .timeline-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 2rem;
+        .adjunto-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: rgba(15, 23, 42, 0.45);
+            border: 1px solid #374151;
+            border-radius: 8px;
+            color: #e5e7eb;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: border-color 0.15s, background 0.15s;
         }
-        .timeline-card h2 {
-            font-size: 1.2rem;
+        .adjunto-link:hover {
+            border-color: rgba(130, 195, 65, 0.4);
+            background: rgba(130, 195, 65, 0.06);
+            color: #fff;
+        }
+        .adjunto-link .adjunto-date {
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: #6b7280;
+            flex-shrink: 0;
+        }
+
+        .admin-box {
+            margin-top: 0.25rem;
+            padding: 1.15rem 1.25rem;
+            background: rgba(15, 23, 42, 0.35);
+            border: 1px solid #374151;
+            border-radius: 8px;
+        }
+        .admin-box .td-section-title {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0.85rem;
+        }
+        .admin-form {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .admin-field {
+            flex: 1;
+            min-width: 160px;
+        }
+        .admin-field label {
+            display: block;
+            font-size: 0.72rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 6px;
             font-weight: 600;
-            margin-bottom: 1.5rem;
         }
+        .admin-field select {
+            width: 100%;
+            padding: 10px 12px;
+            background: #111827;
+            border: 1px solid #4b5563;
+            border-radius: 6px;
+            color: #f3f4f6;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+        .admin-field select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .sla-box {
+            background: rgba(130, 195, 65, 0.06);
+            border: 1px solid rgba(130, 195, 65, 0.25);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .sla-box label {
+            display: block;
+            font-size: 0.7rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .sla-box p {
+            margin: 0;
+            font-size: 0.88rem;
+            color: #d1d5db;
+        }
+        .sla-time {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--primary);
+            white-space: nowrap;
+        }
+
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .upload-form input[type="file"] {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+        .file-dropzone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            min-height: 110px;
+            padding: 18px 14px;
+            background: #111827;
+            border: 1px dashed #4b5563;
+            border-radius: 8px;
+            color: #9ca3af;
+            cursor: pointer;
+            text-align: center;
+            box-sizing: border-box;
+            transition: border-color 0.15s, background 0.15s, color 0.15s;
+        }
+        .file-dropzone:hover,
+        .file-dropzone.is-dragover {
+            border-color: rgba(130, 195, 65, 0.55);
+            background: rgba(130, 195, 65, 0.06);
+            color: #d1d5db;
+        }
+        .file-dropzone.has-file {
+            border-style: solid;
+            border-color: rgba(130, 195, 65, 0.35);
+            background: rgba(130, 195, 65, 0.08);
+        }
+        .file-dropzone-icon {
+            color: #82C341;
+            opacity: 0.9;
+        }
+        .file-dropzone-title {
+            margin: 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+        .file-dropzone-sub {
+            margin: 0;
+            font-size: 0.78rem;
+            color: #6b7280;
+        }
+        .file-dropzone-name {
+            margin: 0;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: #82C341;
+            word-break: break-all;
+            max-width: 100%;
+        }
+        .upload-hint {
+            margin: 0;
+            font-size: 0.78rem;
+            color: #6b7280;
+            line-height: 1.4;
+        }
+
         .timeline {
             position: relative;
-            padding-left: 30px;
+            padding-left: 28px;
         }
         .timeline::before {
             content: '';
             position: absolute;
-            left: 7px;
-            top: 5px;
-            bottom: 5px;
+            left: 6px;
+            top: 4px;
+            bottom: 4px;
             width: 2px;
-            background: var(--border);
+            background: #374151;
         }
         .timeline-item {
             position: relative;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
         }
-        .timeline-item:last-child {
-            margin-bottom: 0;
-        }
+        .timeline-item:last-child { margin-bottom: 0; }
         .timeline-dot {
             position: absolute;
-            left: -30px;
-            width: 16px;
-            height: 16px;
+            left: -28px;
+            top: 4px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
-            background: var(--card-bg);
-            border: 2px solid var(--border);
+            background: #1f2937;
+            border: 2px solid #4b5563;
             z-index: 1;
         }
         .timeline-item.active .timeline-dot {
             border-color: var(--primary);
             background: var(--primary);
-            box-shadow: 0 0 0 4px rgba(130, 195, 65, 0.2);
+            box-shadow: 0 0 0 3px rgba(130, 195, 65, 0.2);
         }
         .timeline-content {
-            background: rgba(255, 255, 255, 0.02);
-            padding: 12px 16px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
+            background: rgba(15, 23, 42, 0.4);
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #374151;
         }
         .timeline-date {
-            font-size: 0.75rem;
-            color: var(--text-dim);
+            font-size: 0.72rem;
+            color: #9ca3af;
             display: block;
             margin-bottom: 4px;
+            font-weight: 500;
         }
         .timeline-msg {
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             font-weight: 500;
+            color: #e5e7eb;
+            margin: 0;
+            line-height: 1.4;
+        }
+        .timeline-state {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin: 6px 0 0;
+        }
+
+        @media (max-width: 900px) {
+            .ticket-grid { grid-template-columns: 1fr; }
+            .meta-grid { grid-template-columns: 1fr 1fr; }
         }
         @media (max-width: 768px) {
             .navbar {
@@ -259,48 +459,20 @@
                 gap: 1rem;
                 text-align: center;
             }
-            .navbar div {
-                flex-direction: column;
-                gap: 5px !important;
-            }
-            .ticket-grid {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-            }
-            .main-card,
-            .timeline-card {
-                padding: 1.5rem;
-            }
-            .ticket-header {
-                flex-direction: column;
-                gap: 1rem;
-                align-items: flex-start;
-            }
-            .ticket-title h1 {
-                font-size: 1.4rem;
-            }
-            .meta-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-            .sla-box {
-                flex-direction: column;
-                text-align: center;
-                gap: 10px;
-            }
+            .ticket-header { flex-direction: column; align-items: flex-start; }
+            .ticket-title h1 { font-size: 1.3rem; }
+            .meta-grid { grid-template-columns: 1fr; }
+            .sla-box { flex-direction: column; text-align: center; }
         }
     </style>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
     <nav class="navbar">
-        <a href="{{ url_for('index') }}" class="nav-brand">
+        <a href="{{ url_for('tickets.index') }}" class="nav-brand">
             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path
-                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
-                </path>
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                 <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
                 <line x1="12" y1="22.08" x2="12" y2="12"></line>
             </svg>
@@ -308,14 +480,14 @@
         </a>
         <div style="display: flex; gap: 20px; align-items: center;">
             <span style="color: var(--text-dim); font-size: 0.9rem;">{{ g.usuario.nombre }} ({{ g.usuario.rol }})</span>
-            <a href="{{ url_for('logout') }}"
+            <a href="{{ url_for('auth.logout') }}"
                 style="color: #f87171; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Cerrar Sesión</a>
         </div>
     </nav>
 
     <div class="container">
         {% if g.usuario.rol == 'cliente' %}
-        <a href="{{ url_for('mis_tickets') }}" class="back-link">
+        <a href="{{ url_for('tickets.mis_tickets') }}" class="back-link">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -324,7 +496,7 @@
             Volver a mis tickets
         </a>
         {% elif g.usuario.rol == 'agente' or g.usuario.rol == 'admin' %}
-        <a href="{{ url_for('panel_agente') }}" class="back-link">
+        <a href="{{ url_for('tickets.panel_agente') }}" class="back-link">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -335,156 +507,206 @@
         {% endif %}
 
         <div class="ticket-grid">
-            <div class="main-card">
-                <div class="ticket-header">
-                    <div class="ticket-title">
-                        <p style="color: var(--primary); font-weight: 700; margin-bottom: 4px;">Ticket #{{ ticket.id }}
-                        </p>
-                        <h1>{{ ticket.asunto }}</h1>
-                        <div class="priority-indicator prio-{{ ticket.prioridad }}">
-                            <div class="priority-dot"></div>
-                            Prioridad {{ ticket.prioridad }}
+            <!-- Columna principal -->
+            <div class="ticket-col">
+                <div class="td-card">
+                    <div class="ticket-header">
+                        <div class="ticket-title">
+                            <p class="ticket-id">Ticket #{{ ticket.id }}</p>
+                            <h1>{{ ticket.asunto }}</h1>
+                            <div class="ticket-tags">
+                                <div class="priority-indicator prio-{{ ticket.prioridad }}">
+                                    <div class="priority-dot"></div>
+                                    Prioridad {{ ticket.prioridad }}
+                                </div>
+                            </div>
+                        </div>
+                        <span class="status-badge badge-{{ ticket.estado }}">{{ ticket.estado.replace('_', ' ') }}</span>
+                    </div>
+
+                    <div class="meta-grid">
+                        <div class="meta-item">
+                            <label>Categoría</label>
+                            <p>{{ ticket.categoria }}</p>
+                        </div>
+                        <div class="meta-item">
+                            <label>Departamento</label>
+                            <p>{{ ticket.departamento | capitalize if ticket.departamento else 'Soporte' }}</p>
+                        </div>
+                        <div class="meta-item">
+                            <label>Creado</label>
+                            <p>{{ ticket.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</p>
                         </div>
                     </div>
-                    <span class="status-badge badge-{{ ticket.estado }}">{{ ticket.estado.replace('_', ' ') }}</span>
+
+                    <div class="description-block">
+                        <h2 class="td-section-title">Descripción</h2>
+                        <div class="description-box">{{ ticket.descripcion }}</div>
+                    </div>
                 </div>
 
-                <div class="description-box">
-                    {{ ticket.descripcion }}
-                </div>
                 {% if ticket.adjuntos %}
-                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #374151;">
-                    <h3 style="font-size: 1rem; color: #9ca3af; margin-bottom: 10px;">Archivos Adjuntos</h3>
-                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div class="td-card">
+                    <h2 class="td-section-title">Archivos adjuntos</h2>
+                    <div class="adjuntos-list">
                         {% for adjunto in ticket.adjuntos %}
-                        <a href="{{ url_for('static', filename=adjunto.ruta_archivo) }}" target="_blank" class="btn btn-outline" style="display: inline-flex; justify-content: flex-start; align-items: center; gap: 8px; padding: 10px;">
+                        <a href="{{ url_for('static', filename=adjunto.ruta_archivo) }}" target="_blank" class="adjunto-link">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-                            {{ adjunto.nombre_archivo }}
-                            <span style="margin-left: auto; font-size: 0.75rem; color: #6b7280;">{{ adjunto.fecha_subida.strftime('%d/%m/%Y') }}</span>
+                            <span>{{ adjunto.nombre_archivo }}</span>
+                            <span class="adjunto-date">{{ adjunto.fecha_subida.strftime('%d/%m/%Y') }}</span>
                         </a>
                         {% endfor %}
                     </div>
                 </div>
                 {% endif %}
 
-
-                <div class="meta-grid">
-                    <div class="meta-item">
-                        <label>Categoría</label>
-                        <p>{{ ticket.categoria }}</p>
-                    </div>
-                    <div class="meta-item">
-                        <label>Fecha de Creación</label>
-                        <p>{{ ticket.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</p>
-                    </div>
-                    <div class="meta-item">
-                        <label>Departamento</label>
-                        <p>{{ ticket.departamento | capitalize if ticket.departamento else 'Soporte' }}</p>
-                    </div>
-                </div>
-
                 {% if g.usuario.rol == 'admin' %}
-                <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
-                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Administración del Ticket</h3>
-                    <form method="POST" action="{{ url_for('actualizar_campos_ticket', ticket_id=ticket.id) }}"
-                        style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
-                        <div style="flex: 1; min-width: 200px;">
-                            <label
-                                style="display: block; font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px;">Prioridad</label>
-                            <select name="prioridad"
-                                style="width: 100%; padding: 10px; background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main);">
-                                <option value="Baja" {% if ticket.prioridad=='Baja' %}selected{% endif %}>Baja</option>
-                                <option value="Media" {% if ticket.prioridad=='Media' %}selected{% endif %}>Media
-                                </option>
-                                <option value="Alta" {% if ticket.prioridad=='Alta' %}selected{% endif %}>Alta</option>
-                                <option value="Urgente" {% if ticket.prioridad=='Urgente' %}selected{% endif %}>Urgente
-                                </option>
-                            </select>
-                        </div>
-                        <div style="flex: 1; min-width: 200px;">
-                            <label
-                                style="display: block; font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px;">Departamento</label>
-                            <select name="departamento"
-                                style="width: 100%; padding: 10px; background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border); border-radius: 8px; color: var(--text-main);">
-                                <option value="soporte" {% if ticket.departamento=='soporte' %}selected{% endif %}>
-                                    Soporte</option>
-                                <option value="desarrollo" {% if ticket.departamento=='desarrollo' %}selected{% endif
-                                    %}>Desarrollo</option>
-                            </select>
-                        </div>
-                        <button type="submit"
-                            style="padding: 10px 20px; background: var(--primary); color: var(--bg-dark); border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                            Actualizar
-                        </button>
-                    </form>
+                <div class="td-card">
+                    <div class="admin-box" style="margin:0; padding:0; background:transparent; border:none;">
+                        <h2 class="td-section-title">Administración</h2>
+                        <p class="upload-hint" style="margin-bottom: 12px;">Cambia prioridad o departamento y guarda los cambios.</p>
+                        <form method="POST" action="{{ url_for('admin.actualizar_campos_ticket', ticket_id=ticket.id) }}" class="admin-form">
+                            <div class="admin-field">
+                                <label>Prioridad</label>
+                                <select name="prioridad">
+                                    <option value="Baja" {% if ticket.prioridad=='Baja' %}selected{% endif %}>Baja</option>
+                                    <option value="Media" {% if ticket.prioridad=='Media' %}selected{% endif %}>Media</option>
+                                    <option value="Alta" {% if ticket.prioridad=='Alta' %}selected{% endif %}>Alta</option>
+                                    <option value="Urgente" {% if ticket.prioridad=='Urgente' %}selected{% endif %}>Urgente</option>
+                                </select>
+                            </div>
+                            <div class="admin-field">
+                                <label>Departamento</label>
+                                <select name="departamento">
+                                    <option value="soporte" {% if ticket.departamento=='soporte' %}selected{% endif %}>Soporte</option>
+                                    <option value="desarrollo" {% if ticket.departamento=='desarrollo' %}selected{% endif %}>Desarrollo</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Actualizar</button>
+                        </form>
+                    </div>
                 </div>
                 {% endif %}
 
                 {% if ticket.get_tiempo_restante_sla() %}
                 <div class="sla-box">
                     <div>
-                        <label
-                            style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px;">Tiempo
-                            estimado para atención</label>
-                        <p style="font-size: 0.9rem; color: var(--text-main);">Según programación de soporte</p>
+                        <label>Tiempo estimado de atención</label>
+                        <p>Según programación de soporte</p>
                     </div>
-                    <div class="sla-time">
-                        {{ ticket.get_tiempo_restante_sla() }}
-                    </div>
+                    <div class="sla-time">{{ ticket.get_tiempo_restante_sla() }}</div>
                 </div>
                 {% endif %}
             </div>
 
-            
-                <div class="card" style="margin-bottom: 20px;">
-                    <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: #ffffff;">Adjuntar Archivo</h3>
-                    <form action="{{ url_for('adjuntar_archivo', ticket_id=ticket.id) }}" method="POST" enctype="multipart/form-data" style="display: flex; gap: 10px; align-items: center;">
-                        <input type="file" name="archivo" required style="flex: 1; padding: 10px; background: #374151; border: 1px dashed #4b5563; border-radius: 8px; color: #fff; cursor: pointer;">
-                        <button type="submit" class="btn btn-primary" style="white-space: nowrap;">
+            <!-- Columna lateral -->
+            <div class="ticket-col">
+                <div class="td-card">
+                    <h2 class="td-section-title">Adjuntar archivo</h2>
+                    <form action="{{ url_for('tickets.adjuntar_archivo', ticket_id=ticket.id) }}" method="POST" enctype="multipart/form-data" class="upload-form">
+                        <input type="file" name="archivo" id="ticketArchivo" required>
+                        <label for="ticketArchivo" class="file-dropzone" id="fileDropzone">
+                            <svg class="file-dropzone-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            <p class="file-dropzone-title" id="fileDropzoneTitle">Elegir archivo</p>
+                            <p class="file-dropzone-sub" id="fileDropzoneSub">Haz clic o arrastra aquí</p>
+                            <p class="file-dropzone-name" id="fileDropzoneName" hidden></p>
+                        </label>
+                        <p class="upload-hint">Puedes subir capturas, documentos u otros archivos relacionados al ticket.</p>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                            Subir
+                            Subir archivo
                         </button>
                     </form>
                 </div>
 
-            <div class="timeline-card">
-                <h2>Historial y Seguimiento</h2>
-                <div class="timeline">
-                    <!-- Evento inicial -->
-                    <div class="timeline-item active">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-content">
-                            <span class="timeline-date">{{ ticket.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</span>
-                            <p class="timeline-msg">Ticket creado por el usuario</p>
+                <div class="td-card">
+                    <h2 class="td-section-title">Historial y seguimiento</h2>
+                    <div class="timeline">
+                        <div class="timeline-item active">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <span class="timeline-date">{{ ticket.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</span>
+                                <p class="timeline-msg">Ticket creado por el usuario</p>
+                            </div>
                         </div>
-                    </div>
 
-                    {% for log in logs %}
-                    <div class="timeline-item active">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-content">
-                            <span class="timeline-date">{{ log.fecha_cambio.strftime('%d/%m/%Y %H:%M') }}</span>
-                            <p class="timeline-msg">{{ log.descripcion }}</p>
-                            {% if log.estado_anterior != log.estado_nuevo %}
-                            <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 4px;">Estado cambiado a:
-                                {{ log.estado_nuevo }}</p>
-                            {% endif %}
+                        {% for log in logs %}
+                        <div class="timeline-item active">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <span class="timeline-date">{{ log.fecha_cambio.strftime('%d/%m/%Y %H:%M') }}</span>
+                                <p class="timeline-msg">{{ log.descripcion }}</p>
+                                {% if log.estado_anterior != log.estado_nuevo %}
+                                <p class="timeline-state">Estado → {{ log.estado_nuevo }}</p>
+                                {% endif %}
+                            </div>
                         </div>
-                    </div>
-                    {% endfor %}
+                        {% endfor %}
 
-                    {% if ticket.estado == 'CERRADO' and not logs %}
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-content">
-                            <p class="timeline-msg">Ticket finalizado</p>
+                        {% if ticket.estado == 'CERRADO' and not logs %}
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <p class="timeline-msg">Ticket finalizado</p>
+                            </div>
                         </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
+    <script>
+        (function () {
+            const input = document.getElementById('ticketArchivo');
+            const zone = document.getElementById('fileDropzone');
+            const title = document.getElementById('fileDropzoneTitle');
+            const sub = document.getElementById('fileDropzoneSub');
+            const nameEl = document.getElementById('fileDropzoneName');
+            if (!input || !zone) return;
+
+            function showFile(file) {
+                if (!file) {
+                    zone.classList.remove('has-file');
+                    title.hidden = false;
+                    sub.hidden = false;
+                    nameEl.hidden = true;
+                    nameEl.textContent = '';
+                    return;
+                }
+                zone.classList.add('has-file');
+                title.hidden = true;
+                sub.hidden = true;
+                nameEl.hidden = false;
+                nameEl.textContent = file.name;
+            }
+
+            input.addEventListener('change', function () {
+                showFile(input.files && input.files[0]);
+            });
+
+            ['dragenter', 'dragover'].forEach(function (evt) {
+                zone.addEventListener(evt, function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    zone.classList.add('is-dragover');
+                });
+            });
+            ['dragleave', 'drop'].forEach(function (evt) {
+                zone.addEventListener(evt, function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    zone.classList.remove('is-dragover');
+                });
+            });
+            zone.addEventListener('drop', function (e) {
+                const files = e.dataTransfer && e.dataTransfer.files;
+                if (!files || !files.length) return;
+                input.files = files;
+                showFile(files[0]);
+            });
+        })();
+    </script>
 </body>
 
 </html>

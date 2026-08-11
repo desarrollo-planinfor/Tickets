@@ -1,3 +1,4 @@
+<div class="table-responsive">
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -42,6 +43,7 @@
             <h1 class="page-title">Acciones Correctivas</h1>
         </div>
 
+        <div class="table-responsive">
         <table>
             <thead>
                 <tr>
@@ -62,7 +64,7 @@
                     <td>{{ accion.estado }}</td>
                     <td>{{ accion.fecha_registro.strftime('%d/%m/%Y') if accion.fecha_registro else '' }}</td>
                     <td>
-                        <a href="{{ url_for('acciones_acr', id=accion.id) }}" class="btn-sm">ACR</a>
+                        <a href="{{ url_for('eventos_legacy.acciones_acr', id=accion.id) }}" class="btn-sm">ACR</a>
                     </td>
                 </tr>
                 {% else %}
@@ -72,6 +74,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
     </div>
 </body>
 </html>

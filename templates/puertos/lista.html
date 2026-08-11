@@ -1,3 +1,4 @@
+<div class="table-responsive">
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -61,7 +62,7 @@
         <div class="page-header">
             <h1 class="page-title">Gestión de Puertos Abiertos</h1>
             <div style="display: flex; gap: 10px;">
-                <a href="{{ url_for('nuevo_puerto') }}" class="btn btn-primary">
+                <a href="{{ url_for('infra.nuevo_puerto') }}" class="btn btn-primary">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     Nuevo Registro
                 </a>
@@ -69,19 +70,20 @@
         </div>
 
         <div class="filters-card" style="margin-bottom: 20px; background: #1f2937; padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
-            <form method="GET" action="{{ url_for('puertos') }}" style="display: flex; gap: 15px; align-items: flex-end;">
+            <form method="GET" action="{{ url_for('infra.puertos') }}" style="display: flex; gap: 15px; align-items: flex-end;">
                 <div style="flex: 1;">
                     <label style="display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 0.9rem;">Buscar</label>
                     <input type="text" name="q" class="form-control" style="width: 100%;" placeholder="Buscar por servicio, puerto o descripción..." value="{{ q }}">
                 </div>
                 <div>
                     <button type="submit" class="btn btn-primary" style="height: 42px;">Filtrar</button>
-                    <a href="{{ url_for('puertos') }}" class="btn btn-secondary" style="height: 42px; display: inline-flex; align-items: center;" title="Limpiar Filtros">Limpiar</a>
+                    <a href="{{ url_for('infra.puertos') }}" class="btn btn-secondary" style="height: 42px; display: inline-flex; align-items: center;" title="Limpiar Filtros">Limpiar</a>
                 </div>
             </form>
         </div>
 
         <div class="table-container">
+            <div class="table-responsive">
             <table>
                 <thead>
                     <tr>
@@ -103,8 +105,8 @@
                         <td>{{ p.fecha_registro.strftime('%d/%m/%Y') }}</td>
                         <td style="text-align: center;">
                             <div style="display: flex; gap: 8px; justify-content: center;">
-                                <a class="btn-icon-premium" href="{{ url_for('editar_puerto', id=p.id) }}" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></a>
-                                <form action="{{ url_for('eliminar_puerto', id=p.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar este puerto?');">
+                                <a class="btn-icon-premium" href="{{ url_for('infra.editar_puerto', id=p.id) }}" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></a>
+                                <form action="{{ url_for('infra.eliminar_puerto', id=p.id) }}" method="POST" style="display:inline;" onsubmit="return confirmDelete(event, 'Se eliminará el puerto <strong>{{ p.nombre_servicio|e }}</strong> (<code>{{ p.numeros_puerto|e }}</code>).<br><br>Esta acción no se puede deshacer.', '¿Eliminar puerto?');">
                                     <button class="btn-icon-premium danger" type="submit" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                                 </form>
                             </div>
@@ -119,6 +121,7 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 </body>

@@ -279,7 +279,7 @@
             <span class="user-email">{{ g.usuario.email }}</span>
             {% if g.usuario %}
 
-            <a href="{{ url_for('logout') }}" class="btn-logout">Cerrar Sesión</a>
+            <a href="{{ url_for('auth.logout') }}" class="btn-logout">Cerrar Sesión</a>
             {% endif %}
         </div>
     </nav>
@@ -307,7 +307,7 @@
                 <h2>Nueva Solicitud</h2>
             </div>
 
-            <form method="POST" action="{{ url_for('crear_ticket') }}">
+            <form method="POST" action="{{ url_for('tickets.crear_ticket') }}">
                 <div class="form-group">
                     <label for="asunto">Asunto de la solicitud</label>
                     <input type="text" id="asunto" name="asunto" class="form-control" required
@@ -342,7 +342,7 @@
                 </button>
             </form>
 
-            <a href="{{ url_for('mis_tickets') }}" class="btn btn-secondary">
+            <a href="{{ url_for('tickets.mis_tickets') }}" class="btn btn-secondary">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="8" y1="6" x2="21" y2="6"></line>

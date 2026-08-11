@@ -278,7 +278,7 @@
             {% endif %}
             {% endwith %}
 
-            <form method="POST" action="{{ url_for('login') }}">
+            <form method="POST" action="{{ url_for('auth.login') }}">
                 <div class="form-group">
                     <label for="email">Correo electrónico</label>
                     <input type="email" id="email" name="email" required placeholder="su@correo.com">
@@ -301,7 +301,7 @@
             </form>
 
             <div class="links">
-                <p>¿No tiene cuenta? <a href="{{ url_for('registro') }}">Registrarse</a></p>
+                <p>¿No tiene cuenta? <a href="{{ url_for('auth.registro') }}">Registrarse</a></p>
             </div>
 
 

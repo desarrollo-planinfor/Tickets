@@ -14,7 +14,7 @@ class Area(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
 
     # Relación con Usuario para obtener el jefe
-    jefe = db.relationship('Usuario', foreign_keys=[jefe_id])
+    jefe = db.relationship('Usuario', foreign_keys=[jefe_id], backref=db.backref('areas_a_cargo', lazy=True))
 
 class AreaEquipo(db.Model):
     """Modelo de Área para Equipos (inventario)"""
@@ -61,7 +61,7 @@ class Ticket(db.Model):
         super().__init__(**kwargs)
 
     id = db.Column(db.Integer, primary_key=True)
-    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False, index=True)
     
     # Datos del ticket
     asunto = db.Column(db.String(200), nullable=False)
@@ -71,10 +71,10 @@ class Ticket(db.Model):
     departamento = db.Column(db.String(50), default='soporte')
     
     # Estados: PENDIENTE, RECIBIDO, EN_PROCESO, RESUELTO, CERRADO, ATRASADO
-    estado = db.Column(db.String(20), default='PENDIENTE')
+    estado = db.Column(db.String(20), default='PENDIENTE', index=True)
     
     # Fechas principales
-    fecha_creacion = db.Column(db.DateTime, default=datetime.now)
+    fecha_creacion = db.Column(db.DateTime, default=datetime.now, index=True)
     fecha_recepcion = db.Column(db.DateTime, nullable=True)
     fecha_atencion_programada = db.Column(db.DateTime, nullable=True)
     fecha_inicio_atencion = db.Column(db.DateTime, nullable=True)
@@ -144,7 +144,7 @@ class TicketAdjunto(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id'), nullable=False)
-    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False, index=True)
     nombre_archivo = db.Column(db.String(255), nullable=False)
     ruta_archivo = db.Column(db.String(255), nullable=False)
     fecha_subida = db.Column(db.DateTime, default=datetime.now)
@@ -164,7 +164,7 @@ class Notificacion(db.Model):
     mensaje = db.Column(db.Text, nullable=False)
     tipo = db.Column(db.String(20), default='email')  # email, slack, sistema
     estado = db.Column(db.String(20), default='pendiente')  # pendiente, enviada, fallida
-    fecha_creacion = db.Column(db.DateTime, default=datetime.now)
+    fecha_creacion = db.Column(db.DateTime, default=datetime.now, index=True)
     fecha_envio = db.Column(db.DateTime, nullable=True)
 
 class EquipoMantencion(db.Model):
@@ -260,7 +260,7 @@ class Licencia(db.Model):
     renovacion_automatica = db.Column(db.Boolean, default=False)
     estado = db.Column(db.String(50), default='Activo')
     observaciones = db.Column(db.Text, nullable=True)
-    fecha_creacion = db.Column(db.DateTime, default=datetime.now)
+    fecha_creacion = db.Column(db.DateTime, default=datetime.now, index=True)
 
     @property
     def dias_restantes(self):
@@ -505,6 +505,7 @@ class HallazgoEvento(db.Model):
     tipo_evento_id = db.Column(db.Integer, db.ForeignKey('hallazgo_tipo_evento.id'), nullable=True)
     
     area = db.relationship('Area', foreign_keys=[area_id])
+    responsable = db.relationship('Usuario', foreign_keys=[responsable_id])
     sistema_normativo = db.relationship('HallazgoSistemaNormativo', foreign_keys=[sistema_normativo_id])
     tipo_evento = db.relationship('HallazgoTipoEvento', foreign_keys=[tipo_evento_id])
     

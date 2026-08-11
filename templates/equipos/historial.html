@@ -1,3 +1,4 @@
+<div class="table-responsive">
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -85,11 +86,11 @@
         <div class="page-header">
             <h1 class="page-title">Historial de Mantenciones</h1>
             <div style="display: flex; gap: 10px;">
-                <a href="{{ url_for('descargar_ficha_pdf', id=equipo.id) }}" class="btn btn-primary" target="_blank">
+                <a href="{{ url_for('equipos.descargar_ficha_pdf', id=equipo.id) }}" class="btn btn-primary" target="_blank">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 18 15 15"></polyline></svg>
                     Descargar Ficha PDF
                 </a>
-                <a href="{{ url_for('lista_equipos') }}" class="btn btn-secondary">
+                <a href="{{ url_for('equipos.lista_equipos') }}" class="btn btn-secondary">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                     Volver
                 </a>
@@ -222,6 +223,7 @@
                 Mantenciones Realizadas ({{ historial|length }})
             </h2>
             {% if historial %}
+            <div class="table-responsive">
             <table>
                 <thead>
                     <tr>
@@ -265,7 +267,7 @@
                         <td style="max-width: 250px;">{{ obs_text or '-' }}</td>
                         <td style="font-size: 0.8rem; color: #6b7280;">{{ registro.registrado_por or '-' }}</td>
                         <td>
-                            <a href="{{ url_for('descargar_pdf_mantencion', id=registro.id) }}" class="btn btn-secondary" style="padding: 6px 10px; font-size: 0.8rem;" title="Descargar Ficha PDF">
+                            <a href="{{ url_for('equipos.descargar_pdf_mantencion', id=registro.id) }}" class="btn btn-secondary" style="padding: 6px 10px; font-size: 0.8rem;" title="Descargar Ficha PDF">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 18 15 15"></polyline></svg>
                             </a>
                         </td>
@@ -273,6 +275,7 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
             {% else %}
             <div class="empty-state">
                 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -288,6 +291,7 @@
                 Historial de Responsables ({{ responsables|length }})
             </h2>
             {% if responsables %}
+            <div class="table-responsive">
             <table>
                 <thead>
                     <tr>
@@ -314,6 +318,7 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
             {% else %}
             <div class="empty-state">
                 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>

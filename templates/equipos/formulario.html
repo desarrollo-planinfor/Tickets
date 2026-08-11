@@ -167,7 +167,7 @@
 
         <div class="page-header">
             <h1 class="page-title">{% if equipo %}Editar Equipo{% else %}Nuevo Equipo{% endif %}</h1>
-            <a href="{{ url_for('lista_equipos') }}" class="btn btn-secondary">
+            <a href="{{ url_for('equipos.lista_equipos') }}" class="btn btn-secondary">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -457,7 +457,7 @@
                 </div>
 
                 <div class="form-actions">
-                    <a href="{{ url_for('lista_equipos') }}" class="btn btn-secondary">Cancelar</a>
+                    <a href="{{ url_for('equipos.lista_equipos') }}" class="btn btn-secondary">Cancelar</a>
                     <button type="submit" class="btn btn-primary">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

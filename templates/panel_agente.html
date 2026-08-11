@@ -1,3 +1,4 @@
+<div class="table-responsive">
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -40,7 +41,7 @@
         .columna-verde h2 { border-color: rgba(16, 185, 129, 0.5); color: #34d399; }
         /* Tickets */
         .ticket-card { background: #111827; border: 1px solid #374151; border-radius: 10px; padding: 20px 18px; margin-bottom: 16px; transition: all 0.2s; }
-        .ticket-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .ticket-card:hover {  border-color: rgba(148, 163, 184, 0.4); background: rgba(30, 41, 59, 1); }
         .ticket-card.rojo { border-left: 4px solid #ef4444; }
         .ticket-card.amarillo { border-left: 4px solid #f59e0b; }
         .ticket-card.verde { border-left: 4px solid #10b981; }
@@ -52,7 +53,7 @@
         .ticket-cliente { font-size: 0.85rem; color: #9ca3af; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         /* Botones */
         .btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-family: inherit; }
-        .btn:hover { transform: translateY(-1px); }
+        .btn:hover {  }
         .btn-primary { background: #82C341; color: #111827; }
         .btn-primary:hover { background: #90d648; }
         .btn-success { background: #10b981; color: #111827; }
@@ -307,6 +308,7 @@
                 Tickets Cerrados Recientemente
             </h2>
             <div class="closed-table-container">
+                <div class="table-responsive">
                 <table class="closed-table">
                     <thead>
                         <tr>
@@ -341,6 +343,7 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     </div>

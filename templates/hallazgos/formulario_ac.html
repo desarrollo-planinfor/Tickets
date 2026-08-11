@@ -110,16 +110,16 @@
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label">Área</label>
-                            <select name="area_id" class="form-select">
-                                <option value="">Seleccionar Área</option>
+                            <select name="area_id" class="form-select" onchange="autoSelectResponsable(this)">
+                                <option value="" data-jefe-id="">Seleccionar Área</option>
                                 {% for area in areas %}
-                                <option value="{{ area.id }}" {% if ac and ac.area_id == area.id %}selected{% endif %}>{{ area.nombre }}</option>
+                                <option value="{{ area.id }}" data-jefe-id="{{ area.jefe_id if area.jefe_id else '' }}" {% if ac and ac.area_id == area.id %}selected{% endif %}>{{ area.nombre }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Responsable</label>
-                            <select name="responsable_id" class="form-select">
+                            <select name="responsable_id" class="form-select" onchange="autoSelectAreaFromResponsable(this)">
                                 <option value="">Seleccionar Responsable</option>
                                 {% for user in usuarios %}
                                 <option value="{{ user.id }}" {% if ac and ac.responsable_id == user.id %}selected{% endif %}>{{ user.nombre }}</option>
@@ -355,6 +355,39 @@
     </div>
     
     <script>
+        let _syncingAreaResponsable = false;
+
+        function autoSelectResponsable(selectElement) {
+            if (_syncingAreaResponsable) return;
+            _syncingAreaResponsable = true;
+            const selectedOption = selectElement.options[selectElement.selectedIndex];
+            const jefeId = selectedOption.getAttribute('data-jefe-id');
+            const responsableSelect = document.getElementsByName('responsable_id')[0];
+            if (jefeId && responsableSelect) {
+                responsableSelect.value = jefeId;
+            } else if (responsableSelect && !selectElement.value) {
+                responsableSelect.value = '';
+            }
+            _syncingAreaResponsable = false;
+        }
+
+        function autoSelectAreaFromResponsable(selectElement) {
+            if (_syncingAreaResponsable) return;
+            _syncingAreaResponsable = true;
+            const responsableId = selectElement.value;
+            const areaSelect = document.getElementsByName('area_id')[0];
+            if (areaSelect && responsableId) {
+                for (let i = 0; i < areaSelect.options.length; i++) {
+                    const opt = areaSelect.options[i];
+                    if (opt.getAttribute('data-jefe-id') === responsableId) {
+                        areaSelect.value = opt.value;
+                        break;
+                    }
+                }
+            }
+            _syncingAreaResponsable = false;
+        }
+
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -408,6 +441,12 @@
         
         document.addEventListener('DOMContentLoaded', function() {
             checkVerificationDate();
+
+            const areaSelInit = document.getElementsByName('area_id')[0];
+            const respSelInit = document.getElementsByName('responsable_id')[0];
+            if (areaSelInit?.value && respSelInit && !respSelInit.value) {
+                autoSelectResponsable(areaSelInit);
+            }
 
             // Drag and drop for evidence
             const dropZone = document.getElementById('drop_zone');

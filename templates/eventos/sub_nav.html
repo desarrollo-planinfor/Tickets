@@ -5,10 +5,10 @@
     .sub-nav-link.active { color: #82C341; border-bottom: 2px solid #82C341; }
 </style>
 <div class="sub-nav">
-    <a href="{{ url_for('eventos_lista') }}" class="sub-nav-link {% if vista == 'eventos' %}active{% endif %}">Gestión de Eventos</a>
-    <a href="{{ url_for('acciones_lista') }}" class="sub-nav-link {% if vista == 'acciones' %}active{% endif %}">Acciones Correctivas</a>
-    <a href="{{ url_for('dashboard_eventos') }}" class="sub-nav-link {% if vista == 'dashboard_eventos' %}active{% endif %}">Métricas</a>
+    <a href="{{ url_for('eventos_legacy.eventos_lista') }}" class="sub-nav-link {% if vista == 'eventos' %}active{% endif %}">Gestión de Eventos</a>
+    <a href="{{ url_for('eventos_legacy.acciones_lista') }}" class="sub-nav-link {% if vista == 'acciones' %}active{% endif %}">Acciones Correctivas</a>
+    <a href="{{ url_for('eventos_legacy.dashboard_eventos') }}" class="sub-nav-link {% if vista == 'dashboard_eventos' %}active{% endif %}">Métricas</a>
     {% if g.usuario.rol == 'admin' %}
-    <a href="{{ url_for('configuraciones_eventos') }}" class="sub-nav-link {% if vista == 'configuraciones_eventos' %}active{% endif %}">Configuraciones</a>
+    <a href="{{ url_for('eventos_legacy.configuraciones_eventos') }}" class="sub-nav-link {% if vista == 'configuraciones_eventos' %}active{% endif %}">Configuraciones</a>
     {% endif %}
 </div>

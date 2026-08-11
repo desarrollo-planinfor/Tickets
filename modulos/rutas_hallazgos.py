@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, jsonify, request, redirect, url_for, flash, g, session
+﻿from flask import Blueprint, render_template, jsonify, request, redirect, url_for, flash, g, session
 from functools import wraps
 from datetime import datetime
 
@@ -10,7 +10,7 @@ def local_login_required(f):
     def decorated_function(*args, **kwargs):
         if 'usuario_id' not in session:
             flash('Debe iniciar sesión para acceder a esta página', 'error')
-            return redirect(url_for('login'))
+            return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -18,6 +18,7 @@ def local_login_required(f):
 @local_login_required
 def calcular_recurrencia():
     from models import HallazgoEvento
+    from sqlalchemy.orm import joinedload
     from datetime import datetime, timedelta
     tipo_evento_id = request.args.get('tipo_evento_id', type=int)
     evento_id = request.args.get('evento_id', type=int)
@@ -31,7 +32,7 @@ def calcular_recurrencia():
     hace_6m = ahora - timedelta(days=180)
     hace_12m = ahora - timedelta(days=365)
     
-    query = HallazgoEvento.query.filter(HallazgoEvento.tipo_evento_id == tipo_evento_id, HallazgoEvento.area_id == area_id)
+    query = HallazgoEvento.query.options(joinedload(HallazgoEvento.area), joinedload(HallazgoEvento.sistema_normativo), joinedload(HallazgoEvento.tipo_evento), joinedload(HallazgoEvento.responsable)).filter(HallazgoEvento.tipo_evento_id == tipo_evento_id, HallazgoEvento.area_id == area_id)
     if evento_id:
         query = query.filter(HallazgoEvento.id != evento_id)
         
@@ -63,6 +64,7 @@ def calcular_recurrencia():
 @local_login_required
 def dashboard():
     from extensions import db
+    from sqlalchemy.orm import joinedload
     from models import ( HallazgoEvento, HallazgoAccionCorrectiva, Area,
                      HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoACRIteracion)
     from sqlalchemy import func
@@ -73,8 +75,16 @@ def dashboard():
     anio = request.args.get('anio', type=int)
     area_id = request.args.get('area_id', type=int)
 
-    ev_query = HallazgoEvento.query
-    ac_query = HallazgoAccionCorrectiva.query
+    ev_query = HallazgoEvento.query.options(
+        joinedload(HallazgoEvento.area),
+        joinedload(HallazgoEvento.tipo_evento),
+        joinedload(HallazgoEvento.sistema_normativo),
+        joinedload(HallazgoEvento.responsable)
+    )
+    ac_query = HallazgoAccionCorrectiva.query.options(
+        joinedload(HallazgoAccionCorrectiva.area),
+        joinedload(HallazgoAccionCorrectiva.responsable)
+    )
 
     if mes:
         ev_query = ev_query.filter(func.extract('month', HallazgoEvento.fecha_registro) == mes)
@@ -92,31 +102,51 @@ def dashboard():
     # --- KPIs ---
     total_eventos = len(eventos)
     total_ac = len(acciones)
+    ev_abiertos = sum(1 for e in eventos if e.estado == 'Abierto')
+    ev_en_proceso = sum(1 for e in eventos if e.estado == 'En Proceso')
+    ev_cerrados = sum(1 for e in eventos if e.estado == 'Cerrado')
     eventos_escalados = sum(1 for e in eventos if e.evaluacion == 'Escalado')
     tasa_escalamiento = round((eventos_escalados / total_eventos * 100) if total_eventos > 0 else 0, 1)
-    
-    eventos_cerrados = sum(1 for e in eventos if e.estado == 'Cerrado')
-    tasa_cierre_eventos = round((eventos_cerrados / total_eventos * 100) if total_eventos > 0 else 0, 1)
+
+    tasa_cierre_eventos = round((ev_cerrados / total_eventos * 100) if total_eventos > 0 else 0, 1)
 
     ac_abiertas = sum(1 for a in acciones if a.estado == 'Abierto')
     ac_cerradas = sum(1 for a in acciones if a.estado == 'Cerrado')
     tasa_cierre_ac = round((ac_cerradas / total_ac * 100) if total_ac > 0 else 0, 1)
-    ac_vencidas = sum(1 for a in acciones if a.fecha_plazo and a.estado == 'Abierto' and a.fecha_plazo < datetime.now().date())
+    hoy = datetime.now().date()
+    ac_vencidas = sum(1 for a in acciones if a.fecha_plazo and a.estado == 'Abierto' and a.fecha_plazo < hoy)
 
-    # Acciones correctivas pendientes y/o atrasadas
+    # Acciones correctivas pendientes (vencidas primero)
     ac_pendientes_atrasadas = []
     for a in acciones:
         if a.estado == 'Abierto':
-            es_vencida = a.fecha_plazo and a.fecha_plazo < datetime.now().date()
+            es_vencida = bool(a.fecha_plazo and a.fecha_plazo < hoy)
             ac_pendientes_atrasadas.append({
                 'id': a.id,
                 'codigo': a.codigo,
                 'area': a.area.nombre if a.area else '--',
                 'responsable': a.responsable.nombre if a.responsable else '--',
                 'fecha_plazo': a.fecha_plazo.strftime('%d/%m/%Y') if a.fecha_plazo else '--',
-                'estado_plazo': 'Vencido' if es_vencida else 'A tiempo'
+                'estado_plazo': 'Vencido' if es_vencida else 'A tiempo',
+                '_sort': 0 if es_vencida else 1
             })
+    ac_pendientes_atrasadas.sort(key=lambda x: (x['_sort'], x['fecha_plazo']))
+    ac_pendientes_atrasadas = ac_pendientes_atrasadas[:8]
 
+    # Eventos que requieren atención
+    atencion_eventos = []
+    for e in eventos:
+        if e.estado in ('Abierto', 'En Proceso') or e.evaluacion == 'Escalado':
+            score = (e.impacto or 0) + (e.recurrencia or 0) + (e.potencialidad or 0)
+            atencion_eventos.append(e)
+    atencion_eventos = sorted(
+        atencion_eventos,
+        key=lambda e: (
+            0 if e.evaluacion == 'Escalado' else 1,
+            0 if e.estado == 'Abierto' else 1,
+            -( (e.impacto or 0) + (e.recurrencia or 0) + (e.potencialidad or 0) )
+        )
+    )[:8]
     # --- Estado de Eventos (Donut) ---
     ev_estados = {}
     for e in eventos:
@@ -196,29 +226,23 @@ def dashboard():
 
     # --- Últimos 5 eventos ---
     default_years = [2024, 2025, 2026, 2027]
-    ultimos_eventos = HallazgoEvento.query.order_by(HallazgoEvento.fecha_registro.desc()).limit(5).all()
+    ultimos_eventos = HallazgoEvento.query.options(joinedload(HallazgoEvento.area), joinedload(HallazgoEvento.sistema_normativo), joinedload(HallazgoEvento.tipo_evento), joinedload(HallazgoEvento.responsable)).order_by(HallazgoEvento.fecha_registro.desc()).limit(5).all()
 
     chart_data = {
         'ev_estados': ev_estados,
-        'ac_estados': ac_estados,
-        'ev_tipos': ev_tipos,
+        'riesgo': riesgo,
         'area_labels': area_labels,
         'ev_por_area': ev_por_area,
-        'ac_por_area': ac_por_area,
-        'sn_labels': sn_labels,
-        'ev_por_sn': ev_por_sn,
-        'ac_por_sn': ac_por_sn,
-        'metodo_counts': metodo_counts,
-        'riesgo': riesgo,
         'tendencia_labels': tendencia_labels,
         'tendencia_ev': tendencia_ev,
         'tendencia_ac': tendencia_ac,
-        'tasa_cierre_eventos': tasa_cierre_eventos,
-        'tasa_cierre_ac': tasa_cierre_ac,
     }
 
     return render_template('hallazgos/dashboard.html',
                            total_eventos=total_eventos,
+                           ev_abiertos=ev_abiertos,
+                           ev_en_proceso=ev_en_proceso,
+                           ev_cerrados=ev_cerrados,
                            acciones_correctivas=total_ac,
                            eventos_escalados=eventos_escalados,
                            tasa_escalamiento=tasa_escalamiento,
@@ -234,12 +258,14 @@ def dashboard():
                            filtro_area=area_id or '',
                            years=default_years,
                            ac_pendientes=ac_pendientes_atrasadas,
+                           atencion_eventos=atencion_eventos,
                            ultimos_eventos=ultimos_eventos)
 
 @hallazgos_bp.route('/lista')
 @local_login_required
 def lista():
     from models import HallazgoEvento, Area, HallazgoSistemaNormativo, HallazgoTipoEvento
+    from sqlalchemy import func
     filtro = request.args.get('filtro')
     query = HallazgoEvento.query
     if filtro == 'Abiertos':
@@ -250,6 +276,20 @@ def lista():
         query = query.filter_by(estado='Cerrado')
     elif filtro == 'Escalados':
         query = query.filter_by(evaluacion='Escalado')
+    elif filtro in ('RiesgoAlto', 'RiesgoMedio', 'RiesgoBajo', 'RiesgoSinEvaluar'):
+        score = (
+            func.coalesce(HallazgoEvento.impacto, 0)
+            + func.coalesce(HallazgoEvento.recurrencia, 0)
+            + func.coalesce(HallazgoEvento.potencialidad, 0)
+        )
+        if filtro == 'RiesgoAlto':
+            query = query.filter(score >= 9)
+        elif filtro == 'RiesgoMedio':
+            query = query.filter(score >= 6, score < 9)
+        elif filtro == 'RiesgoBajo':
+            query = query.filter(score > 0, score < 6)
+        else:
+            query = query.filter(score == 0)
         
     eventos = query.order_by(HallazgoEvento.fecha_registro.desc()).all()
     
@@ -270,7 +310,10 @@ def lista():
 @local_login_required
 def nuevo():
     # Importaciones diferidas para evitar ciclo de dependencias con app.py
-    from extensions import db, Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoEvento
+    from extensions import db
+
+    from sqlalchemy.orm import joinedload
+    from models import Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoEvento
     from datetime import datetime
     
     if request.method == 'POST':
@@ -394,7 +437,10 @@ def nuevo():
 @hallazgos_bp.route('/editar/<int:id>', methods=['GET', 'POST'])
 @local_login_required
 def editar(id):
-    from extensions import db, Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoEvento, HallazgoAccionCorrectiva
+    from extensions import db
+
+    from sqlalchemy.orm import joinedload
+    from models import Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoEvento, HallazgoAccionCorrectiva
     evento = HallazgoEvento.query.get_or_404(id)
     
     if request.method == 'POST':
@@ -489,7 +535,10 @@ def editar(id):
 @hallazgos_bp.route('/eliminar/<int:id>', methods=['POST'])
 @local_login_required
 def eliminar(id):
-    from extensions import db, HallazgoEvento
+    from extensions import db
+
+    from sqlalchemy.orm import joinedload
+    from models import HallazgoEvento
     evento = HallazgoEvento.query.get_or_404(id)
     try:
         # Eliminar archivos asociados
@@ -535,6 +584,13 @@ def acciones_correctivas():
         query = query.filter_by(estado='En Proceso')
     elif filtro == 'Cerrados':
         query = query.filter_by(estado='Cerrado')
+    elif filtro == 'Vencidas':
+        hoy = datetime.now().date()
+        query = query.filter(
+            HallazgoAccionCorrectiva.estado == 'Abierto',
+            HallazgoAccionCorrectiva.fecha_plazo.isnot(None),
+            HallazgoAccionCorrectiva.fecha_plazo < hoy
+        )
         
     acciones = query.order_by(HallazgoAccionCorrectiva.fecha_registro.desc()).all()
     
@@ -547,7 +603,10 @@ def acciones_correctivas():
 @hallazgos_bp.route('/acciones_correctivas/nuevo', methods=['GET', 'POST'])
 @local_login_required
 def acciones_correctivas_nuevo():
-    from extensions import db, HallazgoAccionCorrectiva, Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion
+    from extensions import db
+
+    from sqlalchemy.orm import joinedload
+    from models import HallazgoAccionCorrectiva, Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion
     from datetime import datetime
     
     if request.method == 'POST':
@@ -630,7 +689,10 @@ def acciones_correctivas_nuevo():
 @hallazgos_bp.route('/acciones_correctivas/eliminar/<int:id>', methods=['POST'])
 @local_login_required
 def eliminar_ac(id):
-    from extensions import db, HallazgoAccionCorrectiva
+    from extensions import db
+
+    from sqlalchemy.orm import joinedload
+    from models import HallazgoAccionCorrectiva
     ac = HallazgoAccionCorrectiva.query.get_or_404(id)
     try:
         from models import HallazgoACRIteracion, HallazgoArchivo
@@ -655,19 +717,23 @@ def eliminar_ac(id):
 @hallazgos_bp.route('/configuraciones')
 @local_login_required
 def configuraciones():
+    from sqlalchemy.orm import joinedload
     from models import HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR, Area, Usuario
     sistemas = HallazgoSistemaNormativo.query.all()
     tipos = HallazgoTipoEvento.query.all()
     clasificaciones = HallazgoClasificacion.query.all()
     origenes = HallazgoOrigenACR.query.all()
-    areas = Area.query.all()
+    areas = Area.query.options(joinedload(Area.jefe)).order_by(Area.nombre).all()
     usuarios = Usuario.query.all()
     return render_template('hallazgos/configuraciones.html', sistemas=sistemas, tipos=tipos, clasificaciones=clasificaciones, origenes=origenes, areas=areas, usuarios=usuarios)
 
 @hallazgos_bp.route('/acciones_correctivas/editar/<int:id>', methods=['GET', 'POST'])
 @local_login_required
 def acciones_correctivas_editar(id):
-    from extensions import db, HallazgoAccionCorrectiva, Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoACRIteracion
+    from extensions import db
+
+    from sqlalchemy.orm import joinedload
+    from models import HallazgoAccionCorrectiva, Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoACRIteracion
     from datetime import datetime
     
     ac = HallazgoAccionCorrectiva.query.get_or_404(id)
@@ -804,7 +870,10 @@ UPLOAD_FOLDER = os.path.join('static', 'uploads', 'hallazgos')
 @hallazgos_bp.route('/<int:id>/subir_evidencia', methods=['POST'])
 @local_login_required
 def subir_evidencia_evento(id):
-    from extensions import db, HallazgoEvento, HallazgoArchivo
+    from extensions import db
+
+    from sqlalchemy.orm import joinedload
+    from models import HallazgoEvento, HallazgoArchivo
     ev = HallazgoEvento.query.get_or_404(id)
     
     if 'file' not in request.files:
@@ -850,7 +919,10 @@ def subir_evidencia_evento(id):
 @hallazgos_bp.route('/acciones_correctivas/<int:id>/subir_evidencia', methods=['POST'])
 @local_login_required
 def subir_evidencia_ac(id):
-    from extensions import db, HallazgoAccionCorrectiva, HallazgoArchivo
+    from extensions import db
+
+    from sqlalchemy.orm import joinedload
+    from models import HallazgoAccionCorrectiva, HallazgoArchivo
     ac = HallazgoAccionCorrectiva.query.get_or_404(id)
     
     if 'file' not in request.files:
@@ -896,7 +968,10 @@ def subir_evidencia_ac(id):
 @hallazgos_bp.route('/evidencias/<int:file_id>/eliminar', methods=['POST'])
 @local_login_required
 def eliminar_evidencia(file_id):
-    from extensions import db, HallazgoArchivo
+    from extensions import db
+
+    from sqlalchemy.orm import joinedload
+    from models import HallazgoArchivo
     archivo = HallazgoArchivo.query.get_or_404(file_id)
     
     try:
@@ -915,7 +990,10 @@ def eliminar_evidencia(file_id):
 @hallazgos_bp.route('/configuraciones/agregar', methods=['POST'])
 @local_login_required
 def configuraciones_agregar():
-    from extensions import db, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR
+    from extensions import db
+
+    from sqlalchemy.orm import joinedload
+    from models import HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR
     tipo_catalogo = request.form.get('tipo_catalogo')
     nombre = request.form.get('nombre')
     
@@ -933,13 +1011,19 @@ def configuraciones_agregar():
         elif tipo_catalogo == 'origen':
             nuevo_obj = HallazgoOrigenACR(nombre=nombre, activo=True)
         elif tipo_catalogo == 'area':
-            from models import Area
+            from models import Area, Usuario
             jefe_id = request.form.get('jefe_id')
             nuevo_obj = Area(nombre=nombre, activa=True, jefe_id=jefe_id if jefe_id else None)
         else:
             return jsonify({'error': 'Tipo de catálogo inválido'}), 400
             
         db.session.add(nuevo_obj)
+        db.session.flush()
+        if tipo_catalogo == 'area' and nuevo_obj.jefe_id:
+            from models import Usuario
+            jefe = Usuario.query.get(nuevo_obj.jefe_id)
+            if jefe and not jefe.area_id:
+                jefe.area_id = nuevo_obj.id
         db.session.commit()
         return jsonify({'success': True, 'id': nuevo_obj.id, 'nombre': nuevo_obj.nombre})
     except Exception as e:
@@ -949,7 +1033,10 @@ def configuraciones_agregar():
 @hallazgos_bp.route('/configuraciones/toggle', methods=['POST'])
 @local_login_required
 def configuraciones_toggle():
-    from extensions import db, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR
+    from extensions import db
+
+    from sqlalchemy.orm import joinedload
+    from models import HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR
     data = request.get_json()
     if not data:
         return jsonify({'error': 'No data provided'}), 400
@@ -993,7 +1080,10 @@ def configuraciones_toggle():
 @hallazgos_bp.route('/configuraciones/editar', methods=['POST'])
 @local_login_required
 def configuraciones_editar():
-    from extensions import db, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR
+    from extensions import db
+
+    from sqlalchemy.orm import joinedload
+    from models import HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR
     data = request.get_json()
     if not data:
         return jsonify({'error': 'No data provided'}), 400
@@ -1024,8 +1114,13 @@ def configuraciones_editar():
             
         obj.nombre = nuevo_nombre
         if tipo_catalogo == 'area':
+            from models import Usuario
             jefe_id = data.get('jefe_id')
-            obj.jefe_id = jefe_id if jefe_id else None
+            obj.jefe_id = int(jefe_id) if jefe_id else None
+            if obj.jefe_id:
+                jefe = Usuario.query.get(obj.jefe_id)
+                if jefe and not jefe.area_id:
+                    jefe.area_id = obj.id
 
         db.session.commit()
         return jsonify({'success': True, 'nombre': obj.nombre})
@@ -1036,7 +1131,10 @@ def configuraciones_editar():
 @hallazgos_bp.route('/configuraciones/eliminar', methods=['POST'])
 @local_login_required
 def configuraciones_eliminar():
-    from extensions import db, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR
+    from extensions import db
+
+    from sqlalchemy.orm import joinedload
+    from models import HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion, HallazgoOrigenACR
     try:
         data = request.get_json()
         tipo_catalogo = data.get('tipo_catalogo')
@@ -1064,3 +1162,5 @@ def configuraciones_eliminar():
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'No se pudo eliminar el registro. Es posible que esté en uso por otros elementos del sistema.'}), 500
+
+

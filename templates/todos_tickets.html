@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='P.ico') }}">
@@ -60,13 +60,13 @@
                     </svg>
                     Registro de Tickets
                 </h2>
-                <form class="search-form" method="GET" action="{{ url_for('todos_tickets') }}">
+                <form class="search-form" method="GET" action="{{ url_for('tickets.todos_tickets') }}">
                     <input type="text" name="q" class="search-input" placeholder="Buscar por creador..." value="{{ search_query }}">
                     <button type="submit" class="btn btn-primary">Buscar</button>
                     {% if search_query %}
-                    <a href="{{ url_for('todos_tickets') }}" class="btn" style="background: #374151; color: white;">Limpiar</a>
+                    <a href="{{ url_for('tickets.todos_tickets') }}" class="btn" style="background: #374151; color: white;">Limpiar</a>
                     {% endif %}
-                    <a href="{{ url_for('exportar_tickets') }}" class="btn" style="background: #10b981; color: #111827; margin-left: 10px;">
+                    <a href="{{ url_for('tickets.exportar_tickets') }}" class="btn" style="background: #10b981; color: #111827; margin-left: 10px;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                         Exportar Excel
                     </a>
@@ -74,6 +74,7 @@
             </div>
             
             <div class="tickets-table-container">
+                <div class="table-responsive">
                 <table class="tickets-table">
                     <thead>
                         <tr>
@@ -103,7 +104,7 @@
                                 <span class="badge badge-{{ ticket.estado }}">{{ ticket.estado }}</span>
                             </td>
                             <td>
-                                <a href="{{ url_for('ver_ticket', ticket_id=ticket.id) }}" class="btn" style="background: #374151; color: white; padding: 6px 12px; font-size: 0.85rem;">
+                                <a href="{{ url_for('tickets.ver_ticket', ticket_id=ticket.id) }}" class="btn" style="background: #374151; color: white; padding: 6px 12px; font-size: 0.85rem;">
                                     Ver Detalle
                                 </a>
                             </td>
@@ -121,18 +122,19 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                </div>
             </div>
             
             <!-- Paginación -->
             {% if tickets_paginados.pages > 1 %}
             <div class="pagination">
-                <a href="{{ url_for('todos_tickets', page=tickets_paginados.prev_num, q=search_query) }}" class="page-item {% if not tickets_paginados.has_prev %}disabled{% endif %}">
+                <a href="{{ url_for('tickets.todos_tickets', page=tickets_paginados.prev_num, q=search_query) }}" class="page-item {% if not tickets_paginados.has_prev %}disabled{% endif %}">
                     &laquo;
                 </a>
                 
                 {% for page_num in tickets_paginados.iter_pages(left_edge=2, left_current=2, right_current=2, right_edge=2) %}
                     {% if page_num %}
-                        <a href="{{ url_for('todos_tickets', page=page_num, q=search_query) }}" class="page-item {% if page_num == tickets_paginados.page %}active{% endif %}">
+                        <a href="{{ url_for('tickets.todos_tickets', page=page_num, q=search_query) }}" class="page-item {% if page_num == tickets_paginados.page %}active{% endif %}">
                             {{ page_num }}
                         </a>
                     {% else %}
@@ -140,7 +142,7 @@
                     {% endif %}
                 {% endfor %}
                 
-                <a href="{{ url_for('todos_tickets', page=tickets_paginados.next_num, q=search_query) }}" class="page-item {% if not tickets_paginados.has_next %}disabled{% endif %}">
+                <a href="{{ url_for('tickets.todos_tickets', page=tickets_paginados.next_num, q=search_query) }}" class="page-item {% if not tickets_paginados.has_next %}disabled{% endif %}">
                     &raquo;
                 </a>
             </div>

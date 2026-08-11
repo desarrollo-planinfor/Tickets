@@ -1,3 +1,4 @@
+<div class="table-responsive">
 ﻿<!DOCTYPE html>
 <html lang="es">
 
@@ -251,29 +252,39 @@
                 left: 0;
                 right: 0;
                 bottom: 0;
-                background-color: #4b5563;
-                transition: .4s;
+                background-color: #374151;
+                transition: .3s;
                 border-radius: 24px;
+                border: 2px solid #4b5563;
+                box-sizing: border-box;
             }
 
             .slider:before {
                 position: absolute;
                 content: "";
-                height: 18px;
-                width: 18px;
-                left: 3px;
-                bottom: 3px;
+                height: 16px;
+                width: 16px;
+                left: 2px;
+                bottom: 2px;
                 background-color: white;
-                transition: .4s;
+                transition: .3s;
                 border-radius: 50%;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
             }
 
             input:checked+.slider {
                 background-color: #82C341;
+                border-color: #82C341;
+                box-shadow: 0 0 0 3px rgba(130, 195, 65, 0.35);
             }
 
             input:checked+.slider:before {
                 transform: translateX(20px);
+                background-color: #111827;
+            }
+
+            input:focus-visible + .slider {
+                box-shadow: 0 0 0 3px rgba(130, 195, 65, 0.25);
             }
 
             /* Badges */
@@ -335,6 +346,7 @@
                         <span style="color: #9ca3af; font-size: 0.9rem;">Gestiona las normativas (ej. ISO 9001)</span>
                     </div>
                     <div class="table-container">
+                        <div class="table-responsive">
                         <table class="catalog-table">
                             <thead>
                                 <tr>
@@ -354,9 +366,9 @@
                                     <td>
                                         <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-start;">
                                             <button class="btn-icon-premium" onclick="openEditModal('sistema', {{ item.id }}, '{{ item.nombre|escape }}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-                                            <button class="btn-icon-premium danger" onclick="deleteItem('sistema', {{ item.id }})" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                                            <button class="btn-icon-premium danger" onclick="deleteItem('sistema', {{ item.id }}, '{{ item.nombre|e }}')" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                                             <label class="switch" style="margin: 0;">
-                                                <input type="checkbox" onchange="toggleStatus('sistema', {{ item.id }})" {%
+                                                <input type="checkbox" onchange="toggleStatus('sistema', {{ item.id }}, this)" {%
                                                     if item.activo %}checked{% endif %}>
                                                 <span class="slider"></span>
                                             </label>
@@ -366,6 +378,7 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+                        </div>
                     </div>
                     <div class="catalog-footer">
                         <input type="text" id="input-sistema" class="form-input"
@@ -381,6 +394,7 @@
                         <span style="color: #9ca3af; font-size: 0.9rem;">Categorías de eventos reportados</span>
                     </div>
                     <div class="table-container">
+                        <div class="table-responsive">
                         <table class="catalog-table">
                             <thead>
                                 <tr>
@@ -400,9 +414,9 @@
                                     <td>
                                         <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-start;">
                                             <button class="btn-icon-premium" onclick="openEditModal('sistema', {{ item.id }}, '{{ item.nombre|escape }}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-                                            <button class="btn-icon-premium danger" onclick="deleteItem('tipo_evento', {{ item.id }})" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                                            <button class="btn-icon-premium danger" onclick="deleteItem('tipo_evento', {{ item.id }}, '{{ item.nombre|e }}')" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                                             <label class="switch" style="margin: 0;">
-                                                <input type="checkbox" onchange="toggleStatus('tipo_evento', {{ item.id }})"
+                                                <input type="checkbox" onchange="toggleStatus('tipo_evento', {{ item.id }}, this)"
                                                     {% if item.activo %}checked{% endif %}>
                                                 <span class="slider"></span>
                                             </label>
@@ -412,6 +426,7 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+                        </div>
                     </div>
                     <div class="catalog-footer">
                         <input type="text" id="input-tipo_evento" class="form-input"
@@ -427,6 +442,7 @@
                         <span style="color: #9ca3af; font-size: 0.9rem;">Niveles o categorías de gravedad</span>
                     </div>
                     <div class="table-container">
+                        <div class="table-responsive">
                         <table class="catalog-table">
                             <thead>
                                 <tr>
@@ -446,10 +462,10 @@
                                     <td>
                                         <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-start;">
                                             <button class="btn-icon-premium" onclick="openEditModal('sistema', {{ item.id }}, '{{ item.nombre|escape }}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-                                            <button class="btn-icon-premium danger" onclick="deleteItem('clasificacion', {{ item.id }})" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                                            <button class="btn-icon-premium danger" onclick="deleteItem('clasificacion', {{ item.id }}, '{{ item.nombre|e }}')" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                                             <label class="switch" style="margin: 0;">
                                                 <input type="checkbox"
-                                                    onchange="toggleStatus('clasificacion', {{ item.id }})" {% if
+                                                    onchange="toggleStatus('clasificacion', {{ item.id }}, this)" {% if
                                                     item.activo %}checked{% endif %}>
                                                 <span class="slider"></span>
                                             </label>
@@ -459,6 +475,7 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+                        </div>
                     </div>
                     <div class="catalog-footer">
                         <input type="text" id="input-clasificacion" class="form-input"
@@ -475,6 +492,7 @@
                             Correctiva</span>
                     </div>
                     <div class="table-container">
+                        <div class="table-responsive">
                         <table class="catalog-table">
                             <thead>
                                 <tr>
@@ -494,9 +512,9 @@
                                     <td>
                                         <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-start;">
                                             <button class="btn-icon-premium" onclick="openEditModal('sistema', {{ item.id }}, '{{ item.nombre|escape }}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-                                            <button class="btn-icon-premium danger" onclick="deleteItem('origen', {{ item.id }})" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                                            <button class="btn-icon-premium danger" onclick="deleteItem('origen', {{ item.id }}, '{{ item.nombre|e }}')" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                                             <label class="switch" style="margin: 0;">
-                                                <input type="checkbox" onchange="toggleStatus('origen', {{ item.id }})" {%
+                                                <input type="checkbox" onchange="toggleStatus('origen', {{ item.id }}, this)" {%
                                                     if item.activo %}checked{% endif %}>
                                                 <span class="slider"></span>
                                             </label>
@@ -506,6 +524,7 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+                        </div>
                     </div>
                     <div class="catalog-footer">
                         <input type="text" id="input-origen" class="form-input"
@@ -521,6 +540,7 @@
                         <span style="color: #9ca3af; font-size: 0.9rem;">Áreas o departamentos de la empresa</span>
                     </div>
                     <div class="table-container">
+                        <div class="table-responsive">
                         <table class="catalog-table">
                             <thead>
                                 <tr>
@@ -550,10 +570,10 @@
                                             %}Inactivo{% endif %}</span></td>
                                     <td>
                                         <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-start;">
-                                            <button class="btn-icon-premium" onclick="openEditModal('sistema', {{ item.id }}, '{{ item.nombre|escape }}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-                                            <button class="btn-icon-premium danger" onclick="deleteItem('area', {{ item.id }})" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                                            <button class="btn-icon-premium" onclick="openEditModal('area', {{ item.id }}, '{{ item.nombre|escape }}', {{ item.jefe_id if item.jefe_id else 'null' }}, '{{ item.jefe.nombre|e if item.jefe else '' }}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                            <button class="btn-icon-premium danger" onclick="deleteItem('area', {{ item.id }}, '{{ item.nombre|e }}')" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                                             <label class="switch" style="margin: 0;">
-                                                <input type="checkbox" onchange="toggleStatus('area', {{ item.id }})" {%
+                                                <input type="checkbox" onchange="toggleStatus('area', {{ item.id }}, this)" {%
                                                     if item.activa %}checked{% endif %}>
                                                 <span class="slider"></span>
                                             </label>
@@ -563,6 +583,7 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+                        </div>
                     </div>
                     <div class="catalog-footer" style="gap: 10px;">
                         <input type="text" id="input-area" class="form-input"
@@ -583,7 +604,7 @@
     <!-- Edit Modal -->
     <div id="editModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
         <div class="modal-content" style="background: #1f2937; padding: 20px; border-radius: 8px; width: 400px; max-width: 90%;">
-            <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 1.1rem; color: #f3f4f6;">Editar Nombre</h3>
+            <h3 id="editModal-title" style="margin-top: 0; margin-bottom: 15px; font-size: 1.1rem; color: #f3f4f6;">Editar Nombre</h3>
             <input type="hidden" id="editModal-tipo">
             <input type="hidden" id="editModal-id">
             <input type="hidden" id="editModal-oldName">
@@ -636,7 +657,7 @@
             }
         });
 
-        function openEditModal(tipo, id, currentName, currentJefeId) {
+        function openEditModal(tipo, id, currentName, currentJefeId, currentJefeNombre) {
             document.getElementById('editModal-tipo').value = tipo;
             document.getElementById('editModal-id').value = id;
             document.getElementById('editModal-oldName').value = currentName;
@@ -644,12 +665,19 @@
             
             const jefeContainer = document.getElementById('editModal-jefe-container');
             const jefeSelect = document.getElementById('editModal-jefe');
+            const modalTitle = document.getElementById('editModal-title');
             if (tipo === 'area') {
+                modalTitle.textContent = 'Editar Área';
                 jefeContainer.style.display = 'block';
                 jefeSelect.value = currentJefeId || '';
+                jefeSelect.dataset.originalJefe = currentJefeId || '';
+                jefeSelect.dataset.originalJefeNombre = currentJefeNombre || '';
             } else {
+                modalTitle.textContent = 'Editar Nombre';
                 jefeContainer.style.display = 'none';
                 jefeSelect.value = '';
+                jefeSelect.dataset.originalJefe = '';
+                jefeSelect.dataset.originalJefeNombre = '';
             }
             
             const modal = document.getElementById('editModal');
@@ -661,17 +689,67 @@
             document.getElementById('editModal').style.display = 'none';
         }
 
+        const CATALOG_LABELS = {
+            sistema: 'sistema normativo',
+            tipo_evento: 'tipo de evento',
+            clasificacion: 'clasificación',
+            origen: 'origen de ACR',
+            area: 'área'
+        };
+
+        async function confirmSaveChange(title, html) {
+            const result = await Swal.fire({
+                title: title,
+                html: html,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#82C341',
+                cancelButtonColor: '#374151',
+                confirmButtonText: 'Sí, guardar',
+                cancelButtonText: 'Cancelar',
+                background: '#1f2937',
+                color: '#ffffff',
+                iconColor: '#82C341'
+            });
+            return result.isConfirmed;
+        }
+
         async function submitEdit() {
             const tipo = document.getElementById('editModal-tipo').value;
             const id = document.getElementById('editModal-id').value;
             const currentName = document.getElementById('editModal-oldName').value;
             const newName = document.getElementById('editModal-input').value;
-            const jefeId = document.getElementById('editModal-jefe').value;
+            const jefeSelect = document.getElementById('editModal-jefe');
+            const jefeId = jefeSelect.value;
 
             if (!newName || newName.trim() === '') {
                 closeEditModal();
                 return;
             }
+
+            const label = CATALOG_LABELS[tipo] || 'elemento';
+            let confirmHtml = `¿Confirma guardar los cambios en este ${label}?`;
+
+            if (newName.trim() !== currentName) {
+                confirmHtml += `<br><br>Nuevo nombre: <strong>${newName.trim()}</strong>`;
+            }
+
+            if (tipo === 'area') {
+                const jefeName = jefeId
+                    ? jefeSelect.options[jefeSelect.selectedIndex].text
+                    : 'Sin jefe asignado';
+                const jefeChanged = jefeId !== (jefeSelect.dataset.originalJefe || '');
+                const jefeAnterior = jefeSelect.dataset.originalJefeNombre || '';
+                confirmHtml += `<br><br>Jefe de área: <strong>${jefeName}</strong>`;
+                if (jefeChanged && jefeAnterior && jefeId && jefeId !== (jefeSelect.dataset.originalJefe || '')) {
+                    confirmHtml += `<br><span style="color:#fbbf24;font-size:0.9rem;">Esta área tenía asignado a <strong>${jefeAnterior}</strong>. Se reasignará al nuevo jefe.</span>`;
+                } else if (jefeChanged) {
+                    confirmHtml += `<br><span style="color:#9ca3af;font-size:0.9rem;">Al crear o editar eventos, el responsable se completará automáticamente con este jefe.</span>`;
+                }
+            }
+
+            const confirmed = await confirmSaveChange('¿Guardar cambios?', confirmHtml);
+            if (!confirmed) return;
 
             try {
                 const response = await fetch("{{ url_for('hallazgos.configuraciones_editar') }}", {
@@ -691,42 +769,42 @@
             }
         }
 
-        async function deleteItem(tipo, id) {
-            const result = await Swal.fire({
-                title: '¿Eliminar elemento?',
-                text: '¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer y podría afectar los registros que ya lo utilizan.',
-                icon: 'warning',
+        function deleteItem(tipo, id, nombre) {
+            const label = CATALOG_LABELS[tipo] || 'elemento';
+            confirmDeleteFetch(
+                "{{ url_for('hallazgos.configuraciones_eliminar') }}",
+                { tipo_catalogo: tipo, id: id },
+                {
+                    title: '¿Eliminar ' + label + '?',
+                    html: 'Se eliminará <strong>' + nombre + '</strong>.<br><br>Esta acción no se puede deshacer y podría afectar registros que ya lo utilizan.'
+                }
+            );
+        }
+
+        async function toggleStatus(tipo, id, checkbox) {
+            const nuevoEstado = checkbox.checked;
+            const accion = nuevoEstado ? 'activar' : 'desactivar';
+            const label = CATALOG_LABELS[tipo] || 'elemento';
+
+            const confirmed = await Swal.fire({
+                title: `¿${nuevoEstado ? 'Activar' : 'Desactivar'} ${label}?`,
+                html: `¿Está seguro de ${accion} este ${label}?`,
+                icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#ef4444',
+                confirmButtonColor: '#82C341',
                 cancelButtonColor: '#374151',
-                confirmButtonText: 'Sí, eliminar',
+                confirmButtonText: 'Sí, confirmar',
                 cancelButtonText: 'Cancelar',
                 background: '#1f2937',
                 color: '#ffffff',
-                iconColor: '#ef4444'
-            });
+                iconColor: '#82C341'
+            }).then(r => r.isConfirmed);
 
-            if (!result.isConfirmed) return;
-
-            try {
-                const response = await fetch("{{ url_for('hallazgos.configuraciones_eliminar') }}", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tipo_catalogo: tipo, id: id })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    location.reload();
-                } else {
-                    Swal.fire({ title: 'Error', text: 'Error al eliminar: ' + data.error, icon: 'error', background: '#1f2937', color: '#ffffff' });
-                }
-            } catch (e) {
-                console.error(e);
-                Swal.fire({ title: 'Error', text: 'Error de conexión', icon: 'error', background: '#1f2937', color: '#ffffff' });
+            if (!confirmed) {
+                checkbox.checked = !nuevoEstado;
+                return;
             }
-        }
 
-        async function toggleStatus(tipo, id) {
             try {
                 const response = await fetch("{{ url_for('hallazgos.configuraciones_toggle') }}", {
                     method: 'POST',
@@ -744,9 +822,11 @@
                         badge.innerText = 'Inactivo';
                     }
                 } else {
+                    checkbox.checked = !nuevoEstado;
                     Swal.fire({ title: 'Error', text: data.error, icon: 'error', background: '#1f2937', color: '#ffffff' });
                 }
             } catch (e) {
+                checkbox.checked = !nuevoEstado;
                 console.error(e);
                 Swal.fire({ title: 'Error', text: 'Error de conexión', icon: 'error', background: '#1f2937', color: '#ffffff' });
             }
@@ -756,6 +836,21 @@
             const input = document.getElementById(`input-${tipo}`);
             const nombre = input.value.trim();
             if (!nombre) return;
+
+            const label = CATALOG_LABELS[tipo] || 'elemento';
+            let confirmHtml = `¿Agregar <strong>${nombre}</strong> como nuevo ${label}?`;
+
+            if (tipo === 'area') {
+                const jefeSelect = document.getElementById('input-area-jefe');
+                const jefeName = jefeSelect?.value
+                    ? jefeSelect.options[jefeSelect.selectedIndex].text
+                    : 'Sin jefe asignado';
+                confirmHtml += `<br><br>Jefe de área: <strong>${jefeName}</strong>`;
+                confirmHtml += `<br><span style="color:#9ca3af;font-size:0.9rem;">Este jefe se usará como responsable sugerido en nuevos eventos.</span>`;
+            }
+
+            const confirmed = await confirmSaveChange('¿Agregar elemento?', confirmHtml);
+            if (!confirmed) return;
 
             const formData = new FormData();
             formData.append('tipo_catalogo', tipo);
@@ -789,8 +884,3 @@
 </body>
 
 </html>
-
-
-
-
-

@@ -1,3 +1,4 @@
+<div class="table-responsive">
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -25,18 +26,6 @@
             display: none;
         }
 </style>
-    <style>
-        /* Modals */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px); padding: 20px; box-sizing: border-box; }
-        .modal.active { display: flex; }
-        .modal-content { background: #1f2937; padding: 30px; border-radius: 12px; width: 500px; max-width: 100%; max-height: 90vh; overflow-y: auto; border: 1px solid #374151; box-shadow: 0 10px 25px rgba(0,0,0,0.5); box-sizing: border-box; }
-        .modal h3 { margin-bottom: 25px; color: #ffffff; font-size: 1.3rem; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; color: #9ca3af; font-size: 0.9rem; font-weight: 500; }
-        .form-group input[type="text"], .form-group input[type="email"], .form-group input[type="password"], .form-group select { width: 100%; padding: 12px; border: 1px solid #374151; border-radius: 8px; background: #111827; color: white; box-sizing: border-box; }
-        .form-group input[type="text"]:focus, .form-group input[type="email"]:focus, .form-group input[type="password"]:focus, .form-group select:focus { border-color: #82C341; outline: none; }
-    </style>
-
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -67,13 +56,15 @@
         </div>
 
         <div class="table-container">
+            <div class="table-responsive">
             <table >
                     <thead>
                         <tr>
                             <th>Nombre</th>
                             <th>Email</th>
                             <th>Rol</th>
-                            <th>Área</th>
+                            <th>Área (pertenencia)</th>
+                            <th>Áreas a cargo</th>
                             <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
@@ -84,7 +75,26 @@
                             <td style="font-weight: 500;">{{ usuario.nombre }}</td>
                             <td style="color: #9ca3af;">{{ usuario.email }}</td>
                             <td><span class="badge badge-{{ usuario.rol }}">{{ usuario.rol.upper() }}</span></td>
-                            <td style="color: #9ca3af;">{{ usuario.area.nombre if usuario.area else '-' }}</td>
+                            <td style="color: #9ca3af;">
+                                {% if usuario.areas_a_cargo %}
+                                    {% for area in usuario.areas_a_cargo %}
+                                        <span style="display: inline-block; background: rgba(130, 195, 65, 0.12); color: #82C341; border: 1px solid rgba(130, 195, 65, 0.25); border-radius: 6px; padding: 2px 8px; margin: 2px 4px 2px 0; font-size: 0.82rem;">{{ area.nombre }}</span>
+                                    {% endfor %}
+                                {% elif usuario.area %}
+                                    <span style="display: inline-block; background: rgba(130, 195, 65, 0.12); color: #82C341; border: 1px solid rgba(130, 195, 65, 0.25); border-radius: 6px; padding: 2px 8px; margin: 2px 4px 2px 0; font-size: 0.82rem;">{{ usuario.area.nombre }}</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td style="color: #9ca3af;">
+                                {% if usuario.areas_a_cargo %}
+                                    {% for area in usuario.areas_a_cargo %}
+                                        <span style="display: inline-block; background: rgba(130, 195, 65, 0.12); color: #82C341; border: 1px solid rgba(130, 195, 65, 0.25); border-radius: 6px; padding: 2px 8px; margin: 2px 4px 2px 0; font-size: 0.82rem;">{{ area.nombre }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
                             <td>
                                 {% if usuario.activo %}
                                 <span class="badge"
@@ -96,32 +106,39 @@
                             </td>
                             <td>
                                 {% if usuario.id != g.usuario.id %}
-                                <div class="actions-group">
-                                    <button
-                                        onclick="openEditModal('{{ usuario.id }}', '{{ usuario.nombre }}', '{{ usuario.email }}', '{{ usuario.rol }}', '{{ usuario.area_id or '' }}', '{{ usuario.permisos or '[]' }}')"
-                                        class="btn btn-secondary btn-sm">Editar</button>
-                                    <button type="button"
-                                        class="btn {% if usuario.activo %}btn-danger{% else %}btn-primary{% endif %} btn-sm"
-                                        onclick="confirmToggle('{{ usuario.id }}', '{{ usuario.nombre }}', {{ 'true' if usuario.activo else 'false' }})">
-                                        {% if usuario.activo %}Desactivar{% else %}Activar{% endif %}
+                                <div class="actions-cell">
+                                    <button type="button" class="btn-icon-premium" title="Editar"
+                                        onclick="openEditModal('{{ usuario.id }}', '{{ usuario.nombre|e }}', '{{ usuario.email|e }}', '{{ usuario.rol }}', '{{ usuario.area_id or '' }}', {{ usuario.areas_a_cargo|map(attribute='id')|list|tojson }}, '{{ usuario.permisos or '[]'|e }}')">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                     </button>
+                                    {% if usuario.activo %}
+                                    <button type="button" class="btn-icon-premium danger" title="Desactivar"
+                                        onclick="confirmToggle('{{ usuario.id }}', '{{ usuario.nombre|e }}', true)">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+                                    </button>
+                                    {% else %}
+                                    <button type="button" class="btn-icon-premium success" title="Activar"
+                                        onclick="confirmToggle('{{ usuario.id }}', '{{ usuario.nombre|e }}', false)">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    </button>
+                                    {% endif %}
                                 </div>
                                 {% else %}
-                                <span style="color: #4b5563; font-size: 0.85rem; font-style: italic;">Sesión
-                                    Actual</span>
+                                <span style="color: #6b7280; font-size: 0.85rem; font-style: italic;">Sesión actual</span>
                                 {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+                </div>
         </div>
     </div>
 <!-- Modal nuevo usuario -->
     <div class="modal" id="modalNuevoUsuario">
         <div class="modal-content">
             <h3>Nuevo Usuario</h3>
-            <form method="POST" action="{{ url_for('crear_usuario') }}">
+            <form method="POST" action="{{ url_for('admin.crear_usuario') }}">
                 <div class="form-group">
                     <label>Nombre</label>
                     <input type="text" name="nombre" required>
@@ -171,7 +188,7 @@
                 </div>
                 <div class="form-group" style="display: flex; gap: 15px; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 200px;">
-                        <label>Área Existente</label>
+                        <label>Área de pertenencia (tickets)</label>
                         <select name="area_id" id="newAreaSelect">
                             <option value="">-- Sin Área --</option>
                             {% for area in areas %}
@@ -182,6 +199,25 @@
                     <div style="flex: 1; min-width: 200px;">
                         <label>O crear Nueva Área</label>
                         <input type="text" name="nueva_area" id="newAreaInput" placeholder="Ej: Topografía LIDAR">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Áreas a cargo (jefe de área)</label>
+                    <p style="color: #6b7280; font-size: 0.82rem; margin: 0 0 10px;">Se sincroniza con Configuraciones → Áreas. Puede seleccionar más de una.</p>
+                    <div style="background: #111827; border: 1px solid #374151; border-radius: 8px; padding: 12px; max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                        {% for area in areas %}
+                        <label style="display: flex; align-items: center; gap: 8px; margin: 0; cursor: pointer; color: #d1d5db; text-transform: none; font-size: 0.9rem; font-weight: normal;">
+                            <input type="checkbox" name="areas_a_cargo" class="newAreaCargo" value="{{ area.id }}"
+                                data-area-nombre="{{ area.nombre }}"
+                                data-jefe-id="{{ area.jefe_id or '' }}"
+                                data-jefe-nombre="{{ area.jefe.nombre if area.jefe else '' }}">
+                            {{ area.nombre }}
+                            {% if area.jefe %}
+                            <span style="color: #6b7280; font-size: 0.78rem;">(jefe actual: {{ area.jefe.nombre }})</span>
+                            {% endif %}
+                        </label>
+                        {% endfor %}
                     </div>
                 </div>
                 
@@ -214,84 +250,152 @@
 
     <!-- Modal editar usuario -->
     <div class="modal" id="modalEditarUsuario">
-        <div class="modal-content">
-            <h3>Editar Usuario</h3>
-            <form method="POST" id="formEditarUsuario">
-                <div class="form-group">
-                    <label>Nombre</label>
-                    <input type="text" name="nombre" id="editNombre" required>
+        <div class="modal-content modal-user-edit">
+            <div class="user-edit-header">
+                <div class="user-edit-avatar" id="editUserAvatar">?</div>
+                <div>
+                    <h3 id="editUserTitle">Editar Usuario</h3>
+                    <p class="user-edit-email" id="editUserEmail">—</p>
                 </div>
-                <div class="form-group">
-                    <label>Contraseña</label>
-                    <div style="position: relative;">
-                        <input type="password" name="password" id="editPassword" style="padding-right: 40px;">
-                        <button type="button" onclick="togglePasswordVisibility('editPassword')"
-                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #9ca3af; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="eye-icon">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Confirmar Contraseña <span style="font-size: 0.8rem; color: #9ca3af; font-weight: 400;">(dejar en blanco para mantener actual)</span></label>
-                    <div style="position: relative;">
-                        <input type="password" name="confirm_password" id="editConfirmPassword"
-                            style="padding-right: 40px;">
-                        <button type="button" onclick="togglePasswordVisibility('editConfirmPassword')"
-                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #9ca3af; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="eye-icon">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Rol</label>
-                    <select name="rol" id="editRol">
-                        <option value="cliente">Cliente</option>
-                        <option value="agente">Agente</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Área</label>
-                    <select name="area_id" id="editArea_id">
-                        <option value="">-- Sin Área --</option>
-                        {% for area in areas %}
-                        <option value="{{ area.id }}">{{ area.nombre }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Permisos Adicionales</label>
-                    <div style="background: #111827; border: 1px solid #374151; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 10px;">
-                        <label style="display: flex; align-items: center; gap: 8px; margin: 0; cursor: pointer; color: #d1d5db; text-transform: none; font-size: 0.9rem; font-weight: normal;">
-                            <input type="checkbox" name="permisos" class="editPermiso" value="ver_tickets_area"> Ver todos los tickets del área
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; margin: 0; cursor: pointer; color: #d1d5db; text-transform: none; font-size: 0.9rem; font-weight: normal;">
-                            <input type="checkbox" name="permisos" class="editPermiso" value="ver_inventario"> Acceso al Inventario de Equipos
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; margin: 0; cursor: pointer; color: #d1d5db; text-transform: none; font-size: 0.9rem; font-weight: normal;">
-                            <input type="checkbox" name="permisos" class="editPermiso" value="ver_licencias"> Acceso a la Gestión de Licencias
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; margin: 0; cursor: pointer; color: #d1d5db; text-transform: none; font-size: 0.9rem; font-weight: normal;">
-                            <input type="checkbox" name="permisos" class="editPermiso" value="ver_eventos"> Acceso al Módulo de Eventos
-                        </label>
+                <button type="button" class="user-edit-close" onclick="closeModal('modalEditarUsuario')" title="Cerrar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <form method="POST" id="formEditarUsuario" class="user-edit-form">
+                <div class="user-edit-body">
+                    <div class="user-edit-layout">
+                        <div class="user-edit-col user-edit-col-left">
+                            <div class="user-edit-block">
+                                <div class="user-edit-block-title">Datos generales</div>
+                                <div class="form-group">
+                                    <label class="form-label">Nombre completo</label>
+                                    <input type="text" class="form-control" name="nombre" id="editNombre" required placeholder="Nombre del usuario">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Rol en el sistema</label>
+                                    <select class="form-control" name="rol" id="editRol">
+                                        <option value="cliente">Cliente</option>
+                                        <option value="agente">Agente</option>
+                                        <option value="admin">Administrador</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="user-edit-block">
+                                <button type="button" class="user-edit-toggle" onclick="togglePasswordFields()">
+                                    <span>Cambiar contraseña</span>
+                                    <svg id="passwordChevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </button>
+                                <div class="user-edit-password-fields" id="passwordFields">
+                                    <div class="form-group" style="margin-top:12px;">
+                                        <label class="form-label">Nueva contraseña</label>
+                                        <div class="input-with-icon">
+                                            <input type="password" class="form-control" name="password" id="editPassword" placeholder="Opcional">
+                                            <button type="button" class="eye-btn" onclick="togglePasswordVisibility('editPassword')">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Confirmar contraseña</label>
+                                        <div class="input-with-icon">
+                                            <input type="password" class="form-control" name="confirm_password" id="editConfirmPassword" placeholder="Repita la contraseña">
+                                            <button type="button" class="eye-btn" onclick="togglePasswordVisibility('editConfirmPassword')">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="user-edit-col user-edit-col-right">
+                            <div class="user-edit-block">
+                                <div class="user-edit-block-title">Áreas y pertenencia</div>
+                                <div class="form-group">
+                                    <label class="form-label">Área de pertenencia (tickets)</label>
+                                    <select class="form-control" name="areas_pertenencia" id="editArea_id" multiple placeholder="Seleccionar áreas...">
+                                        {% for area in areas %}
+                                        <option value="{{ area.id }}">{{ area.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <input type="hidden" name="area_id" id="editAreaIdPrimary" value="">
+                                </div>
+
+                                <label class="form-label">Áreas a cargo</label>
+                                <p class="user-edit-hint">Sincronizado con Configuraciones → Áreas. Un jefe por área; varias áreas por persona.</p>
+
+                                <div class="user-edit-chips-box" id="editAreasResumenBox">
+                                    <span class="user-edit-chips-placeholder" id="editAreasPlaceholder">Área</span>
+                                    <div class="user-edit-chips-inner" id="editAreasResumen"></div>
+                                </div>
+
+                                <input type="text" class="form-control" id="editAreaSearch" placeholder="Buscar área..." oninput="filtrarAreasEdit()" style="margin-bottom:10px;">
+
+                                <div class="user-edit-area-list" id="editAreasGrid">
+                                    {% for area in areas %}
+                                    <label class="user-edit-area-item area-card" data-area-nombre="{{ area.nombre|lower }}">
+                                        <input type="checkbox" name="areas_a_cargo" class="editAreaCargo" value="{{ area.id }}"
+                                            data-area-nombre="{{ area.nombre }}"
+                                            data-jefe-id="{{ area.jefe_id or '' }}"
+                                            data-jefe-nombre="{{ area.jefe.nombre if area.jefe else '' }}"
+                                            onchange="onAreaCargoChange('edit')">
+                                        <div class="user-edit-area-info">
+                                            <span class="user-edit-area-name">{{ area.nombre }}</span>
+                                            <span class="user-edit-area-meta area-card-jefe{% if area.jefe %} warning{% endif %}">{% if area.jefe %}Jefe: {{ area.jefe.nombre }}{% else %}Sin jefe{% endif %}</span>
+                                        </div>
+                                    </label>
+                                    {% endfor %}
+                                    {% set pad = (3 - (areas|length % 3)) % 3 %}
+                                    {% for i in range(pad) %}
+                                    <div class="user-edit-area-spacer" aria-hidden="true"></div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="user-edit-col user-edit-col-full">
+                            <div class="user-edit-block">
+                                <div class="user-edit-block-title">Permisos adicionales</div>
+                                <div class="user-edit-permisos">
+                                    <label class="user-edit-permiso">
+                                        <input type="checkbox" name="permisos" class="editPermiso" value="ver_tickets_area">
+                                        <div>
+                                            <strong>Tickets del área</strong>
+                                            <span>Ver tickets de su área</span>
+                                        </div>
+                                    </label>
+                                    <label class="user-edit-permiso">
+                                        <input type="checkbox" name="permisos" class="editPermiso" value="ver_inventario">
+                                        <div>
+                                            <strong>Inventario</strong>
+                                            <span>Equipos e infraestructura</span>
+                                        </div>
+                                    </label>
+                                    <label class="user-edit-permiso">
+                                        <input type="checkbox" name="permisos" class="editPermiso" value="ver_licencias">
+                                        <div>
+                                            <strong>Licencias</strong>
+                                            <span>Gestión de software</span>
+                                        </div>
+                                    </label>
+                                    <label class="user-edit-permiso">
+                                        <input type="checkbox" name="permisos" class="editPermiso" value="ver_eventos">
+                                        <div>
+                                            <strong>Eventos</strong>
+                                            <span>Hallazgos y eventos</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 10px; margin-top: 30px;">
-                    <button type="submit" class="btn btn-primary" style="flex: 1;">Guardar</button>
-                    <button type="button" onclick="closeModal('modalEditarUsuario')" class="btn btn-secondary"
-                        style="flex: 1;">Cancelar</button>
+                <div class="user-edit-footer">
+                    <button type="button" onclick="closeModal('modalEditarUsuario')" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
                 </div>
             </form>
         </div>
@@ -321,53 +425,283 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <script>
+        let editAreaTom = null;
+        let syncingAreas = false;
+
         document.addEventListener('DOMContentLoaded', function () {
             const formNuevoUsuario = document.querySelector('#modalNuevoUsuario form');
             if (formNuevoUsuario) {
-                formNuevoUsuario.addEventListener('submit', function (e) {
+                formNuevoUsuario.addEventListener('submit', async function (e) {
+                    e.preventDefault();
                     const pwd = document.getElementById('newPassword').value;
-                    const confirm = document.getElementById('newConfirmPassword').value;
-                    if (pwd !== confirm) {
-                        e.preventDefault();
-                        alert('Las contraseñas no coinciden');
+                    const confirmPwd = document.getElementById('newConfirmPassword').value;
+                    if (pwd !== confirmPwd) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Contraseñas no coinciden',
+                            text: 'Verifique que ambos campos de contraseña sean iguales.',
+                            confirmButtonColor: '#82C341'
+                        });
+                        return;
+                    }
+                    if (await validarAreasCargo('newAreaCargo')) {
+                        formNuevoUsuario.submit();
                     }
                 });
             }
 
             const formEditarUsuario = document.getElementById('formEditarUsuario');
             if (formEditarUsuario) {
-                formEditarUsuario.addEventListener('submit', function (e) {
+                formEditarUsuario.addEventListener('submit', async function (e) {
+                    e.preventDefault();
                     const pwd = document.getElementById('editPassword').value;
-                    const confirm = document.getElementById('editConfirmPassword').value;
-                    if (pwd && pwd !== confirm) {
-                        e.preventDefault();
-                        alert('Las contraseñas no coinciden');
+                    const confirmPwd = document.getElementById('editConfirmPassword').value;
+                    if (pwd && pwd !== confirmPwd) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Contraseñas no coinciden',
+                            text: 'Verifique que ambos campos de contraseña sean iguales.',
+                            confirmButtonColor: '#82C341'
+                        });
+                        return;
+                    }
+                    const usuarioId = formEditarUsuario.dataset.usuarioId;
+                    if (await validarAreasCargo('editAreaCargo', usuarioId)) {
+                        formEditarUsuario.submit();
+                    }
+                });
+            }
+
+            document.querySelectorAll('.newAreaCargo').forEach(cb => {
+                cb.addEventListener('change', () => syncPertenenciaDesdeCargo('newAreaSelect', 'newAreaCargo'));
+            });
+
+            const editSelect = document.getElementById('editArea_id');
+            if (editSelect && typeof TomSelect !== 'undefined') {
+                editAreaTom = new TomSelect(editSelect, {
+                    plugins: ['remove_button'],
+                    maxItems: null,
+                    create: false,
+                    placeholder: 'Seleccionar áreas...',
+                    onChange: function (values) {
+                        if (syncingAreas) return;
+                        syncingAreas = true;
+                        const ids = (values || []).map(String);
+                        document.querySelectorAll('.editAreaCargo').forEach(cb => {
+                            cb.checked = ids.includes(cb.value);
+                        });
+                        updatePrimaryAreaId(ids);
+                        updateAreaCardStates('edit');
+                        updateEditAreasResumen();
+                        refreshAreaJefeLabels();
+                        syncingAreas = false;
                     }
                 });
             }
         });
 
+        function updatePrimaryAreaId(ids) {
+            const primary = document.getElementById('editAreaIdPrimary');
+            if (primary) primary.value = (ids && ids.length) ? ids[0] : '';
+        }
+
+        function getSelectedCargoIds() {
+            return Array.from(document.querySelectorAll('.editAreaCargo:checked')).map(cb => cb.value);
+        }
+
+        function setPertenenciaValues(ids) {
+            const list = (ids || []).map(String).filter(Boolean);
+            updatePrimaryAreaId(list);
+            if (editAreaTom) {
+                syncingAreas = true;
+                editAreaTom.setValue(list, true);
+                syncingAreas = false;
+            }
+        }
+
+        function refreshAreaJefeLabels() {
+            const usuarioId = document.getElementById('formEditarUsuario')?.dataset?.usuarioId || '';
+            document.querySelectorAll('.editAreaCargo').forEach(cb => {
+                const card = cb.closest('.user-edit-area-item, .area-card');
+                if (!card) return;
+                const jefeLabel = card.querySelector('.area-card-jefe');
+                const jefeId = cb.dataset.jefeId;
+                if (!jefeLabel) return;
+                if (cb.checked && (!jefeId || jefeId === usuarioId)) {
+                    jefeLabel.textContent = 'Jefe: tú';
+                    jefeLabel.className = 'user-edit-area-meta area-card-jefe success';
+                } else if (jefeId && jefeId !== usuarioId) {
+                    jefeLabel.textContent = 'Jefe: ' + cb.dataset.jefeNombre;
+                    jefeLabel.className = 'user-edit-area-meta area-card-jefe warning';
+                } else {
+                    jefeLabel.textContent = 'Sin jefe';
+                    jefeLabel.className = 'user-edit-area-meta area-card-jefe';
+                }
+            });
+        }
+
+        function togglePasswordFields() {
+            const fields = document.getElementById('passwordFields');
+            const chevron = document.getElementById('passwordChevron');
+            const isOpen = fields.classList.toggle('open');
+            chevron.style.transform = isOpen ? 'rotate(180deg)' : '';
+            if (!isOpen) {
+                document.getElementById('editPassword').value = '';
+                document.getElementById('editConfirmPassword').value = '';
+            }
+        }
+
+        function filtrarAreasEdit() {
+            const term = (document.getElementById('editAreaSearch').value || '').toLowerCase().trim();
+            document.querySelectorAll('#editAreasGrid .user-edit-area-item').forEach(card => {
+                const nombre = card.dataset.areaNombre || '';
+                card.style.display = !term || nombre.includes(term) ? '' : 'none';
+            });
+            document.querySelectorAll('#editAreasGrid .user-edit-area-spacer').forEach(sp => {
+                sp.style.display = term ? 'none' : '';
+            });
+        }
+
+        function updateAreaCardStates(prefix) {
+            const checkboxClass = prefix === 'edit' ? 'editAreaCargo' : 'newAreaCargo';
+            document.querySelectorAll('.' + checkboxClass).forEach(cb => {
+                const card = cb.closest('.user-edit-area-item, .area-card');
+                if (card) card.classList.toggle('selected', cb.checked);
+            });
+        }
+
+        function updateEditAreasResumen() {
+            const resumen = document.getElementById('editAreasResumen');
+            const placeholder = document.getElementById('editAreasPlaceholder');
+            if (!resumen) return;
+            const seleccionadas = Array.from(document.querySelectorAll('.editAreaCargo:checked'));
+            if (seleccionadas.length === 0) {
+                resumen.innerHTML = '';
+                if (placeholder) placeholder.classList.remove('hidden');
+            } else {
+                if (placeholder) placeholder.classList.add('hidden');
+                resumen.innerHTML = seleccionadas.map(cb =>
+                    `<span class="user-edit-chip">${cb.dataset.areaNombre}</span>`
+                ).join('');
+            }
+        }
+
+        function onAreaCargoChange(prefix) {
+            if (prefix === 'edit') {
+                if (!syncingAreas) {
+                    setPertenenciaValues(getSelectedCargoIds());
+                }
+                updateAreaCardStates('edit');
+                updateEditAreasResumen();
+                refreshAreaJefeLabels();
+            }
+        }
+
+        function syncPertenenciaDesdeCargo(selectId, checkboxClass) {
+            if (selectId === 'editArea_id') {
+                setPertenenciaValues(
+                    Array.from(document.querySelectorAll('.' + checkboxClass + ':checked')).map(cb => cb.value)
+                );
+                return;
+            }
+            const areaSelect = document.getElementById(selectId);
+            if (!areaSelect) return;
+            const seleccionadas = Array.from(document.querySelectorAll('.' + checkboxClass + ':checked'));
+            if (seleccionadas.length === 0) return;
+            const idsSeleccionados = seleccionadas.map(cb => cb.value);
+            if (!areaSelect.value || !idsSeleccionados.includes(areaSelect.value)) {
+                areaSelect.value = idsSeleccionados[0];
+            }
+        }
+
+        function resolverAreasAsignadas(areaId, areasCargoIds) {
+            const ids = [];
+            if (Array.isArray(areasCargoIds)) {
+                areasCargoIds.forEach(id => {
+                    const s = String(id);
+                    if (s && !ids.includes(s)) ids.push(s);
+                });
+            }
+            if (areaId) {
+                const s = String(areaId);
+                if (s && !ids.includes(s)) ids.unshift(s);
+            }
+            return ids;
+        }
+
         function openNewUserModal() {
             document.getElementById('modalNuevoUsuario').classList.add('active');
         }
 
-        function openEditModal(id, nombre, email, rol, area_id, permisosStr) {
+        async function validarAreasCargo(checkboxClass, usuarioId) {
+            const seleccionadas = Array.from(document.querySelectorAll('.' + checkboxClass + ':checked'));
+            const conflictos = seleccionadas.filter(cb => {
+                const jefeId = cb.dataset.jefeId;
+                return jefeId && jefeId !== String(usuarioId || '');
+            });
+            if (conflictos.length === 0) return true;
+
+            const listaHtml = conflictos.map(cb =>
+                `<li style="margin-bottom:6px;"><strong>${cb.dataset.areaNombre}</strong><br><span style="color:#9ca3af;font-size:0.9rem;">Jefe actual: ${cb.dataset.jefeNombre}</span></li>`
+            ).join('');
+
+            const result = await Swal.fire({
+                title: 'Reasignar jefe de área',
+                html: `
+                    <p style="color:#d1d5db;line-height:1.6;margin:0 0 14px;text-align:left;">
+                        Cada área solo puede tener <strong>un jefe</strong> asignado.
+                        ${conflictos.length === 1 ? 'El área seleccionada ya tiene responsable:' : 'Las áreas seleccionadas ya tienen responsable:'}
+                    </p>
+                    <ul style="text-align:left;margin:0 0 14px 18px;padding:0;color:#e5e7eb;">${listaHtml}</ul>
+                    <p style="color:#9ca3af;font-size:0.9rem;line-height:1.5;margin:0;text-align:left;">
+                        Si continúa, este usuario quedará como nuevo jefe y el responsable anterior dejará de estar a cargo de ${conflictos.length === 1 ? 'esa área' : 'esas áreas'}.
+                    </p>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, reasignar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#82C341',
+                cancelButtonColor: '#374151',
+                background: '#1f2937',
+                color: '#ffffff',
+                iconColor: '#fbbf24',
+                focusCancel: true
+            });
+
+            return result.isConfirmed;
+        }
+
+        function openEditModal(id, nombre, email, rol, area_id, areasCargoIds, permisosStr) {
             document.getElementById('editNombre').value = nombre;
             document.getElementById('editRol').value = rol;
+            document.getElementById('editUserEmail').textContent = email;
+            document.getElementById('editUserAvatar').textContent = (nombre || '?').charAt(0).toUpperCase();
             document.getElementById('formEditarUsuario').action = '/admin/usuario/editar/' + id;
-            
-            // Set area
-            const areaSelect = document.getElementById('editArea_id');
-            if (areaSelect) {
-                areaSelect.value = area_id || '';
-            }
-            
-            // Set checkboxes
+            document.getElementById('formEditarUsuario').dataset.usuarioId = id;
+
+            document.getElementById('passwordFields').classList.remove('open');
+            document.getElementById('passwordChevron').style.transform = '';
+            document.getElementById('editPassword').value = '';
+            document.getElementById('editConfirmPassword').value = '';
+            document.getElementById('editAreaSearch').value = '';
+            filtrarAreasEdit();
+
+            const asignadas = resolverAreasAsignadas(area_id, areasCargoIds);
+
+            document.querySelectorAll('.editAreaCargo').forEach(cb => {
+                cb.checked = asignadas.includes(cb.value);
+            });
+
+            setPertenenciaValues(asignadas);
+            updateAreaCardStates('edit');
+            updateEditAreasResumen();
+            refreshAreaJefeLabels();
+
             document.querySelectorAll('.editPermiso').forEach(cb => cb.checked = false);
             try {
-                // If single quotes are used from python repr, fix them for JSON.parse
-                // Or safely decode
                 const permisos = JSON.parse(permisosStr.replace(/'/g, '"'));
                 permisos.forEach(p => {
                     const cb = document.querySelector(`.editPermiso[value="${p}"]`);
@@ -376,7 +710,7 @@
             } catch (e) {
                 console.error("Error parsing permisos:", e, permisosStr);
             }
-            
+
             document.getElementById('modalEditarUsuario').classList.add('active');
         }
 
@@ -428,15 +762,16 @@
 
         function togglePasswordVisibility(inputId) {
             const input = document.getElementById(inputId);
-            const btn = input.nextElementSibling;
+            const btn = input.parentElement.querySelector('.eye-btn') || input.nextElementSibling;
+            if (!btn) return;
 
             if (input.type === 'password') {
                 input.type = 'text';
-                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
                 btn.style.color = '#82C341';
             } else {
                 input.type = 'password';
-                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
                 btn.style.color = '#9ca3af';
             }
         }

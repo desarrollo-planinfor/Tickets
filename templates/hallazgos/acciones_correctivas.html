@@ -1,3 +1,4 @@
+<div class="table-responsive">
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -82,6 +83,7 @@
         </div>
         
         <div class="card">
+            <div class="table-responsive">
             <table>
                 <thead>
                     <tr>
@@ -128,7 +130,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            <form action="{{ url_for('hallazgos.eliminar_ac', id=ac.id) }}" method="POST" style="display:inline;" onsubmit="return confirmDelete(event, '¿Está seguro de que desea eliminar esta Acción Correctiva?');">
+                            <form action="{{ url_for('hallazgos.eliminar_ac', id=ac.id) }}" method="POST" style="display:inline;" onsubmit="return confirmDelete(event, 'Se eliminará la acción correctiva <strong>{{ ac.codigo|e }}</strong> y todos sus datos asociados.<br><br>Esta acción no se puede deshacer.', '¿Eliminar acción correctiva?');">
                                 <button class="btn-icon-premium danger" type="submit" title="Eliminar AC"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                             </form>
                         </td>
@@ -142,6 +144,7 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 </body>

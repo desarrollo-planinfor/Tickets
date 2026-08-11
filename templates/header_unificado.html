@@ -1,6 +1,118 @@
 <!-- Toastify CSS/JS para Notificaciones -->
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function _swalCleanup() {
+        document.body.style.paddingRight = '';
+        document.body.style.overflow = '';
+        document.documentElement.style.paddingRight = '';
+        document.documentElement.style.overflow = '';
+        document.body.classList.remove('swal2-shown', 'swal2-height-auto');
+        document.documentElement.classList.remove('swal2-shown', 'swal2-height-auto');
+    }
+
+    window.Swal = Swal.mixin({
+        scrollbarPadding: false,
+        didClose: _swalCleanup
+    });
+
+    const SWAL_DELETE_OPTS = {
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#374151',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        background: '#1f2937',
+        color: '#ffffff',
+        iconColor: '#ef4444'
+    };
+
+    function confirmDelete(event, message, title) {
+        event.preventDefault();
+        const form = event.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        Swal.fire({
+            ...SWAL_DELETE_OPTS,
+            title: title || '¿Confirmar eliminación?',
+            html: message
+        }).then((result) => {
+            if (result.isConfirmed) {
+                if (submitBtn) submitBtn.classList.add('btn-loading');
+                form.submit();
+            } else if (submitBtn) {
+                submitBtn.classList.remove('btn-loading');
+            }
+        });
+        return false;
+    }
+
+    async function confirmDeleteFetch(url, payload, options) {
+        const result = await Swal.fire({
+            ...SWAL_DELETE_OPTS,
+            title: options.title || '¿Eliminar elemento?',
+            html: options.html || options.text || '¿Está seguro? Esta acción no se puede deshacer.'
+        });
+        if (!result.isConfirmed) return;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (data.success) {
+                location.reload();
+            } else {
+                Swal.fire({
+                    title: 'No se pudo eliminar',
+                    text: data.error || 'El elemento podría estar en uso por otros registros.',
+                    icon: 'error',
+                    background: '#1f2937',
+                    color: '#ffffff'
+                });
+            }
+        } catch (e) {
+            Swal.fire({
+                title: 'Error de conexión',
+                text: 'No se pudo completar la eliminación. Intente nuevamente.',
+                icon: 'error',
+                background: '#1f2937',
+                color: '#ffffff'
+            });
+        }
+    }
+
+    function confirmAction(event, message, title, actionType) {
+        event.preventDefault();
+        const form = event.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const isDanger = actionType === 'danger';
+        Swal.fire({
+            title: title,
+            html: message,
+            icon: isDanger ? 'warning' : 'question',
+            showCancelButton: true,
+            confirmButtonColor: isDanger ? '#ef4444' : '#10b981',
+            cancelButtonColor: '#374151',
+            confirmButtonText: isDanger ? 'Sí, inactivar' : 'Sí, activar',
+            cancelButtonText: 'Cancelar',
+            background: '#1f2937',
+            color: '#ffffff',
+            iconColor: isDanger ? '#ef4444' : '#10b981'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                if (submitBtn) submitBtn.classList.add('btn-loading');
+                form.submit();
+            } else if (submitBtn) {
+                submitBtn.classList.remove('btn-loading');
+            }
+        });
+        return false;
+    }
+</script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         {% with messages = get_flashed_messages(with_categories = true) %}
@@ -43,7 +155,7 @@
         --focus-ring: rgba(130, 195, 65, 0.25);
         --danger: #ef4444;
         --danger-focus: rgba(239, 68, 68, 0.25);
-        --transition-bounce: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        
         --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
     }
@@ -57,12 +169,7 @@
         border-radius: 12px !important;
     }
     
-    .btn-premium {
-        transition: var(--transition-bounce) !important;
-    }
-    .btn-premium:active {
-        transform: scale(0.96) !important;
-    }
+    
     
     .input-premium:focus, .form-control:focus, .filter-select:focus, .filter-input:focus {
         box-shadow: 0 0 0 3px var(--focus-ring) !important;
@@ -72,6 +179,14 @@
 
     html {
         scrollbar-gutter: stable;
+        background: #111827;
+    }
+
+    /* Evitar franja blanca al abrir/cerrar SweetAlert2 */
+    html.swal2-shown,
+    body.swal2-shown {
+        padding-right: 0 !important;
+        overflow: hidden;
     }
     /* Diseño Unificado de Cabecera */
     .header-unificada {
@@ -437,7 +552,7 @@
                 </svg>
                 {{ g.usuario.nombre }} <span style="color: #6b7280; font-size: 0.8rem;">({{ g.usuario.rol }})</span>
             </div>
-            <a href="{{ url_for('cambiar_password') }}" class="btn-logout-u" style="border-color: transparent;"
+            <a href="{{ url_for('auth.cambiar_password') }}" class="btn-logout-u" style="border-color: transparent;"
                 title="Mi Contraseña">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -445,7 +560,7 @@
                 </svg>
                 Mi Contraseña
             </a>
-            <a href="{{ url_for('logout') }}" class="btn-logout-u">
+            <a href="{{ url_for('auth.logout') }}" class="btn-logout-u">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -462,7 +577,7 @@
     <div class="nav-bar-u">
         <div style="display: flex; gap: 12px; flex-wrap: wrap;">
             {% if g.usuario.rol == 'admin' %}
-            <a href="{{ url_for('panel_admin') }}" class="nav-link-u {% if vista == 'admin' %}active{% endif %}">
+            <a href="{{ url_for('admin.panel_admin') }}" class="nav-link-u {% if vista == 'admin' %}active{% endif %}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="3" width="7" height="7"></rect>
@@ -474,7 +589,7 @@
             </a>
             {% endif %}
             {% if g.usuario.rol in ['admin', 'agente'] or g.usuario.tiene_permiso('ver_panel_agente') %}
-            <a href="{{ url_for('panel_agente') }}" class="nav-link-u {% if vista == 'agente' %}active{% endif %}">
+            <a href="{{ url_for('tickets.panel_agente') }}" class="nav-link-u {% if vista == 'agente' %}active{% endif %}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
@@ -484,7 +599,7 @@
             {% endif %}
 
             {% if g.usuario.rol != 'admin' %}
-            <a href="{{ url_for('mis_tickets') }}" class="nav-link-u {% if vista == 'cliente' %}active{% endif %}">
+            <a href="{{ url_for('tickets.mis_tickets') }}" class="nav-link-u {% if vista == 'cliente' %}active{% endif %}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -494,7 +609,7 @@
             </a>
             {% endif %}
             {% if g.usuario.rol in ['admin', 'agente'] or g.usuario.tiene_permiso('ver_tickets_area') %}
-            <a href="{{ url_for('todos_tickets') }}" class="nav-link-u {% if vista == 'todos' %}active{% endif %}">
+            <a href="{{ url_for('tickets.todos_tickets') }}" class="nav-link-u {% if vista == 'todos' %}active{% endif %}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -507,7 +622,7 @@
             </a>
             {% endif %}
             {% if g.usuario.rol == 'admin' or g.usuario.tiene_permiso('ver_seguridad') %}
-            <a href="{{ url_for('vista_seguridad') }}"
+            <a href="{{ url_for('admin.vista_seguridad') }}"
                 class="nav-link-u {% if vista == 'seguridad' %}active{% endif %}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -519,7 +634,7 @@
             {% endif %}
 
             {% if g.usuario.tiene_permiso('ver_inventario') %}
-            <a href="{{ url_for('lista_equipos') }}" class="nav-link-u {% if vista == 'equipos' %}active{% endif %}">
+            <a href="{{ url_for('equipos.lista_equipos') }}" class="nav-link-u {% if vista == 'equipos' %}active{% endif %}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path
@@ -530,7 +645,7 @@
             </a>
             {% endif %}
             {% if g.usuario.tiene_permiso('ver_licencias') %}
-            <a href="{{ url_for('licencias') }}" class="nav-link-u {% if vista == 'licencias' %}active{% endif %}">
+            <a href="{{ url_for('infra.licencias') }}" class="nav-link-u {% if vista == 'licencias' %}active{% endif %}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
@@ -540,7 +655,7 @@
             </a>
             {% endif %}
             {% if g.usuario.rol == 'admin' %}
-            <a href="{{ url_for('puertos') }}" class="nav-link-u {% if vista == 'puertos' %}active{% endif %}">
+            <a href="{{ url_for('infra.puertos') }}" class="nav-link-u {% if vista == 'puertos' %}active{% endif %}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
                 Gestión de Puertos
             </a>
@@ -589,14 +704,16 @@
         const containers = document.querySelectorAll('.container');
         containers.forEach(c => c.classList.add('animate-fade-in-up'));
 
-        // Add spinner on form submit
+        // Add spinner on form submit (solo si el envío no fue cancelado)
         const forms = document.querySelectorAll('form');
         forms.forEach(form => {
-            form.addEventListener('submit', function () {
-                const submitBtn = this.querySelector('button[type="submit"]');
-                if (submitBtn) {
-                    submitBtn.classList.add('btn-loading');
-                }
+            form.addEventListener('submit', function (e) {
+                setTimeout(() => {
+                    if (!e.defaultPrevented) {
+                        const submitBtn = this.querySelector('button[type="submit"]');
+                        if (submitBtn) submitBtn.classList.add('btn-loading');
+                    }
+                }, 0);
             });
         });
     });
@@ -630,22 +747,36 @@
         });
     })();
 </script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.card, .kpi-card, .chart-card, .activity-card').forEach(el => {
-            el.classList.add('glass-card');
-        });
-        document.querySelectorAll('.btn-filter, .btn-action, .btn-primary, .btn-delete-animated, .btn-edit, .btn').forEach(el => {
-            el.classList.add('btn-premium');
-        });
-        document.querySelectorAll('input, select, textarea').forEach(el => {
-            el.classList.add('input-premium');
-        });
-    });
-</script>
+
 
 <style>
 .btn-icon-premium { background: transparent; border: none; padding: 6px; color: #9ca3af; cursor: pointer; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; }
 .btn-icon-premium:hover { background: rgba(130, 195, 65, 0.15); color: #82C341; transform: translateY(-1px); }
-.btn-icon-premium.danger:hover { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+.btn-icon-premium.danger {
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.45);
+    background: rgba(239, 68, 68, 0.1);
+}
+.btn-icon-premium.danger:hover {
+    background: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.55);
+    transform: translateY(-2px) scale(1.12);
+}
+.btn-icon-premium.danger:hover svg { stroke: #ffffff; }
+.btn-icon-premium.success {
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.45);
+    background: rgba(16, 185, 129, 0.1);
+}
+.btn-icon-premium.success:hover {
+    background: #10b981;
+    color: #ffffff;
+    border-color: #10b981;
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.55);
+    transform: translateY(-2px) scale(1.12);
+}
+.btn-icon-premium.success:hover svg { stroke: #ffffff; }
 </style>
+

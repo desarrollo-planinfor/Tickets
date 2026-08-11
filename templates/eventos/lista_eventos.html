@@ -1,3 +1,4 @@
+<div class="table-responsive">
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -42,9 +43,10 @@
         {% include 'eventos/sub_nav.html' %}
         <div class="page-header">
             <h1 class="page-title">Eventos</h1>
-            <a href="{{ url_for('eventos_nuevo') }}" class="btn btn-primary">Nuevo Evento</a>
+            <a href="{{ url_for('eventos_legacy.eventos_nuevo') }}" class="btn btn-primary">Nuevo Evento</a>
         </div>
 
+        <div class="table-responsive">
         <table>
             <thead>
                 <tr>
@@ -71,6 +73,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
     </div>
 </body>
 </html>

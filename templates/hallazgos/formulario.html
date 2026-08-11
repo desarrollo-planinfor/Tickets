@@ -172,7 +172,7 @@
                         
                         <div class="form-group">
                             <label class="form-label">Responsable <span class="required">*</span></label>
-                            <select name="responsable_id" class="form-select" required>
+                            <select name="responsable_id" class="form-select" required onchange="autoSelectAreaFromResponsable(this)">
                                 <option value="">Seleccionar...</option>
                                 {% for u in usuarios %}
                                 <option value="{{ u.id }}" {% if evento and evento.responsable_id == u.id %}selected{% endif %}>{{ u.nombre }}</option>
@@ -537,19 +537,41 @@
             }
         }
 
+        let _syncingAreaResponsable = false;
+
         function autoSelectResponsable(selectElement) {
+            if (_syncingAreaResponsable) return;
+            _syncingAreaResponsable = true;
             const selectedOption = selectElement.options[selectElement.selectedIndex];
             const jefeId = selectedOption.getAttribute('data-jefe-id');
             const responsableSelect = document.getElementsByName('responsable_id')[0];
-            
+
             if (jefeId && responsableSelect) {
                 responsableSelect.value = jefeId;
-            } else if (responsableSelect) {
+            } else if (responsableSelect && !selectElement.value) {
                 responsableSelect.value = '';
             }
-            if (responsableSelect) {
-                responsableSelect.dispatchEvent(new Event('change'));
+            _syncingAreaResponsable = false;
+            if (typeof checkRecurrence === 'function') checkRecurrence();
+        }
+
+        function autoSelectAreaFromResponsable(selectElement) {
+            if (_syncingAreaResponsable) return;
+            _syncingAreaResponsable = true;
+            const responsableId = selectElement.value;
+            const areaSelect = document.getElementsByName('area_id')[0];
+
+            if (areaSelect && responsableId) {
+                for (let i = 0; i < areaSelect.options.length; i++) {
+                    const opt = areaSelect.options[i];
+                    if (opt.getAttribute('data-jefe-id') === responsableId) {
+                        areaSelect.value = opt.value;
+                        if (typeof checkRecurrence === 'function') checkRecurrence();
+                        break;
+                    }
+                }
             }
+            _syncingAreaResponsable = false;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -576,6 +598,14 @@
 
             // Realizar validación inicial de los requisitos de firma de cierre
             checkRequirementsForClosure();
+
+            {% if not evento %}
+            const areaSelInit = document.getElementsByName('area_id')[0];
+            const respSelInit = document.getElementsByName('responsable_id')[0];
+            if (areaSelInit?.value && respSelInit && !respSelInit.value) {
+                autoSelectResponsable(areaSelInit);
+            }
+            {% endif %}
 
             // Agregar listeners para validar la firma de cierre cuando cambien los inputs requeridos
             const formElements = [

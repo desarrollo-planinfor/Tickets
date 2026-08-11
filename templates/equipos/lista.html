@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='P.ico') }}">
@@ -27,11 +27,11 @@
         <div class="page-header">
             <h1 class="page-title">Inventario de Equipos y Mantenciones</h1>
             <div style="display: flex; gap: 10px;">
-                <a href="{{ url_for('exportar_inventario') }}" class="btn" style="background: #10b981; color: #111827;">
+                <a href="{{ url_for('equipos.exportar_inventario') }}" class="btn" style="background: #10b981; color: #111827;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     Exportar
                 </a>
-                <a href="{{ url_for('nuevo_equipo') }}" class="btn btn-primary">
+                <a href="{{ url_for('equipos.nuevo_equipo') }}" class="btn btn-primary">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     Nuevo Equipo
                 </a>
@@ -80,14 +80,14 @@
 
         <!-- Tabs -->
         <div style="display: flex; gap: 10px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 0;">
-            <a href="{{ url_for('lista_equipos', tab='programados') }}" 
+            <a href="{{ url_for('equipos.lista_equipos', tab='programados') }}" 
                style="padding: 12px 24px; text-decoration: none; font-weight: 600; font-size: 0.95rem; 
                       color: {% if current_tab != 'por_uso' %}var(--text-main){% else %}var(--text-muted){% endif %}; 
                       border-bottom: 3px solid {% if current_tab != 'por_uso' %}var(--accent){% else %}transparent{% endif %}; 
                       transition: all 0.2s;">
                 Mantenimiento Regular
             </a>
-            <a href="{{ url_for('lista_equipos', tab='por_uso') }}" 
+            <a href="{{ url_for('equipos.lista_equipos', tab='por_uso') }}" 
                style="padding: 12px 24px; text-decoration: none; font-weight: 600; font-size: 0.95rem; 
                       color: {% if current_tab == 'por_uso' %}var(--text-main){% else %}var(--text-muted){% endif %}; 
                       border-bottom: 3px solid {% if current_tab == 'por_uso' %}var(--accent){% else %}transparent{% endif %}; 
@@ -97,7 +97,7 @@
         </div>
 
         <div class="filters-card">
-            <form method="GET" action="{{ url_for('lista_equipos') }}" class="filters-form">
+            <form method="GET" action="{{ url_for('equipos.lista_equipos') }}" class="filters-form">
                 <input type="hidden" name="tab" value="{{ current_tab }}">
                 <div class="form-group">
                     <label class="form-label">Buscar (Código, Nombre)</label>
@@ -133,7 +133,7 @@
                 <div class="form-group" style="display: flex; flex-direction: column; gap: 10px; justify-content: flex-end;">
                     <div style="display: grid; grid-template-columns: 1fr 42px; gap: 10px;">
                         <button type="submit" class="btn btn-primary" style="height: 42px; width: 100%;">Filtrar</button>
-                        <a href="{{ url_for('lista_equipos') }}" class="btn btn-secondary" style="height: 42px; padding: 0; display: flex; justify-content: center;" title="Limpiar Filtros">
+                        <a href="{{ url_for('equipos.lista_equipos') }}" class="btn btn-secondary" style="height: 42px; padding: 0; display: flex; justify-content: center;" title="Limpiar Filtros">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><polyline points="21 3 21 8 16 8"></polyline></svg>
                         </a>
                     </div>
@@ -141,7 +141,7 @@
             </form>
         </div>
 
-        <form id="mass-download-form" action="{{ url_for('descargar_fichas_masivo') }}" method="POST">
+        <form id="mass-download-form" action="{{ url_for('equipos.descargar_fichas_masivo') }}" method="POST">
             <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
                 <div style="font-size: 0.9rem; color: var(--text-muted);">
                     Mostrando <strong style="color: white;">{{ equipos_paginados.items|length }}</strong> equipos en esta página
@@ -151,12 +151,14 @@
                     Descargar Seleccionados
                 </button>
             </div>
+        </form>
             
             <div class="table-container">
+            <div class="table-responsive">
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all" onclick="toggleAll(this)"></th>
+                        <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all" form="mass-download-form" onclick="toggleAll(this)"></th>
                         <th>Código</th>
                         <th>Nombre</th>
                         <th>Marca/Modelo</th>
@@ -173,7 +175,7 @@
                     {% for equipo in equipos_paginados.items %}
                     <tr>
                         <td>
-                            <input type="checkbox" name="equipo_ids" value="{{ equipo.id }}" class="equipo-checkbox" onclick="updateMassDownloadBtn()">
+                            <input type="checkbox" name="equipo_ids" value="{{ equipo.id }}" form="mass-download-form" class="equipo-checkbox" onclick="updateMassDownloadBtn()">
                         </td>
                         <td><strong>{{ equipo.codigo or 'S/N' }}</strong></td>
                         <td>{{ equipo.nombre or '-' }}</td>
@@ -210,23 +212,23 @@
                         </td>
                         <td>
                             <div class="actions-cell">
-                                <a href="{{ url_for('descargar_ficha_pdf', id=equipo.id) }}" class="action-icon" title="Descargar PDF" target="_blank">
+                                <a href="{{ url_for('equipos.descargar_ficha_pdf', id=equipo.id) }}" class="action-icon" aria-label="Acción" title="Descargar PDF" target="_blank">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 18 15 15"></polyline></svg>
                                 </a>
-                                <a href="{{ url_for('historial_equipo', id=equipo.id) }}" class="action-icon" title="Historial">
+                                <a href="{{ url_for('equipos.historial_equipo', id=equipo.id) }}" class="action-icon" aria-label="Acción" title="Historial">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                 </a>
-                                <a class="btn-icon-premium" href="{{ url_for('editar_equipo', id=equipo.id) }}" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></a>
+                                <a class="btn-icon-premium" href="{{ url_for('equipos.editar_equipo', id=equipo.id) }}" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></a>
                                 {% if equipo.estado == 'Inactivo' %}
-                                <form method="POST" action="{{ url_for('activar_equipo', id=equipo.id) }}" style="display:inline;" onsubmit="return confirm('¿Está seguro de activar este equipo?');">
-                                    <button type="submit" style="background:none; border:none; padding:0; cursor:pointer;" class="action-icon" title="Activar">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <form method="POST" action="{{ url_for('equipos.activar_equipo', id=equipo.id) }}" style="display:inline;" onsubmit="return confirmAction(event, 'El equipo <strong>{{ (equipo.codigo or 'S/N')|e }}</strong>{% if equipo.nombre %} — {{ equipo.nombre|e }}{% endif %} volverá a estado <strong>Operativo</strong> y se incluirá nuevamente en el inventario activo.', '¿Activar equipo?', 'success');">
+                                    <button type="submit" class="btn-icon-premium success" title="Activar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                     </button>
                                 </form>
                                 {% else %}
-                                <form method="POST" action="{{ url_for('inactivar_equipo', id=equipo.id) }}" style="display:inline;" onsubmit="return confirm('¿Está seguro de marcar como inactivo este equipo?');">
-                                    <button type="submit" style="background:none; border:none; padding:0; cursor:pointer;" class="action-icon" title="Inactivar">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg>
+                                <form method="POST" action="{{ url_for('equipos.inactivar_equipo', id=equipo.id) }}" style="display:inline;" onsubmit="return confirmAction(event, 'El equipo <strong>{{ (equipo.codigo or 'S/N')|e }}</strong>{% if equipo.nombre %} — {{ equipo.nombre|e }}{% endif %} pasará a estado <strong>Inactivo</strong>.<br><br>No se eliminará del inventario, pero dejará de contarse como operativo.', '¿Inactivar equipo?', 'danger');">
+                                    <button type="submit" class="btn-icon-premium danger" title="Inactivar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
                                     </button>
                                 </form>
                                 {% endif %}
@@ -240,14 +242,14 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         </div>
-        </form>
 
         <!-- Paginación -->
         {% if equipos_paginados.pages > 1 %}
         <div class="pagination">
             {% if equipos_paginados.has_prev %}
-                <a href="{{ url_for('lista_equipos', page=equipos_paginados.prev_num, q=search_query, area=area_filter, responsable=responsable_filter, marca=marca_filter, tab=current_tab) }}" class="page-item">&laquo;</a>
+                <a href="{{ url_for('equipos.lista_equipos', page=equipos_paginados.prev_num, q=search_query, area=area_filter, responsable=responsable_filter, marca=marca_filter, tab=current_tab) }}" class="page-item">&laquo;</a>
             {% else %}
                 <span class="page-item disabled">&laquo;</span>
             {% endif %}
@@ -257,7 +259,7 @@
                     {% if equipos_paginados.page == page_num %}
                         <span class="page-item active">{{ page_num }}</span>
                     {% else %}
-                        <a href="{{ url_for('lista_equipos', page=page_num, q=search_query, area=area_filter, responsable=responsable_filter, marca=marca_filter, tab=current_tab) }}" class="page-item">{{ page_num }}</a>
+                        <a href="{{ url_for('equipos.lista_equipos', page=page_num, q=search_query, area=area_filter, responsable=responsable_filter, marca=marca_filter, tab=current_tab) }}" class="page-item">{{ page_num }}</a>
                     {% endif %}
                 {% else %}
                     <span class="page-item disabled" style="background:transparent; border:none; padding: 0 5px;">...</span>
@@ -265,7 +267,7 @@
             {% endfor %}
             
             {% if equipos_paginados.has_next %}
-                <a href="{{ url_for('lista_equipos', page=equipos_paginados.next_num, q=search_query, area=area_filter, responsable=responsable_filter, marca=marca_filter, tab=current_tab) }}" class="page-item">&raquo;</a>
+                <a href="{{ url_for('equipos.lista_equipos', page=equipos_paginados.next_num, q=search_query, area=area_filter, responsable=responsable_filter, marca=marca_filter, tab=current_tab) }}" class="page-item">&raquo;</a>
             {% else %}
                 <span class="page-item disabled">&raquo;</span>
             {% endif %}
@@ -346,3 +348,4 @@
     </script>
 </body>
 </html>
+

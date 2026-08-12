@@ -1,14 +1,13 @@
-<div class="table-responsive">
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='P.ico') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HUB Planinfor</title>
+    <title>Gestión de Licencias — HUB Planinfor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
         /* ===== Page Header ===== */
         /* ===== Botones ===== */
@@ -32,10 +31,10 @@
         @media (max-width: 900px) { .dashboard-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 500px) { .dashboard-grid { grid-template-columns: 1fr; } }
         /* ===== Tabs ===== */
-        .tabs-bar { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
-        .tab-link { padding: 12px 24px; text-decoration: none; font-weight: 600; font-size: 0.95rem; color: var(--text-muted); border-bottom: 3px solid transparent; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .tabs-bar { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--border); position: relative; }
+        .tab-link { padding: 12px 24px; text-decoration: none; font-weight: 600; font-size: 0.95rem; color: var(--text-muted); border-bottom: 3px solid transparent; transition: color 160ms ease; display: inline-flex; align-items: center; gap: 8px; position: relative; }
         .tab-link:hover { color: var(--text-main); }
-        .tab-link.active { color: var(--text-main); border-bottom-color: var(--accent); }
+        .tab-link.active { color: var(--text-main); border-bottom-color: transparent; }
         .tab-link svg { flex-shrink: 0; opacity: 0.85; }
         .tab-link.active svg { color: var(--accent); opacity: 1; }
         .tab-count { background: #374151; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; }
@@ -140,6 +139,54 @@
             .tabs-bar { overflow-x: auto; flex-wrap: nowrap; }
             .filters-card { flex-direction: column; }
         }
+
+        /* === Pilot: ui-ux-pro-max + emil + gsap tokens === */
+        :root {
+            --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+            --lic-accent: #82C341;
+        }
+        .lic-page .page-title {
+            font-family: 'Poppins', 'Outfit', sans-serif;
+            letter-spacing: -0.02em;
+        }
+        .lic-page .dash-number,
+        .lic-page .table-title {
+            font-family: 'Poppins', 'Outfit', sans-serif;
+        }
+        .btn {
+            transition: background-color 180ms var(--ease-out), color 180ms ease, border-color 180ms ease, transform 160ms var(--ease-out) !important;
+        }
+        .btn:active { transform: scale(0.97); }
+        .dash-card {
+            transition: transform 180ms var(--ease-out), box-shadow 180ms ease, border-color 180ms ease !important;
+        }
+        .tab-link {
+            transition: color 160ms ease, border-color 180ms var(--ease-out) !important;
+        }
+        .tab-link.active .tab-count {
+            background: rgba(130, 195, 65, 0.12);
+            border: 1px solid rgba(130, 195, 65, 0.28);
+            color: var(--lic-accent);
+        }
+        .action-btn {
+            transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 140ms var(--ease-out) !important;
+        }
+        .action-btn:hover {
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        .action-btn:active { transform: scale(0.94); }
+        .form-panel-chevron { transition: transform 220ms var(--ease-out) !important; }
+        .form-panel-body { transition: max-height 260ms var(--ease-out) !important; }
+        .form-control { transition: border-color 160ms ease, box-shadow 160ms ease !important; }
+        .progress-fill { transition: width 280ms var(--ease-out) !important; }
+        .lic-page table { min-width: 0 !important; }
+        @media (prefers-reduced-motion: reduce) {
+            .btn, .dash-card, .tab-link, .action-btn, .form-panel-body, .form-panel-chevron, .progress-fill {
+                transition: none !important;
+            }
+            .dash-card:hover, .btn:active, .action-btn:active { transform: none !important; }
+        }
     </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
@@ -147,7 +194,7 @@
 
     {% include 'header_unificado.html' %}
 
-    <div class="container">
+    <div class="container lic-page">
 
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -293,25 +340,28 @@
         </div>
 
         <!-- Tabs -->
-        <div class="tabs-bar">
-            <a href="{{ url_for('infra.licencias', tab='todas') }}" class="tab-link {% if current_tab == 'todas' %}active{% endif %}">
+        <div class="tabs-bar tabs-bar--ink" id="licencias-tabs">
+            <span class="tabs-ink" id="licencias-tabs-ink" aria-hidden="true"></span>
+            <a href="{{ url_for('infra.licencias', tab='todas', q=search_query) }}" class="tab-link {% if current_tab == 'todas' %}active{% endif %}" data-tab="todas" data-lv-ignore>
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 Todas <span class="tab-count">{{ stats.total }}</span>
             </a>
-            <a href="{{ url_for('infra.licencias', tab='ssl') }}" class="tab-link {% if current_tab == 'ssl' %}active{% endif %}">
+            <a href="{{ url_for('infra.licencias', tab='ssl', q=search_query) }}" class="tab-link {% if current_tab == 'ssl' %}active{% endif %}" data-tab="ssl" data-lv-ignore>
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 SSL <span class="tab-count">{{ stats.total_ssl }}</span>
             </a>
-            <a href="{{ url_for('infra.licencias', tab='software') }}" class="tab-link {% if current_tab == 'software' %}active{% endif %}">
+            <a href="{{ url_for('infra.licencias', tab='software', q=search_query) }}" class="tab-link {% if current_tab == 'software' %}active{% endif %}" data-tab="software" data-lv-ignore>
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
                 Software <span class="tab-count">{{ stats.total_software }}</span>
             </a>
-            <a href="{{ url_for('infra.licencias', tab='saas') }}" class="tab-link {% if current_tab == 'saas' %}active{% endif %}">
+            <a href="{{ url_for('infra.licencias', tab='saas', q=search_query) }}" class="tab-link {% if current_tab == 'saas' %}active{% endif %}" data-tab="saas" data-lv-ignore>
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
                 SaaS <span class="tab-count">{{ stats.total_saas }}</span>
             </a>
         </div>
 
+        <!-- Search Bar + Table (swap instantáneo al cambiar tab) -->
+        <div id="licencias-results">
         <!-- Search Bar -->
         <div class="filters-card">
             <form method="GET" action="{{ url_for('infra.licencias') }}" style="display: flex; gap: 15px; align-items: end; flex: 1; flex-wrap: wrap;">
@@ -342,7 +392,7 @@
                 </div>
             </div>
             <div class="table-scroll">
-                <div class="table-responsive">
+                <div class="table-responsive table-swap">
                 <table>
                     <thead>
                         <tr>
@@ -529,6 +579,7 @@
                 </div>
             </div>
         </div>
+        </div><!-- /#licencias-results -->
 
     </div>
 
@@ -724,6 +775,85 @@
                 closeWarningModal();
             }
         });
+    </script>
+
+    <script>
+        (function softLicenciasTabs() {
+            var busy = false;
+
+            function setActiveTab(tabName) {
+                var activeEl = null;
+                var bar = document.getElementById('licencias-tabs');
+                document.querySelectorAll('#licencias-tabs .tab-link').forEach(function (tab) {
+                    var on = tab.getAttribute('data-tab') === tabName;
+                    tab.classList.toggle('active', on);
+                    if (on) activeEl = tab;
+                });
+                var hidden = document.querySelector('#licencias-results input[name="tab"]');
+                if (hidden) hidden.value = tabName;
+                if (window.moveTabsInk) window.moveTabsInk(bar, activeEl, true);
+            }
+
+            async function loadResults(url, push) {
+                if (busy) return;
+                busy = true;
+                var panel = document.getElementById('licencias-results');
+                try {
+                    var res = await fetch(url, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        credentials: 'same-origin'
+                    });
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    var html = await res.text();
+                    var doc = new DOMParser().parseFromString(html, 'text/html');
+                    var next = doc.getElementById('licencias-results');
+                    if (!panel || !next) {
+                        window.location.href = url;
+                        return;
+                    }
+                    panel.replaceWith(next);
+                    var tabParam = new URL(url, location.href).searchParams.get('tab') || 'todas';
+                    setActiveTab(tabParam);
+                    if (push) history.pushState({ licSoft: true }, '', url);
+                } catch (err) {
+                    window.location.href = url;
+                } finally {
+                    busy = false;
+                }
+            }
+
+            document.addEventListener('click', function (e) {
+                var tab = e.target.closest && e.target.closest('#licencias-tabs .tab-link');
+                if (!tab) return;
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                e.stopPropagation();
+                if (tab.classList.contains('active') && tab.href === location.href) return;
+                setActiveTab(tab.getAttribute('data-tab'));
+                loadResults(tab.href, true);
+            }, true);
+
+            window.addEventListener('popstate', function () {
+                if (!document.getElementById('licencias-results')) return;
+                loadResults(location.href, false);
+            });
+
+            function initInk() {
+                var bar = document.getElementById('licencias-tabs');
+                var active = document.querySelector('#licencias-tabs .tab-link.active');
+                if (window.moveTabsInk) window.moveTabsInk(bar, active, false);
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initInk);
+            } else {
+                initInk();
+            }
+            window.addEventListener('resize', function () {
+                var bar = document.getElementById('licencias-tabs');
+                var active = document.querySelector('#licencias-tabs .tab-link.active');
+                if (window.moveTabsInk) window.moveTabsInk(bar, active, false);
+            });
+        })();
     </script>
 
 </body>

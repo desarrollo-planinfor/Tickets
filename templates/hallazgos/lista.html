@@ -1,4 +1,3 @@
-<div class="table-responsive">
 <!DOCTYPE html>
 <html lang="es">
 
@@ -9,7 +8,7 @@
     <title>Lista de Eventos - HUB Planinfor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
@@ -25,6 +24,7 @@
         }
 
         .page-title {
+            font-family: 'Poppins', 'Outfit', sans-serif;
             font-size: 1.5rem;
             font-weight: 600;
             color: #f9fafb;
@@ -32,6 +32,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            letter-spacing: -0.02em;
         }
 
         .btn-primary {
@@ -42,12 +43,13 @@
             text-decoration: none;
             font-weight: 600;
             font-size: 0.9rem;
-            transition: 0.2s;
+            transition: background-color 180ms cubic-bezier(0.23, 1, 0.32, 1), transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
         }
 
         .btn-primary:hover {
             background: #90d648;
         }
+        .btn-primary:active { transform: scale(0.97); }
 
         .card {
             background: #1f2937;
@@ -210,6 +212,8 @@
     {% set vista = 'hallazgos' %}
     {% include 'header_unificado.html' %}
 
+<div id="hallazgos-soft-root">
+
     <div class="container">
         {% set sub_vista = 'lista' %}
         {% include 'hallazgos/sub_nav.html' %}
@@ -218,19 +222,20 @@
             Lista de Eventos
         </div>
 
+        <div id="hallazgos-results">
         <div class="summary-sticky-bar">
             <div class="summary-box">
                 <div class="summary-stats">
                     <span class="summary-title">Resumen de Eventos:</span>
-                    <a href="{{ url_for('hallazgos.lista', filtro='Abiertos') }}" class="summary-stat-item" style="text-decoration:none;">Abiertos: <span class="summary-stat-badge abiertos">{{ abiertos }}</span></a>
+                    <a href="{{ url_for('hallazgos.lista', filtro='Abiertos') }}" class="summary-stat-item" data-filtro="Abiertos" data-lv-ignore style="text-decoration:none;">Abiertos: <span class="summary-stat-badge abiertos">{{ abiertos }}</span></a>
                     <span class="summary-divider">|</span>
-                    <a href="{{ url_for('hallazgos.lista', filtro='En Proceso') }}" class="summary-stat-item" style="text-decoration:none;">En Proceso: <span class="summary-stat-badge proceso">{{ en_proceso }}</span></a>
+                    <a href="{{ url_for('hallazgos.lista', filtro='En Proceso') }}" class="summary-stat-item" data-filtro="En Proceso" data-lv-ignore style="text-decoration:none;">En Proceso: <span class="summary-stat-badge proceso">{{ en_proceso }}</span></a>
                     <span class="summary-divider">|</span>
-                    <a href="{{ url_for('hallazgos.lista', filtro='Cerrados') }}" class="summary-stat-item" style="text-decoration:none;">Cerrados: <span class="summary-stat-badge cerrados">{{ cerrados }}</span></a>
+                    <a href="{{ url_for('hallazgos.lista', filtro='Cerrados') }}" class="summary-stat-item" data-filtro="Cerrados" data-lv-ignore style="text-decoration:none;">Cerrados: <span class="summary-stat-badge cerrados">{{ cerrados }}</span></a>
                 </div>
                 <div style="display: flex; gap: 10px;">
                     {% if request.args.get('filtro') %}
-                    <a href="{{ url_for('hallazgos.lista') }}" class="btn-primary" style="background: #374151; color: #f3f4f6;">Quitar Filtro</a>
+                    <a href="{{ url_for('hallazgos.lista') }}" class="btn-primary hallazgos-clear-filter" data-lv-ignore style="background: #374151; color: #f3f4f6;">Quitar Filtro</a>
                     {% endif %}
                     <a href="{{ url_for('hallazgos.nuevo') }}" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -241,7 +246,7 @@
         </div>
 
         <div class="card">
-            <div class="table-responsive">
+            <div class="table-responsive table-swap">
             <table>
                 <thead>
                     <tr>
@@ -327,40 +332,76 @@
             </table>
             </div>
         </div>
+        </div><!-- /#hallazgos-results -->
     </div>
     <script>
-        // Observador para activar la animación de "flotación" cuando la barra se pega arriba
-        document.addEventListener("DOMContentLoaded", function() {
-            const stickyEl = document.querySelector('.summary-sticky-bar');
-            const summaryBox = document.querySelector('.summary-box');
-            
-            // Creamos un observer que se dispara cuando la barra toca el borde top: 100px
-            const observer = new IntersectionObserver(
-                ([e]) => {
-                    // Si intersectionRatio es menor a 1, significa que empezó a esconderse (es decir, chocó y se pegó)
-                    summaryBox.classList.toggle('is-stuck', e.intersectionRatio < 1);
-                },
-                { threshold: [1], rootMargin: "-101px 0px 0px 0px" }
-            );
-            
-            if (stickyEl) {
+        function bindHallazgosSticky() {
+            const stickyEl = document.querySelector('#hallazgos-results .summary-sticky-bar');
+            const summaryBox = document.querySelector('#hallazgos-results .summary-box');
+            if (stickyEl && summaryBox) {
+                const observer = new IntersectionObserver(
+                    ([e]) => summaryBox.classList.toggle('is-stuck', e.intersectionRatio < 1),
+                    { threshold: [1], rootMargin: "-101px 0px 0px 0px" }
+                );
                 observer.observe(stickyEl);
             }
-            
-            // Observer para los encabezados de la tabla (thead)
-            const theadEl = document.querySelector('thead');
-            const theadObserver = new IntersectionObserver(
-                ([e]) => {
-                    theadEl.classList.toggle('is-stuck', e.intersectionRatio < 1);
-                },
-                { threshold: [1], rootMargin: "-176px 0px 0px 0px" } // Top 175px
-            );
-            
+            const theadEl = document.querySelector('#hallazgos-results thead');
             if (theadEl) {
+                const theadObserver = new IntersectionObserver(
+                    ([e]) => theadEl.classList.toggle('is-stuck', e.intersectionRatio < 1),
+                    { threshold: [1], rootMargin: "-176px 0px 0px 0px" }
+                );
                 theadObserver.observe(theadEl);
             }
-        });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener("DOMContentLoaded", bindHallazgosSticky);
+        } else {
+            bindHallazgosSticky();
+        }
+
+        (function softHallazgosFiltros() {
+            if (window.__softHallazgosFiltrosBound) return;
+            window.__softHallazgosFiltrosBound = true;
+            var busy = false;
+            async function loadResults(url, push) {
+                if (busy) return;
+                busy = true;
+                var panel = document.getElementById('hallazgos-results');
+                try {
+                    var res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    var html = await res.text();
+                    var doc = new DOMParser().parseFromString(html, 'text/html');
+                    var next = doc.getElementById('hallazgos-results');
+                    if (!panel || !next) { window.location.href = url; return; }
+                    panel.replaceWith(next);
+                    if (push) history.pushState({ hallazgosSoft: true }, '', url);
+                    if (typeof bindHallazgosSticky === 'function') bindHallazgosSticky();
+                } catch (e) {
+                    window.location.href = url;
+                } finally {
+                    busy = false;
+                }
+            }
+            document.addEventListener('click', function (e) {
+                var a = e.target.closest && e.target.closest('#hallazgos-results .summary-stat-item, #hallazgos-results .hallazgos-clear-filter');
+                if (!a) return;
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                e.stopPropagation();
+                if (a.href === location.href) return;
+                loadResults(a.href, true);
+            }, true);
+            window.addEventListener('popstate', function () {
+                if (!document.getElementById('hallazgos-results')) return;
+                if (history.state && history.state.softPage) return;
+                loadResults(location.href, false);
+            });
+        })();
     </script>
+</div><!-- /#hallazgos-soft-root -->
 </body>
 
 </html>

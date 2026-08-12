@@ -7,7 +7,7 @@
     <title>HUB Planinfor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
@@ -78,23 +78,41 @@
             </div>
         </div>
 
-        <!-- Tabs -->
-        <div style="display: flex; gap: 10px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 0;">
-            <a href="{{ url_for('equipos.lista_equipos', tab='programados') }}" 
-               style="padding: 12px 24px; text-decoration: none; font-weight: 600; font-size: 0.95rem; 
-                      color: {% if current_tab != 'por_uso' %}var(--text-main){% else %}var(--text-muted){% endif %}; 
-                      border-bottom: 3px solid {% if current_tab != 'por_uso' %}var(--accent){% else %}transparent{% endif %}; 
-                      transition: all 0.2s;">
+        <!-- Tabs (opción 4: underline animado + tabla instantánea) -->
+        <div class="equipos-tabs" id="equipos-tabs">
+            <span class="tabs-ink" id="equipos-tabs-ink" aria-hidden="true"></span>
+            <a href="{{ url_for('equipos.lista_equipos', tab='programados', q=search_query, area=area_filter, responsable=responsable_filter, marca=marca_filter) }}"
+               class="equipos-tab {% if current_tab != 'por_uso' %}active{% endif %}"
+               data-tab="programados"
+               data-lv-ignore>
                 Mantenimiento Regular
             </a>
-            <a href="{{ url_for('equipos.lista_equipos', tab='por_uso') }}" 
-               style="padding: 12px 24px; text-decoration: none; font-weight: 600; font-size: 0.95rem; 
-                      color: {% if current_tab == 'por_uso' %}var(--text-main){% else %}var(--text-muted){% endif %}; 
-                      border-bottom: 3px solid {% if current_tab == 'por_uso' %}var(--accent){% else %}transparent{% endif %}; 
-                      transition: all 0.2s;">
+            <a href="{{ url_for('equipos.lista_equipos', tab='por_uso', q=search_query, area=area_filter, responsable=responsable_filter, marca=marca_filter) }}"
+               class="equipos-tab {% if current_tab == 'por_uso' %}active{% endif %}"
+               data-tab="por_uso"
+               data-lv-ignore>
                 Ajustes por Uso
             </a>
         </div>
+        <style>
+            .equipos-tabs {
+                display: flex;
+                gap: 0;
+                margin-bottom: 24px;
+                border-bottom: 1px solid var(--border);
+            }
+            .equipos-tab {
+                padding: 12px 24px;
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 0.95rem;
+                color: var(--text-muted);
+                border-bottom: 3px solid transparent;
+                transition: color 160ms ease;
+            }
+            .equipos-tab:hover { color: var(--text-main); }
+            .equipos-tab.active { color: var(--text-main); }
+        </style>
 
         <div class="filters-card">
             <form method="GET" action="{{ url_for('equipos.lista_equipos') }}" class="filters-form">
@@ -141,6 +159,7 @@
             </form>
         </div>
 
+        <div id="equipos-results">
         <form id="mass-download-form" action="{{ url_for('equipos.descargar_fichas_masivo') }}" method="POST">
             <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
                 <div style="font-size: 0.9rem; color: var(--text-muted);">
@@ -152,9 +171,9 @@
                 </button>
             </div>
         </form>
-            
+
             <div class="table-container">
-            <div class="table-responsive">
+            <div class="table-responsive table-swap">
             <table>
                 <thead>
                     <tr>
@@ -273,6 +292,7 @@
             {% endif %}
         </div>
         {% endif %}
+        </div><!-- /#equipos-results -->
     </div>
     
     <script>
@@ -287,6 +307,7 @@
         function updateMassDownloadBtn() {
             var checkboxes = document.querySelectorAll('.equipo-checkbox:checked');
             var btn = document.getElementById('btn-descargar-masivo');
+            if (!btn) return;
             if (checkboxes.length > 0) {
                 btn.style.display = 'inline-flex';
                 btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Descargar ${checkboxes.length} en ZIP`;
@@ -294,13 +315,86 @@
                 btn.style.display = 'none';
             }
             
-            // Update select-all checkbox state based on individual checkboxes
             var allCheckboxes = document.querySelectorAll('.equipo-checkbox');
             var selectAllCheckbox = document.getElementById('select-all');
-            if (allCheckboxes.length > 0) {
+            if (selectAllCheckbox && allCheckboxes.length > 0) {
                 selectAllCheckbox.checked = checkboxes.length === allCheckboxes.length;
             }
         }
+
+        (function softEquiposTabs() {
+            var busy = false;
+
+            function setActiveTab(tabName) {
+                var activeEl = null;
+                var bar = document.getElementById('equipos-tabs');
+                document.querySelectorAll('#equipos-tabs .equipos-tab').forEach(function (tab) {
+                    var on = tab.getAttribute('data-tab') === tabName;
+                    tab.classList.toggle('active', on);
+                    if (on) activeEl = tab;
+                });
+                var hidden = document.querySelector('.filters-form input[name="tab"]');
+                if (hidden) hidden.value = tabName;
+                if (window.moveTabsInk) window.moveTabsInk(bar, activeEl, true);
+            }
+
+            async function loadResults(url, push) {
+                if (busy) return;
+                busy = true;
+                var panel = document.getElementById('equipos-results');
+                try {
+                    var res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    var html = await res.text();
+                    var doc = new DOMParser().parseFromString(html, 'text/html');
+                    var next = doc.getElementById('equipos-results');
+                    if (!panel || !next) {
+                        window.location.href = url;
+                        return;
+                    }
+                    panel.replaceWith(next);
+                    var tabParam = new URL(url, location.href).searchParams.get('tab') || 'programados';
+                    setActiveTab(tabParam);
+                    if (push) history.pushState({ equiposSoft: true }, '', url);
+                } catch (err) {
+                    window.location.href = url;
+                } finally {
+                    busy = false;
+                }
+            }
+
+            document.addEventListener('click', function (e) {
+                var tab = e.target.closest && e.target.closest('.equipos-tab');
+                if (!tab) return;
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                e.stopPropagation();
+                if (tab.classList.contains('active') && tab.href === location.href) return;
+                setActiveTab(tab.getAttribute('data-tab'));
+                loadResults(tab.href, true);
+            }, true);
+
+            window.addEventListener('popstate', function () {
+                if (!document.getElementById('equipos-results')) return;
+                loadResults(location.href, false);
+            });
+
+            function initInk() {
+                var bar = document.getElementById('equipos-tabs');
+                var active = document.querySelector('#equipos-tabs .equipos-tab.active');
+                if (window.moveTabsInk) window.moveTabsInk(bar, active, false);
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initInk);
+            } else {
+                initInk();
+            }
+            window.addEventListener('resize', function () {
+                var bar = document.getElementById('equipos-tabs');
+                var active = document.querySelector('#equipos-tabs .equipos-tab.active');
+                if (window.moveTabsInk) window.moveTabsInk(bar, active, false);
+            });
+        })();
     </script>
 
     {% if equipos_alerta_7_dias %}

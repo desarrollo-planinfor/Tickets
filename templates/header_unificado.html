@@ -2,6 +2,7 @@
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% include 'partials/list_view_head.html' %}
 <script>
     function _swalCleanup() {
         document.body.style.paddingRight = '';
@@ -779,4 +780,5 @@
 }
 .btn-icon-premium.success:hover svg { stroke: #ffffff; }
 </style>
+{% include 'partials/list_view_scripts.html' %}
 

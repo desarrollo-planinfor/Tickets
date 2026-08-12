@@ -7,7 +7,7 @@
     <title>Editar Acción Correctiva - HUB Planinfor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; font-family: 'Outfit', sans-serif; background: #111827; color: #f3f4f6; }
         .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
@@ -66,8 +66,9 @@
             <div class="tabs">
                 <button type="button" class="tab-btn active" onclick="switchTab('info')">Información General</button>
                 <button type="button" class="tab-btn" onclick="switchTab('acr')">Análisis de Causa (ACR)</button>
-                <button type="button" class="tab-btn" onclick="switchTab('verificacion')">Verificación y Eficacia</button>
                 <button type="button" class="tab-btn" onclick="switchTab('evidencias')">Evidencias</button>
+                <button type="button" class="tab-btn" onclick="switchTab('verificacion')">Verificación y Eficacia</button>
+                <button type="button" class="tab-btn" onclick="switchTab('historial')">Historial</button>
             </div>
 
             {% if ac and ac.estado == 'Cerrado' %}
@@ -191,59 +192,119 @@
                         <h4 style="color:#d1d5db; margin-bottom:15px;">Técnica de los 5 Porqués</h4>
                         <div style="display:grid; grid-template-columns:1fr; gap:10px;">
                             {% set datos = it.datos_acr if it and it.datos_acr else {} %}
-                            <input type="text" class="form-input" name="acr_p1" placeholder="1. ¿Por qué sucedió?" value="{{ datos.get('p1', '') }}">
-                            <input type="text" class="form-input" name="acr_p2" placeholder="2. ¿Por qué (respuesta anterior)?" value="{{ datos.get('p2', '') }}">
-                            <input type="text" class="form-input" name="acr_p3" placeholder="3. ¿Por qué (respuesta anterior)?" value="{{ datos.get('p3', '') }}">
-                            <input type="text" class="form-input" name="acr_p4" placeholder="4. ¿Por qué (respuesta anterior)?" value="{{ datos.get('p4', '') }}">
-                            <input type="text" class="form-input" name="acr_p5" placeholder="5. ¿Por qué (respuesta anterior)? (Causa Raíz)" value="{{ datos.get('p5', '') }}">
+                            <textarea class="form-textarea" style="min-height: 50px; padding: 10px 15px;" name="acr_p1" placeholder="1. ¿Por qué sucedió?">{{ datos.get('p1', '') }}</textarea>
+                            <textarea class="form-textarea" style="min-height: 50px; padding: 10px 15px;" name="acr_p2" placeholder="2. ¿Por qué (respuesta anterior)?">{{ datos.get('p2', '') }}</textarea>
+                            <textarea class="form-textarea" style="min-height: 50px; padding: 10px 15px;" name="acr_p3" placeholder="3. ¿Por qué (respuesta anterior)?">{{ datos.get('p3', '') }}</textarea>
+                            <textarea class="form-textarea" style="min-height: 50px; padding: 10px 15px;" name="acr_p4" placeholder="4. ¿Por qué (respuesta anterior)?">{{ datos.get('p4', '') }}</textarea>
+                            <textarea class="form-textarea" style="min-height: 50px; padding: 10px 15px;" name="acr_p5" placeholder="5. ¿Por qué (respuesta anterior)? (Causa Raíz)">{{ datos.get('p5', '') }}</textarea>
                         </div>
                     </div>
 
                     <div id="metodologia_ishikawa" style="display: {% if it and it.metodologia == 'Ishikawa' %}block{% else %}none{% endif %}; margin-top: 20px;">
                         <h4 style="color:#d1d5db; margin-bottom:15px;">Diagrama de Ishikawa (Espina de Pescado)</h4>
+                        <script>
+                            function showHelpText(element, titulo) {
+                                let existing = element.querySelector('.custom-tooltip');
+                                if (existing) {
+                                    existing.remove();
+                                    return;
+                                }
+                                document.querySelectorAll('.custom-tooltip').forEach(el => el.remove());
+                                
+                                const text = element.getAttribute('data-help-text');
+                                if (text) {
+                                    const tooltip = document.createElement('div');
+                                    tooltip.className = 'custom-tooltip';
+                                    tooltip.innerHTML = `<div style="color:#60a5fa; margin-bottom:4px; font-weight:600;">${titulo}</div>${text}`;
+                                    tooltip.style.position = 'absolute';
+                                    tooltip.style.bottom = '100%';
+                                    tooltip.style.right = '0';
+                                    tooltip.style.marginBottom = '8px';
+                                    tooltip.style.backgroundColor = '#111827';
+                                    tooltip.style.border = '1px solid #374151';
+                                    tooltip.style.color = '#f3f4f6';
+                                    tooltip.style.padding = '10px 14px';
+                                    tooltip.style.borderRadius = '8px';
+                                    tooltip.style.fontSize = '0.85rem';
+                                    tooltip.style.fontWeight = 'normal';
+                                    tooltip.style.width = 'max-content';
+                                    tooltip.style.maxWidth = '280px';
+                                    tooltip.style.textAlign = 'left';
+                                    tooltip.style.lineHeight = '1.4';
+                                    tooltip.style.zIndex = '100';
+                                    tooltip.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.3)';
+                                    
+                                    // Pequeña flecha apuntando abajo
+                                    const arrow = document.createElement('div');
+                                    arrow.style.position = 'absolute';
+                                    arrow.style.bottom = '-6px';
+                                    arrow.style.right = '4px';
+                                    arrow.style.width = '10px';
+                                    arrow.style.height = '10px';
+                                    arrow.style.backgroundColor = '#111827';
+                                    arrow.style.borderRight = '1px solid #374151';
+                                    arrow.style.borderBottom = '1px solid #374151';
+                                    arrow.style.transform = 'rotate(45deg)';
+                                    tooltip.appendChild(arrow);
+                                    
+                                    element.style.position = 'relative';
+                                    element.appendChild(tooltip);
+                                    
+                                    setTimeout(() => {
+                                        const closeListener = (e) => {
+                                            if (!element.contains(e.target)) {
+                                                if (tooltip.parentNode) tooltip.remove();
+                                                document.removeEventListener('click', closeListener);
+                                            }
+                                        };
+                                        document.addEventListener('click', closeListener);
+                                    }, 50);
+                                }
+                            }
+                        </script>
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                             {% set datos = it.datos_acr if it and it.datos_acr else {} %}
                             <div class="form-group">
                                 <label class="form-label" style="display:flex; align-items:center; justify-content:space-between;">
                                     Máquina / Equipo
-                                    <span title="Fallas en equipos, falta de mantenimiento, tecnología obsoleta." style="cursor:help; color:#9ca3af;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
+                                    <span data-help-text="Fallas en equipos, falta de mantenimiento, tecnología obsoleta." title="Ver detalles" style="cursor:pointer; color:#9ca3af;" onclick="showHelpText(this, 'Máquina / Equipo')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
                                 </label>
-                                <input type="text" class="form-input" name="acr_maquina" placeholder="Causas relacionadas a equipos..." value="{{ datos.get('maquina', '') }}">
+                                <textarea class="form-textarea" style="min-height: 50px; padding: 10px 15px;" name="acr_maquina" placeholder="Causas relacionadas a equipos...">{{ datos.get('maquina', '') }}</textarea>
                             </div>
                             <div class="form-group">
                                 <label class="form-label" style="display:flex; align-items:center; justify-content:space-between;">
                                     Método
-                                    <span title="Procedimientos incorrectos, falta de estandarización, procesos mal diseñados." style="cursor:help; color:#9ca3af;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
+                                    <span data-help-text="Procedimientos incorrectos, falta de estandarización, procesos mal diseñados." title="Ver detalles" style="cursor:pointer; color:#9ca3af;" onclick="showHelpText(this, 'Método')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
                                 </label>
-                                <input type="text" class="form-input" name="acr_metodo" placeholder="Causas relacionadas a procesos/métodos..." value="{{ datos.get('metodo', '') }}">
+                                <textarea class="form-textarea" style="min-height: 50px; padding: 10px 15px;" name="acr_metodo" placeholder="Causas relacionadas a procesos/métodos...">{{ datos.get('metodo', '') }}</textarea>
                             </div>
                             <div class="form-group">
                                 <label class="form-label" style="display:flex; align-items:center; justify-content:space-between;">
                                     Material
-                                    <span title="Insumos defectuosos, falta de stock, especificaciones incorrectas de materia prima." style="cursor:help; color:#9ca3af;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
+                                    <span data-help-text="Insumos defectuosos, falta de stock, especificaciones incorrectas de materia prima." title="Ver detalles" style="cursor:pointer; color:#9ca3af;" onclick="showHelpText(this, 'Material')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
                                 </label>
-                                <input type="text" class="form-input" name="acr_material" placeholder="Causas relacionadas a materiales/insumos..." value="{{ datos.get('material', '') }}">
+                                <textarea class="form-textarea" style="min-height: 50px; padding: 10px 15px;" name="acr_material" placeholder="Causas relacionadas a materiales/insumos...">{{ datos.get('material', '') }}</textarea>
                             </div>
                             <div class="form-group">
                                 <label class="form-label" style="display:flex; align-items:center; justify-content:space-between;">
                                     Mano de Obra
-                                    <span title="Falta de capacitación, fatiga, desmotivación, errores humanos." style="cursor:help; color:#9ca3af;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
+                                    <span data-help-text="Falta de capacitación, fatiga, desmotivación, errores humanos." title="Ver detalles" style="cursor:pointer; color:#9ca3af;" onclick="showHelpText(this, 'Mano de Obra')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
                                 </label>
-                                <input type="text" class="form-input" name="acr_mano_obra" placeholder="Causas relacionadas al personal..." value="{{ datos.get('mano_obra', '') }}">
+                                <textarea class="form-textarea" style="min-height: 50px; padding: 10px 15px;" name="acr_mano_obra" placeholder="Causas relacionadas al personal...">{{ datos.get('mano_obra', '') }}</textarea>
                             </div>
                             <div class="form-group">
                                 <label class="form-label" style="display:flex; align-items:center; justify-content:space-between;">
                                     Medio Ambiente
-                                    <span title="Condiciones del entorno: clima, iluminación, ruido, temperatura." style="cursor:help; color:#9ca3af;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
+                                    <span data-help-text="Condiciones del entorno: clima, iluminación, ruido, temperatura." title="Ver detalles" style="cursor:pointer; color:#9ca3af;" onclick="showHelpText(this, 'Medio Ambiente')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
                                 </label>
-                                <input type="text" class="form-input" name="acr_medio_ambiente" placeholder="Causas relacionadas al entorno..." value="{{ datos.get('medio_ambiente', '') }}">
+                                <textarea class="form-textarea" style="min-height: 50px; padding: 10px 15px;" name="acr_medio_ambiente" placeholder="Causas relacionadas al entorno...">{{ datos.get('medio_ambiente', '') }}</textarea>
                             </div>
                             <div class="form-group">
                                 <label class="form-label" style="display:flex; align-items:center; justify-content:space-between;">
                                     Medición
-                                    <span title="Errores de calibración, instrumentos inadecuados, fallas de inspección." style="cursor:help; color:#9ca3af;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
+                                    <span data-help-text="Errores de calibración, instrumentos inadecuados, fallas de inspección." title="Ver detalles" style="cursor:pointer; color:#9ca3af;" onclick="showHelpText(this, 'Medición')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
                                 </label>
-                                <input type="text" class="form-input" name="acr_medicion" placeholder="Causas relacionadas a indicadores/monitoreo..." value="{{ datos.get('medicion', '') }}">
+                                <textarea class="form-textarea" style="min-height: 50px; padding: 10px 15px;" name="acr_medicion" placeholder="Causas relacionadas a indicadores/monitoreo...">{{ datos.get('medicion', '') }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -272,7 +333,45 @@
                     </div>
                 </div>
 
-                <!-- TAB 3: VERIFICACIÓN -->
+                <!-- TAB 3: EVIDENCIAS -->
+                <div id="tab-evidencias" class="tab-content">
+                    <div class="section-title" style="margin-top:0">Evidencias Adjuntas</div>
+                    
+                    <div id="drop_zone" style="background: #1f2937; border: 1px dashed #4b5563; padding: 30px; border-radius: 8px; text-align: center; margin-bottom: 20px; transition: all 0.2s;">
+                        <p style="color: #9ca3af; margin-bottom: 15px;">Arrastra archivos aquí o haz clic para seleccionar</p>
+                        <input type="file" name="evidencias_nuevas" id="file_upload" style="display:none;" multiple onchange="uploadFiles(event)">
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('file_upload').click()">Seleccionar Archivos</button>
+                    </div>
+                    
+                    <div id="file_list" style="display: flex; flex-direction: column; gap: 10px;">
+                        {% if ac %}
+                            {% for file in ac.archivos %}
+                            <div class="file-item" id="file-{{ file.id }}" style="display:flex; flex-direction:column; background:#374151; border-radius:6px; overflow:hidden;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 15px;">
+                                    <div style="display:flex; align-items:center; gap:10px;">
+                                        <svg style="width:20px; color:#9ca3af;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                                        <a href="{{ url_for('static', filename='uploads/hallazgos/' ~ file.nombre_almacenado) }}" target="_blank" style="color:#60a5fa; text-decoration:none;">{{ file.nombre_original }}</a>
+                                        <span style="font-size:0.8rem; color:#9ca3af;">({{ (file.tamano / 1024)|round(1) }} KB)</span>
+                                        {% if file.mime_type.startswith('image/') or file.mime_type == 'application/pdf' %}
+                                        <a href="{{ url_for('static', filename='uploads/hallazgos/' ~ file.nombre_almacenado) }}" target="_blank" class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.75rem; text-decoration:none; margin-left: 10px;">Ver</a>
+                                        {% else %}
+                                        <a href="{{ url_for('static', filename='uploads/hallazgos/' ~ file.nombre_almacenado) }}" download="{{ file.nombre_original }}" class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.75rem; text-decoration:none; margin-left: 10px;">Descargar</a>
+                                        {% endif %}
+                                    </div>
+                                    <button class="btn-icon-premium danger" type="button" onclick="deleteFile({{ file.id }})" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                                </div>
+                                {% if file.mime_type.startswith('image/') %}
+                                <div style="padding: 0 15px 15px 15px;">
+                                    <img src="{{ url_for('static', filename='uploads/hallazgos/' ~ file.nombre_almacenado) }}" style="max-width: 100%; max-height: 250px; border-radius: 4px; border: 1px solid #4b5563;">
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- TAB 4: VERIFICACIÓN -->
                 <div id="tab-verificacion" class="tab-content">
                     <div class="section-title" style="margin-top:0">Verificación y Eficacia</div>
                     
@@ -325,30 +424,27 @@
                     </div>
                 </div>
 
-                <!-- TAB 4: EVIDENCIAS -->
-                <div id="tab-evidencias" class="tab-content">
-                    <div class="section-title" style="margin-top:0">Evidencias Adjuntas</div>
-                    
-                    <div id="drop_zone" style="background: #1f2937; border: 1px dashed #4b5563; padding: 30px; border-radius: 8px; text-align: center; margin-bottom: 20px; transition: all 0.2s;">
-                        <p style="color: #9ca3af; margin-bottom: 15px;">Arrastra archivos aquí o haz clic para seleccionar</p>
-                        <input type="file" name="evidencias_nuevas" id="file_upload" style="display:none;" multiple onchange="uploadFiles(event)">
-                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('file_upload').click()">Seleccionar Archivos</button>
-                    </div>
-                    
-                    <div id="file_list" style="display: flex; flex-direction: column; gap: 10px;">
-                        {% if ac %}
-                            {% for file in ac.archivos %}
-                            <div class="file-item" id="file-{{ file.id }}" style="display:flex; justify-content:space-between; align-items:center; background:#374151; padding:10px 15px; border-radius:6px;">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <svg style="width:20px; color:#9ca3af;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-                                    <a href="{{ url_for('static', filename='uploads/hallazgos/' ~ file.nombre_almacenado) }}" target="_blank" style="color:#60a5fa; text-decoration:none;">{{ file.nombre_original }}</a>
-                                    <span style="font-size:0.8rem; color:#9ca3af;">({{ (file.tamano / 1024)|round(1) }} KB)</span>
+                <!-- TAB 5: HISTORIAL -->
+                <div id="tab-historial" class="tab-content">
+                    <div class="section-title" style="margin-top:0">Historial de Cambios</div>
+                    {% if ac and ac.historial.count() > 0 %}
+                        <div style="display: flex; flex-direction: column; gap: 15px;">
+                            {% for h in ac.historial|sort(attribute='created_at', reverse=True) %}
+                            <div style="background: #1f2937; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 6px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                    <span style="font-weight: 600; color: #f3f4f6;">{{ h.accion }}</span>
+                                    <span style="font-size: 0.85rem; color: #9ca3af;">{{ h.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
                                 </div>
-                                <button class="btn-icon-premium danger" type="button" onclick="deleteFile({{ file.id }})" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                                <p style="margin: 0 0 5px 0; font-size: 0.9rem; color: #d1d5db;">{{ h.detalles }}</p>
+                                <div style="font-size: 0.8rem; color: #6b7280;">Usuario: <span style="color: #9ca3af;">{{ h.usuario }}</span></div>
                             </div>
                             {% endfor %}
-                        {% endif %}
-                    </div>
+                        </div>
+                    {% else %}
+                        <div style="padding:40px; text-align:center; color:#6b7280; border:1px solid #374151; border-radius:8px;">
+                            Sin historial aún
+                        </div>
+                    {% endif %}
                 </div>
             </form>
         </div>
@@ -388,12 +484,23 @@
             _syncingAreaResponsable = false;
         }
 
-        function switchTab(tabId) {
+        function switchTab(tabId, element = null) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             
-            document.getElementById('tab-' + tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
+            const targetTab = document.getElementById('tab-' + tabId);
+            if(targetTab) targetTab.classList.add('active');
+            
+            if (element) {
+                element.classList.add('active');
+            } else if (typeof event !== 'undefined' && event && event.currentTarget && event.currentTarget.classList) {
+                event.currentTarget.classList.add('active');
+            } else {
+                const btn = document.querySelector(`button[onclick*="switchTab('${tabId}')"]`);
+                if (btn) btn.classList.add('active');
+            }
+            
+            sessionStorage.setItem('activeTabAC', tabId);
         }
         
         function toggleMetodologia() {
@@ -466,19 +573,83 @@
                     dropZone.style.borderColor = '#4b5563';
                     dropZone.style.background = '#1f2937';
                     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                        const fileUpload = document.getElementById('file_upload');
-                        fileUpload.files = e.dataTransfer.files;
-                        uploadFiles({target: fileUpload});
+                        uploadFiles({target: {files: e.dataTransfer.files}});
                     }
                 });
             }
         });
         
+        let pendingFiles = new DataTransfer();
+
+        function renderPendingFiles() {
+            const fileList = document.getElementById('file_list');
+            if (!fileList) return;
+            fileList.innerHTML = '';
+            const files = pendingFiles.files;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const div = document.createElement('div');
+                div.style = "display:flex; flex-direction:column; background:#374151; border-radius:6px; margin-bottom: 10px; overflow:hidden;";
+                
+                let innerHtml = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 15px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <svg style="width:20px; color:#9ca3af;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                            <span style="color:#60a5fa;">${file.name}</span>
+                            <span style="font-size:0.8rem; color:#f59e0b;">(${(file.size / 1024).toFixed(1)} KB) (Se guardará al Enviar)</span>
+                        </div>
+                        <button class="btn-icon-premium danger" type="button" onclick="removePendingFile(${i})" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                    </div>
+                `;
+                
+                div.innerHTML = innerHtml;
+                
+                if (file.type.startsWith('image/')) {
+                    const previewDiv = document.createElement('div');
+                    previewDiv.style = "padding: 0 15px 15px 15px;";
+                    const img = document.createElement('img');
+                    img.style = "max-width: 100%; max-height: 250px; border-radius: 4px; border: 1px solid #4b5563; display: none;";
+                    previewDiv.appendChild(img);
+                    div.appendChild(previewDiv);
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        img.src = e.target.result;
+                        img.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+                
+                fileList.appendChild(div);
+            }
+        }
+
+        function removePendingFile(index) {
+            const dt = new DataTransfer();
+            const files = pendingFiles.files;
+            for(let i = 0; i < files.length; i++) {
+                if(i !== index) dt.items.add(files[i]);
+            }
+            pendingFiles = dt;
+            const fileUpload = document.getElementById('file_upload');
+            if (fileUpload) fileUpload.files = pendingFiles.files;
+            renderPendingFiles();
+        }
+
         async function uploadFiles(event) {
             const files = event.target.files;
             if (files.length === 0) return;
             
             {% if not ac %}
+            const fileList = document.getElementById('file_list');
+            if (fileList) {
+                for (let i = 0; i < files.length; i++) {
+                    pendingFiles.items.add(files[i]);
+                }
+                const fileUpload = document.getElementById('file_upload');
+                if (fileUpload) fileUpload.files = pendingFiles.files;
+                renderPendingFiles();
+            }
             return;
             {% else %}
             for (let i = 0; i < files.length; i++) {
@@ -529,7 +700,7 @@
             if (!result.isConfirmed) return;
             
             try {
-                const response = await fetch(`/hallazgos/evidencias/${fileId}/eliminar`, {
+                const response = await fetch(`/eventos/evidencias/${fileId}/eliminar`, {
                     method: 'POST'
                 });
                 if (response.ok) {
@@ -556,6 +727,11 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            const activeTab = sessionStorage.getItem('activeTabAC');
+            if (activeTab) {
+                switchTab(activeTab);
+            }
+
             {% if ac and ac.estado == 'Cerrado' %}
             const form = document.getElementById('ac-form');
             if (form) {

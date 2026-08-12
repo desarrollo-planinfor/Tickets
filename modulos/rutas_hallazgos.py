@@ -1,4 +1,4 @@
-﻿from flask import Blueprint, render_template, jsonify, request, redirect, url_for, flash, g, session
+from flask import Blueprint, render_template, jsonify, request, redirect, url_for, flash, g, session
 from functools import wraps
 from datetime import datetime
 
@@ -373,14 +373,37 @@ def nuevo():
                     db.session.add(nueva_ac)
                     db.session.flush()
                     nuevo_hallazgo.accion_correctiva_id = nueva_ac.id
-                else:
-                    nuevo_hallazgo.evaluacion = "Cierre Inmediato"
-                    if nuevo_hallazgo.firma_cierre:
+                    
+                    from models import HallazgoHistorialAC
+                    hist_ac = HallazgoHistorialAC(
+                        accion_id=nueva_ac.id,
+                        accion='Creación Automática',
+                        detalles='Acción Correctiva generada automáticamente por escalamiento del evento.',
+                        usuario=session.get('user_name', 'Sistema')
+                    )
+                    db.session.add(hist_ac)
+
+                    archivos = request.files.getlist('evidencias_nuevas')
+                    tiene_archivos = any(f for f in archivos if f and f.filename)
+                    
+                    if nuevo_hallazgo.firma_cierre or tiene_archivos:
                         nuevo_hallazgo.estado = "Cerrado"
                         nuevo_hallazgo.estado_cierre = "Completado"
                         nuevo_hallazgo.fecha_cierre = datetime.now()
                     else:
-                        nuevo_hallazgo.estado = "Abierto"
+                        nuevo_hallazgo.estado = "En Proceso"
+                        nuevo_hallazgo.estado_cierre = "Pendiente"
+                else:
+                    nuevo_hallazgo.evaluacion = "Cierre Inmediato"
+                    archivos = request.files.getlist('evidencias_nuevas')
+                    tiene_archivos = any(f for f in archivos if f and f.filename)
+                    
+                    if nuevo_hallazgo.firma_cierre or tiene_archivos:
+                        nuevo_hallazgo.estado = "Cerrado"
+                        nuevo_hallazgo.estado_cierre = "Completado"
+                        nuevo_hallazgo.fecha_cierre = datetime.now()
+                    else:
+                        nuevo_hallazgo.estado = "En Proceso"
                         nuevo_hallazgo.estado_cierre = "Pendiente"
             
             archivos = request.files.getlist('evidencias_nuevas')
@@ -495,14 +518,44 @@ def editar(id):
                         db.session.add(nueva_ac)
                         db.session.flush() # Para obtener el ID
                         evento.accion_correctiva_id = nueva_ac.id
-                else:
-                    evento.evaluacion = "Cierre Inmediato"
-                    if evento.firma_cierre:
+                        
+                        from models import HallazgoHistorialAC
+                        hist_ac = HallazgoHistorialAC(
+                            accion_id=nueva_ac.id,
+                            accion='Creación Automática',
+                            detalles='Acción Correctiva generada automáticamente por escalamiento del evento.',
+                            usuario=session.get('user_name', 'Sistema')
+                        )
+                        db.session.add(hist_ac)
+                        
+                    from models import HallazgoArchivo
+                    tiene_archivos = HallazgoArchivo.query.filter_by(evento_id=evento.id).first() is not None
+                    archivos = request.files.getlist('evidencias_nuevas')
+                    if not tiene_archivos:
+                        tiene_archivos = any(f for f in archivos if f and f.filename)
+                        
+                    if evento.firma_cierre or tiene_archivos:
                         evento.estado = "Cerrado"
                         evento.estado_cierre = "Completado"
                         evento.fecha_cierre = datetime.now()
                     else:
-                        evento.estado = "Abierto"
+                        evento.estado = "En Proceso"
+                        evento.estado_cierre = "Pendiente"
+                else:
+                    evento.evaluacion = "Cierre Inmediato"
+                    
+                    from models import HallazgoArchivo
+                    tiene_archivos = HallazgoArchivo.query.filter_by(evento_id=evento.id).first() is not None
+                    archivos = request.files.getlist('evidencias_nuevas')
+                    if not tiene_archivos:
+                        tiene_archivos = any(f for f in archivos if f and f.filename)
+                        
+                    if evento.firma_cierre or tiene_archivos:
+                        evento.estado = "Cerrado"
+                        evento.estado_cierre = "Completado"
+                        evento.fecha_cierre = datetime.now()
+                    else:
+                        evento.estado = "En Proceso"
                         evento.estado_cierre = "Pendiente"
             
             from models import HallazgoHistorial
@@ -580,10 +633,12 @@ def acciones_correctivas():
     
     if filtro == 'Abiertos':
         query = query.filter_by(estado='Abierto')
-    elif filtro == 'En Proceso':
-        query = query.filter_by(estado='En Proceso')
-    elif filtro == 'Cerrados':
-        query = query.filter_by(estado='Cerrado')
+    elif filtro == 'En Revisión':
+        query = query.filter_by(estado='En Revisión')
+    elif filtro == 'Cerrado Parcial':
+        query = query.filter_by(estado='Cerrado Parcial')
+    elif filtro == 'Cerrado (Eficaz)':
+        query = query.filter_by(estado='Cerrado (Eficaz)')
     elif filtro == 'Vencidas':
         hoy = datetime.now().date()
         query = query.filter(
@@ -595,10 +650,11 @@ def acciones_correctivas():
     acciones = query.order_by(HallazgoAccionCorrectiva.fecha_registro.desc()).all()
     
     abiertos = HallazgoAccionCorrectiva.query.filter_by(estado='Abierto').count()
-    en_proceso = HallazgoAccionCorrectiva.query.filter_by(estado='En Proceso').count()
-    cerrados = HallazgoAccionCorrectiva.query.filter_by(estado='Cerrado').count()
+    en_revision = HallazgoAccionCorrectiva.query.filter_by(estado='En Revisión').count()
+    cerrado_parcial = HallazgoAccionCorrectiva.query.filter_by(estado='Cerrado Parcial').count()
+    cerrado_eficaz = HallazgoAccionCorrectiva.query.filter_by(estado='Cerrado (Eficaz)').count()
     
-    return render_template('hallazgos/acciones_correctivas.html', acciones=acciones, abiertos=abiertos, en_proceso=en_proceso, cerrados=cerrados)
+    return render_template('hallazgos/acciones_correctivas.html', acciones=acciones, abiertos=abiertos, en_revision=en_revision, cerrado_parcial=cerrado_parcial, cerrado_eficaz=cerrado_eficaz)
 
 @hallazgos_bp.route('/acciones_correctivas/nuevo', methods=['GET', 'POST'])
 @local_login_required
@@ -639,6 +695,17 @@ def acciones_correctivas_nuevo():
                     pass
             
             db.session.add(nueva_ac)
+            db.session.flush()
+            
+            from models import HallazgoHistorialAC
+            hist_ac = HallazgoHistorialAC(
+                accion_id=nueva_ac.id,
+                accion='Creación Inicial',
+                detalles='Se registró la Acción Correctiva manualmente.',
+                usuario=session.get('user_name', 'Sistema')
+            )
+            db.session.add(hist_ac)
+            
             db.session.commit()
             
             archivos = request.files.getlist('evidencias_nuevas')
@@ -841,6 +908,15 @@ def acciones_correctivas_editar(id):
                         if not ac.fecha_cierre:
                             ac.fecha_cierre = datetime.now()
             
+            from models import HallazgoHistorialAC
+            hist_ac = HallazgoHistorialAC(
+                accion_id=ac.id,
+                accion='Actualización de Acción Correctiva',
+                detalles='Se actualizó la información de la Acción Correctiva.',
+                usuario=session.get('user_name', 'Sistema')
+            )
+            db.session.add(hist_ac)
+            
             db.session.commit()
             flash('Acción Correctiva actualizada', 'success')
             return redirect(url_for('hallazgos.acciones_correctivas_editar', id=ac.id))
@@ -950,6 +1026,16 @@ def subir_evidencia_ac(id):
             subido_por=session.get('user_name', 'Sistema')
         )
         db.session.add(nuevo_archivo)
+        
+        from models import HallazgoHistorialAC
+        hist_ac = HallazgoHistorialAC(
+            accion_id=ac.id,
+            accion='Evidencia Subida',
+            detalles=f'Se subió el archivo {filename}',
+            usuario=session.get('user_name', 'Sistema')
+        )
+        db.session.add(hist_ac)
+        
         db.session.commit()
         return jsonify({
             'success': True, 
@@ -978,8 +1064,21 @@ def eliminar_evidencia(file_id):
         filepath = os.path.join(UPLOAD_FOLDER, archivo.nombre_almacenado)
         if os.path.exists(filepath):
             os.remove(filepath)
-            
+        
+        accion_id_hist = archivo.accion_id
+        
         db.session.delete(archivo)
+        
+        if accion_id_hist:
+            from models import HallazgoHistorialAC
+            hist_ac = HallazgoHistorialAC(
+                accion_id=accion_id_hist,
+                accion='Evidencia Eliminada',
+                detalles=f'Se eliminó el archivo {archivo.nombre_original}',
+                usuario=session.get('user_name', 'Sistema')
+            )
+            db.session.add(hist_ac)
+            
         db.session.commit()
         return jsonify({'success': True})
     except Exception as e:

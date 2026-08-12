@@ -1,0 +1,19 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/list-view-transition.css') }}">
+<script>
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    (function () {
+        try {
+            var pathKey = 'lv:' + location.pathname;
+            var y = sessionStorage.getItem(pathKey + ':scroll');
+            if (y === null) return;
+            var top = parseInt(y, 10) || 0;
+            var restore = function () { window.scrollTo(0, top); };
+            restore();
+            document.addEventListener('DOMContentLoaded', restore);
+            window.addEventListener('load', restore);
+        } catch (e) { /* ignore */ }
+    })();
+</script>

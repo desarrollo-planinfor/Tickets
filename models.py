@@ -581,6 +581,8 @@ class HallazgoAccionCorrectiva(db.Model):
     
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    historial = db.relationship('HallazgoHistorialAC', backref='accion_correctiva', lazy='dynamic', cascade='all, delete-orphan')
 
 class HallazgoACRIteracion(db.Model):
     __tablename__ = 'hallazgo_acr_iteracion'
@@ -621,4 +623,13 @@ class HallazgoArchivo(db.Model):
     tamano = db.Column(db.Integer)
     fecha_subida = db.Column(db.DateTime, default=datetime.now)
     subido_por = db.Column(db.String(150), default='Sistema')
+
+class HallazgoHistorialAC(db.Model):
+    __tablename__ = 'hallazgo_historial_ac'
+    id = db.Column(db.Integer, primary_key=True)
+    accion_id = db.Column(db.Integer, db.ForeignKey('hallazgo_accion_correctiva.id'), nullable=False)
+    accion = db.Column(db.String(100), nullable=False)
+    detalles = db.Column(db.Text, nullable=True)
+    usuario = db.Column(db.String(150), default='Sistema')
+    created_at = db.Column(db.DateTime, default=datetime.now)
 

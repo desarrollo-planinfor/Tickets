@@ -8,16 +8,18 @@
     <title>Dashboard Eventos - HUB Planinfor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <style>
         .dash { padding-top: 20px; padding-bottom: 36px; }
         .dash-title {
             margin: 0 0 16px;
+            font-family: 'Poppins', 'Outfit', sans-serif;
             font-size: 1.3rem;
             font-weight: 700;
             color: #f3f4f6;
+            letter-spacing: -0.02em;
         }
         .dash-title span {
             display: block;
@@ -71,12 +73,13 @@
             border: 1px solid #374151;
             border-radius: 8px;
             padding: 14px 14px 12px;
-            transition: border-color 0.15s, background 0.15s;
+            transition: border-color 160ms ease, background 160ms ease, transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
         }
         .kpi:hover {
             border-color: rgba(130, 195, 65, 0.45);
             background: rgba(130, 195, 65, 0.05);
         }
+        .kpi:active { transform: scale(0.98); }
         .kpi-label {
             display: block;
             font-size: 0.7rem;
@@ -244,6 +247,8 @@
 <body>
     {% set vista = 'hallazgos' %}
     {% include 'header_unificado.html' %}
+
+<div id="hallazgos-soft-root">
 
     <div class="container dash">
         {% set sub_vista = 'dashboard' %}
@@ -583,6 +588,7 @@
             });
         })();
     </script>
+</div><!-- /#hallazgos-soft-root -->
 </body>
 
 </html>

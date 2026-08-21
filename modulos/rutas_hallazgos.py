@@ -136,7 +136,7 @@ def dashboard():
     # Eventos que requieren atención
     atencion_eventos = []
     for e in eventos:
-        if e.estado in ('Abierto', 'En Proceso') or e.evaluacion == 'Escalado':
+        if e.estado != 'Cerrado' and (e.estado in ('Abierto', 'En Proceso') or e.evaluacion == 'Escalado'):
             score = (e.impacto or 0) + (e.recurrencia or 0) + (e.potencialidad or 0)
             atencion_eventos.append(e)
     atencion_eventos = sorted(
@@ -318,8 +318,17 @@ def nuevo():
     
     if request.method == 'POST':
         try:
-            conteo = HallazgoEvento.query.count() + 1
-            nuevo_codigo = f"EV-{conteo:03d}"
+            todos_eventos = HallazgoEvento.query.all()
+            max_num = 0
+            for e in todos_eventos:
+                if e.codigo and e.codigo.startswith('EV-'):
+                    try:
+                        num = int(e.codigo.split('-')[1])
+                        if num > max_num:
+                            max_num = num
+                    except:
+                        pass
+            nuevo_codigo = f"EV-{max_num + 1:03d}"
             
             # Procesar fecha personalizada
             fecha_reg = None
@@ -558,11 +567,22 @@ def editar(id):
                         evento.estado = "En Proceso"
                         evento.estado_cierre = "Pendiente"
             
+            # Generar detalles dinámicos para el historial
+            cambios = []
+            if request.form.get('descripcion'): cambios.append('Información Base')
+            if request.form.get('val-impacto') and int(request.form.get('val-impacto')) > 0: cambios.append('Evaluación de Riesgo')
+            if request.form.get('firma_cierre'): cambios.append('Firma de Cierre')
+            
+            if cambios:
+                hist_detalles = f"Se actualizaron las secciones: {', '.join(cambios)}."
+            else:
+                hist_detalles = "Se actualizó la información general del evento."
+
             from models import HallazgoHistorial
             hist = HallazgoHistorial(
                 evento_id=evento.id,
                 accion='Actualización de Evento',
-                detalles='Se actualizó la información o evaluación del evento.',
+                detalles=hist_detalles,
                 usuario=session.get('user_name', 'Sistema')
             )
             db.session.add(hist)
@@ -633,16 +653,16 @@ def acciones_correctivas():
     
     if filtro == 'Abiertos':
         query = query.filter_by(estado='Abierto')
-    elif filtro == 'En Revisión':
-        query = query.filter_by(estado='En Revisión')
+    elif filtro == 'En Proceso':
+        query = query.filter(HallazgoAccionCorrectiva.estado.in_(['En Proceso', 'En Revisión']), HallazgoAccionCorrectiva.estado_cierre != 'Parcial')
     elif filtro == 'Cerrado Parcial':
-        query = query.filter_by(estado='Cerrado Parcial')
+        query = query.filter_by(estado_cierre='Parcial')
     elif filtro == 'Cerrado (Eficaz)':
-        query = query.filter_by(estado='Cerrado (Eficaz)')
+        query = query.filter_by(estado='Cerrado')
     elif filtro == 'Vencidas':
         hoy = datetime.now().date()
         query = query.filter(
-            HallazgoAccionCorrectiva.estado == 'Abierto',
+            HallazgoAccionCorrectiva.estado.in_(['Abierto', 'En Proceso']),
             HallazgoAccionCorrectiva.fecha_plazo.isnot(None),
             HallazgoAccionCorrectiva.fecha_plazo < hoy
         )
@@ -650,11 +670,11 @@ def acciones_correctivas():
     acciones = query.order_by(HallazgoAccionCorrectiva.fecha_registro.desc()).all()
     
     abiertos = HallazgoAccionCorrectiva.query.filter_by(estado='Abierto').count()
-    en_revision = HallazgoAccionCorrectiva.query.filter_by(estado='En Revisión').count()
-    cerrado_parcial = HallazgoAccionCorrectiva.query.filter_by(estado='Cerrado Parcial').count()
-    cerrado_eficaz = HallazgoAccionCorrectiva.query.filter_by(estado='Cerrado (Eficaz)').count()
+    en_proceso = HallazgoAccionCorrectiva.query.filter(HallazgoAccionCorrectiva.estado.in_(['En Proceso', 'En Revisión']), HallazgoAccionCorrectiva.estado_cierre != 'Parcial').count()
+    cerrado_parcial = HallazgoAccionCorrectiva.query.filter_by(estado_cierre='Parcial').count()
+    cerrado_eficaz = HallazgoAccionCorrectiva.query.filter_by(estado='Cerrado').count()
     
-    return render_template('hallazgos/acciones_correctivas.html', acciones=acciones, abiertos=abiertos, en_revision=en_revision, cerrado_parcial=cerrado_parcial, cerrado_eficaz=cerrado_eficaz)
+    return render_template('hallazgos/acciones_correctivas.html', acciones=acciones, abiertos=abiertos, en_proceso=en_proceso, cerrado_parcial=cerrado_parcial, cerrado_eficaz=cerrado_eficaz)
 
 @hallazgos_bp.route('/acciones_correctivas/nuevo', methods=['GET', 'POST'])
 @local_login_required
@@ -667,8 +687,17 @@ def acciones_correctivas_nuevo():
     
     if request.method == 'POST':
         try:
-            conteo = HallazgoAccionCorrectiva.query.count() + 1
-            nuevo_codigo_ac = f"AC-{conteo:03d}"
+            todas_ac = HallazgoAccionCorrectiva.query.all()
+            max_num = 0
+            for a in todas_ac:
+                if a.codigo and a.codigo.startswith('AC-'):
+                    try:
+                        num = int(a.codigo.split('-')[1])
+                        if num > max_num:
+                            max_num = num
+                    except:
+                        pass
+            nuevo_codigo_ac = f"AC-{max_num + 1:03d}"
             
             nueva_ac = HallazgoAccionCorrectiva(
                 codigo=nuevo_codigo_ac,
@@ -824,13 +853,22 @@ def acciones_correctivas_editar(id):
             
             fecha_plazo_str = request.form.get('fecha_plazo')
             if fecha_plazo_str:
-                ac.fecha_plazo = datetime.strptime(fecha_plazo_str, '%Y-%m-%d').date()
+                try:
+                    ac.fecha_plazo = datetime.strptime(fecha_plazo_str, '%Y-%m-%d').date()
+                except ValueError:
+                    try:
+                        ac.fecha_plazo = datetime.strptime(fecha_plazo_str, '%d/%m/%Y').date()
+                    except ValueError:
+                        pass
                 
             if request.form.get('fecha_registro'):
                 try:
                     ac.fecha_registro = datetime.strptime(request.form.get('fecha_registro'), '%Y-%m-%d')
                 except ValueError:
-                    pass
+                    try:
+                        ac.fecha_registro = datetime.strptime(request.form.get('fecha_registro'), '%d/%m/%Y')
+                    except ValueError:
+                        pass
             
             # --- Análisis de Causa Raíz ---
             metodologia = request.form.get('acr_metodologia')
@@ -878,41 +916,102 @@ def acciones_correctivas_editar(id):
                     from sqlalchemy.orm.attributes import flag_modified
                     flag_modified(iteracion, "datos_acr")
             
+            # --- Lógica Automática de Estado ---
+            tiene_acr = bool(request.form.get('acr_metodologia') or request.form.get('acr_causa_raiz') or request.form.get('acr_texto_accion'))
+            tiene_archivos = len(ac.archivos) > 0
+            
+            nuevo_estado = 'Abierto'
+            if tiene_acr or tiene_archivos:
+                nuevo_estado = 'En Proceso'
+
             # --- Verificación y Eficacia ---
             fecha_eval = request.form.get('verif_fecha')
             if fecha_eval and iteracion:
-                iteracion.fecha_evaluacion = datetime.strptime(fecha_eval, '%Y-%m-%d')
-                ac.fecha_verificacion = iteracion.fecha_evaluacion.date()
+                try:
+                    iteracion.fecha_evaluacion = datetime.strptime(fecha_eval, '%Y-%m-%d')
+                    ac.fecha_verificacion = iteracion.fecha_evaluacion.date()
+                except ValueError:
+                    try:
+                        iteracion.fecha_evaluacion = datetime.strptime(fecha_eval, '%d/%m/%Y')
+                        ac.fecha_verificacion = iteracion.fecha_evaluacion.date()
+                    except ValueError:
+                        pass
                 
-            estado_manual = request.form.get('ac_estado_manual')
-            if estado_manual:
-                ac.estado = estado_manual
-                
-            resultado_eficacia = request.form.get('verif_resultado')
-            if resultado_eficacia and iteracion:
+            q1 = request.form.get('verif_q1') == 'true'
+            q2 = request.form.get('verif_q2') == 'true'
+            
+            # Solo si se envía evaluación explícitamente desde la pestaña de Verificación
+            btn_guardar = request.form.get('btn_guardar')
+            if btn_guardar == 'verif' and iteracion and request.form.get('verif_evaluado_por'):
                 today = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
-                # Validar backend para que no cierre si no es la fecha
-                if iteracion.fecha_evaluacion and iteracion.fecha_evaluacion > today and resultado_eficacia == 'Eficaz':
-                    pass # Bloqueado
-                else:
-                    iteracion.eficacia_q1 = request.form.get('verif_q1') == 'true'
-                    iteracion.eficacia_q2 = request.form.get('verif_q2') == 'true'
-                    iteracion.resultado_eficacia = resultado_eficacia
-                    iteracion.evaluado_por = request.form.get('verif_evaluado_por')
-                    iteracion.motivo_falla = request.form.get('verif_motivo')
-                    
-                    ac.resultado_eficacia = resultado_eficacia
-                    if resultado_eficacia == 'Eficaz':
-                        ac.estado = 'Cerrado'
+                
+                iteracion.eficacia_q1 = q1
+                iteracion.eficacia_q2 = q2
+                iteracion.evaluado_por = request.form.get('verif_evaluado_por')
+                iteracion.motivo_falla = request.form.get('verif_motivo')
+                
+                # Para ser Eficaz, AMBAS casillas deben estar marcadas
+                es_eficaz = (q1 and q2)
+                es_parcial = (q1 and not q2) or (not q1 and q2)
+                
+                if es_eficaz:
+                    # Validar backend para que no cierre si no es la fecha (si es futura)
+                    if iteracion.fecha_evaluacion and iteracion.fecha_evaluacion > today:
+                        # Bloqueado, no puede ser eficaz aún
+                        iteracion.resultado_eficacia = 'Pendiente'
+                        ac.resultado_eficacia = 'Pendiente'
+                    else:
+                        iteracion.resultado_eficacia = 'Eficaz'
+                        ac.resultado_eficacia = 'Eficaz'
+                        nuevo_estado = 'Cerrado'
                         ac.estado_cierre = 'Eficaz'
                         if not ac.fecha_cierre:
                             ac.fecha_cierre = datetime.now()
+                elif es_parcial:
+                    iteracion.resultado_eficacia = 'Ineficaz'
+                    ac.resultado_eficacia = 'Ineficaz'
+                    ac.estado_cierre = 'Parcial'
+                    nuevo_estado = 'En Proceso'
+                    
+                    existe_siguiente = HallazgoACRIteracion.query.filter_by(accion_id=ac.id, numero_iteracion=iteracion.numero_iteracion + 1).first()
+                    if not existe_siguiente:
+                        nueva_it = HallazgoACRIteracion(accion_id=ac.id, numero_iteracion=iteracion.numero_iteracion + 1)
+                        db.session.add(nueva_it)
+                        flash('Evaluación parcial (1 tick). La Acción Correctiva sigue En Proceso y se ha creado una nueva iteración de Análisis.', 'warning')
+                        
+                else:
+                    # 0 ticks
+                    iteracion.resultado_eficacia = 'Ineficaz'
+                    ac.resultado_eficacia = 'Ineficaz'
+                    ac.estado_cierre = 'Parcial'
+                    nuevo_estado = 'En Proceso'
+                    
+                    existe_siguiente = HallazgoACRIteracion.query.filter_by(accion_id=ac.id, numero_iteracion=iteracion.numero_iteracion + 1).first()
+                    if not existe_siguiente:
+                        nueva_it = HallazgoACRIteracion(accion_id=ac.id, numero_iteracion=iteracion.numero_iteracion + 1)
+                        db.session.add(nueva_it)
+                        flash('Evaluación Ineficaz (0 ticks). La Acción Correctiva sigue En Proceso y se ha creado una nueva iteración de Análisis.', 'warning')
             
+            ac.estado = nuevo_estado
+            
+            if btn_guardar == 'info':
+                hist_accion = 'Actualización de Información General'
+                hist_detalles = 'Se actualizaron los datos básicos, detalles o fechas de la Acción Correctiva.'
+            elif btn_guardar == 'acr':
+                hist_accion = f'Actualización de ACR (Iteración #{iteracion.numero_iteracion if iteracion else 1})'
+                hist_detalles = 'Se modificó la metodología, causa raíz o plan de acción.'
+            elif btn_guardar == 'verif':
+                hist_accion = 'Registro de Verificación'
+                hist_detalles = 'Se evaluó la eficacia de la implementación de la Acción Correctiva.'
+            else:
+                hist_accion = 'Actualización de Acción Correctiva'
+                hist_detalles = 'Se actualizó la información general de la Acción Correctiva.'
+                
             from models import HallazgoHistorialAC
             hist_ac = HallazgoHistorialAC(
                 accion_id=ac.id,
-                accion='Actualización de Acción Correctiva',
-                detalles='Se actualizó la información de la Acción Correctiva.',
+                accion=hist_accion,
+                detalles=hist_detalles,
                 usuario=session.get('user_name', 'Sistema')
             )
             db.session.add(hist_ac)
@@ -922,8 +1021,10 @@ def acciones_correctivas_editar(id):
             return redirect(url_for('hallazgos.acciones_correctivas_editar', id=ac.id))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error: {str(e)}', 'error')
+            flash(f'Error al editar iteración: {str(e)}', 'error')
+            return redirect(url_for('hallazgos.acciones_correctivas_editar', id=ac.id))
 
+    # GET request part of acciones_correctivas_editar
     areas = Area.query.filter_by(activa=True).all()
     sistemas = HallazgoSistemaNormativo.query.filter_by(activo=True).all()
     tipos = HallazgoTipoEvento.query.filter_by(activo=True).all()
@@ -935,6 +1036,103 @@ def acciones_correctivas_editar(id):
                            ac=ac, areas=areas, sistemas=sistemas, 
                            tipos=tipos, clasificaciones=clasificaciones, 
                            usuarios=usuarios, iteraciones=iteraciones)
+
+@hallazgos_bp.route('/acciones_correctivas/iteracion/<int:id>/eliminar', methods=['POST'])
+@local_login_required
+def eliminar_iteracion_acr(id):
+    from extensions import db
+    from models import HallazgoACRIteracion
+    
+    it = HallazgoACRIteracion.query.get_or_404(id)
+    ac_id = it.accion_id
+    
+    try:
+        count = HallazgoACRIteracion.query.filter_by(accion_id=ac_id).count()
+        if count <= 1:
+            flash('No se puede eliminar la única iteración existente.', 'error')
+        else:
+            db.session.delete(it)
+            db.session.commit()
+            
+            remaining_its = HallazgoACRIteracion.query.filter_by(accion_id=ac_id).order_by(HallazgoACRIteracion.id).all()
+            for idx, r_it in enumerate(remaining_its):
+                r_it.numero_iteracion = idx + 1
+            db.session.commit()
+            flash('Iteración eliminada correctamente.', 'success')
+            
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al eliminar iteración: {str(e)}', 'error')
+        
+    return redirect(url_for('hallazgos.acciones_correctivas_editar', id=ac_id))
+
+
+@hallazgos_bp.route('/acciones_correctivas/editar/<int:id>/nueva_iteracion', methods=['POST'])
+@local_login_required
+def nueva_iteracion_acr(id):
+    from extensions import db
+    from models import HallazgoAccionCorrectiva, HallazgoACRIteracion
+    
+    ac = HallazgoAccionCorrectiva.query.get_or_404(id)
+    if ac.estado == 'Cerrado':
+        flash('La Acción Correctiva está cerrada, no se pueden agregar nuevas iteraciones.', 'error')
+        return redirect(url_for('hallazgos.acciones_correctivas_editar', id=ac.id))
+        
+    ultima = HallazgoACRIteracion.query.filter_by(accion_id=ac.id).order_by(HallazgoACRIteracion.numero_iteracion.desc()).first()
+    num = (ultima.numero_iteracion + 1) if ultima else 1
+    
+    nueva = HallazgoACRIteracion(accion_id=ac.id, numero_iteracion=num)
+    db.session.add(nueva)
+    db.session.commit()
+    
+    flash(f'Se ha creado la Iteración #{num} para un nuevo análisis.', 'success')
+    return redirect(url_for('hallazgos.acciones_correctivas_editar', id=ac.id) + '#tab-acr')
+
+@hallazgos_bp.route('/acciones_correctivas/iteracion/<int:it_id>/editar', methods=['POST'])
+@local_login_required
+def editar_iteracion_acr(it_id):
+    from extensions import db
+    from models import HallazgoACRIteracion
+    import json
+    
+    iteracion = HallazgoACRIteracion.query.get_or_404(it_id)
+    if iteracion.accion.estado == 'Cerrado':
+        flash('La Acción Correctiva está cerrada.', 'error')
+        return redirect(url_for('hallazgos.acciones_correctivas_editar', id=iteracion.accion_id) + '#tab-acr')
+        
+    metodologia = request.form.get('edit_acr_metodologia')
+    if metodologia:
+        iteracion.metodologia = metodologia
+        iteracion.causa_raiz = request.form.get('edit_acr_causa_raiz')
+        iteracion.texto_accion_correctiva = request.form.get('edit_acr_texto_accion')
+        
+        if metodologia == '5 Porqués':
+            datos = {
+                'p1': request.form.get('edit_acr_p1', ''),
+                'p2': request.form.get('edit_acr_p2', ''),
+                'p3': request.form.get('edit_acr_p3', ''),
+                'p4': request.form.get('edit_acr_p4', ''),
+                'p5': request.form.get('edit_acr_p5', '')
+            }
+            iteracion.datos_acr = datos
+        elif metodologia == 'Ishikawa':
+            datos = {
+                'maquina': request.form.get('edit_acr_maquina', ''),
+                'metodo': request.form.get('edit_acr_metodo', ''),
+                'material': request.form.get('edit_acr_material', ''),
+                'mano_obra': request.form.get('edit_acr_mano_obra', ''),
+                'medio_ambiente': request.form.get('edit_acr_medio_ambiente', ''),
+                'medicion': request.form.get('edit_acr_medicion', '')
+            }
+            iteracion.datos_acr = datos
+            
+        from sqlalchemy.orm.attributes import flag_modified
+        flag_modified(iteracion, "datos_acr")
+        db.session.commit()
+        flash(f'Iteración #{iteracion.numero_iteracion} actualizada correctamente.', 'success')
+        
+    return redirect(url_for('hallazgos.acciones_correctivas_editar', id=iteracion.accion_id) + '#tab-acr')
+
 
 # --- API RUTAS PARA EVIDENCIAS ---
 import os

@@ -46,6 +46,7 @@
         .summary-stat-badge { background: #374151; padding: 4px 10px; border-radius: 6px; font-weight: 800; }
         .summary-stat-badge.abiertos { background: rgba(59, 130, 246, 0.25); color: #93c5fd; }
         .summary-stat-badge.proceso { background: rgba(245, 158, 11, 0.25); color: #fcd34d; }
+        .summary-stat-badge.parcial { background: rgba(217, 119, 6, 0.25); color: #fbbf24; }
         .summary-stat-badge.cerrados { background: rgba(16, 185, 129, 0.25); color: #6ee7b7; }
         .summary-divider { color: #4b5563; }
     </style>
@@ -70,9 +71,9 @@
                 <span class="summary-title">Resumen:</span>
                 <a href="{{ url_for('hallazgos.acciones_correctivas', filtro='Abiertos') }}" class="summary-stat-item" data-lv-ignore>Abiertos: <span class="summary-stat-badge abiertos">{{ abiertos }}</span></a>
                 <span class="summary-divider">|</span>
-                <a href="{{ url_for('hallazgos.acciones_correctivas', filtro='En Revisión') }}" class="summary-stat-item" data-lv-ignore>En Revisión: <span class="summary-stat-badge proceso">{{ en_revision }}</span></a>
+                <a href="{{ url_for('hallazgos.acciones_correctivas', filtro='En Proceso') }}" class="summary-stat-item" data-lv-ignore>En Proceso: <span class="summary-stat-badge proceso">{{ en_proceso }}</span></a>
                 <span class="summary-divider">|</span>
-                <a href="{{ url_for('hallazgos.acciones_correctivas', filtro='Cerrado Parcial') }}" class="summary-stat-item" data-lv-ignore>Cerrado Parcial: <span class="summary-stat-badge proceso">{{ cerrado_parcial }}</span></a>
+                <a href="{{ url_for('hallazgos.acciones_correctivas', filtro='Cerrado Parcial') }}" class="summary-stat-item" data-lv-ignore>Cerrado Parcial: <span class="summary-stat-badge parcial">{{ cerrado_parcial }}</span></a>
                 <span class="summary-divider">|</span>
                 <a href="{{ url_for('hallazgos.acciones_correctivas', filtro='Cerrado (Eficaz)') }}" class="summary-stat-item" data-lv-ignore>Cerrado (Eficaz): <span class="summary-stat-badge cerrados">{{ cerrado_eficaz }}</span></a>
             </div>
@@ -120,15 +121,15 @@
                         <td>{{ ac.fecha_verificacion.strftime('%d/%m/%Y') if ac.fecha_verificacion else '--' }}</td>
                         <td>
                             {% if ac.estado == 'Abierto' %}
-                                <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 500;">Abierto</span>
-                            {% elif ac.estado == 'En Revisión' %}
-                                <span style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 500;">En Revisión</span>
-                            {% elif ac.estado == 'Cerrado Parcial' %}
-                                <span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 500;">Cerrado Parcial</span>
+                                <span style="background: rgba(59, 130, 246, 0.25); color: #93c5fd; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Abierto</span>
+                            {% elif ac.estado == 'En Proceso' and ac.estado_cierre == 'Parcial' %}
+                                <span style="background: rgba(245, 158, 11, 0.25); color: #fcd34d; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Cerrado Parcial</span>
+                            {% elif ac.estado == 'En Proceso' or ac.estado == 'En Revisión' %}
+                                <span style="background: rgba(245, 158, 11, 0.25); color: #fcd34d; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">En Proceso</span>
                             {% elif ac.estado == 'Cerrado' %}
-                                <span style="background: rgba(16, 185, 129, 0.2); color: #059669; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Cerrado (Eficaz)</span>
+                                <span style="background: rgba(16, 185, 129, 0.25); color: #6ee7b7; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Cerrado (Eficaz)</span>
                             {% else %}
-                                <span style="background: rgba(107, 114, 128, 0.1); color: #9ca3af; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 500;">{{ ac.estado }}</span>
+                                <span style="background: rgba(107, 114, 128, 0.25); color: #9ca3af; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">{{ ac.estado }}</span>
                             {% endif %}
                         </td>
                         <td>

@@ -645,6 +645,46 @@
                     }
                 });
             }
+            
+            // Validate before submit
+            const form = document.getElementById('form-hallazgo');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    // Check HTML5 validity for required fields (Información de Eventos)
+                    if (!form.checkValidity()) {
+                        e.preventDefault();
+                        // Find the first invalid element
+                        const firstInvalid = form.querySelector(':invalid');
+                        if (firstInvalid) {
+                            // Find which tab it belongs to
+                            const tabContent = firstInvalid.closest('.tab-content');
+                            if (tabContent) {
+                                const tabId = tabContent.id.replace('tab-', '');
+                                switchTab(tabId);
+                            }
+                            firstInvalid.focus();
+                        }
+                        return false;
+                    }
+
+                    // Check Evidence
+                    const fileList = document.getElementById('file_list');
+                    const hasEvidences = fileList ? fileList.children.length > 0 : false;
+                    
+                    if (!hasEvidences) {
+                        e.preventDefault();
+                        Swal.fire({
+                            title: 'Evidencia Requerida',
+                            text: 'Debe adjuntar al menos un archivo de evidencia con datos completos.',
+                            icon: 'warning',
+                            background: '#1f2937',
+                            color: '#ffffff'
+                        });
+                        switchTab('evidence');
+                        return false;
+                    }
+                });
+            }
         });
 
         function checkRequirementsForClosure() {

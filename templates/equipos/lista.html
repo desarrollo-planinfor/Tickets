@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='P.ico') }}">
@@ -203,7 +203,18 @@
                             <div style="font-size: 0.75rem; color: #9ca3af;">{{ equipo.modelo or '-' }}</div>
                         </td>
                         <td>{{ equipo.area or '-' }}</td>
-                        <td>{{ equipo.responsable or '-' }}</td>
+                        <td>
+                            {% if equipo.responsable and equipo.responsable.strip() in multi_responsables %}
+                                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                                    {{ equipo.responsable }}
+                                    <span title="Este responsable tiene múltiples equipos asignados" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #111827; font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; white-space: nowrap; cursor: help;">
+                                        Multi
+                                    </span>
+                                </span>
+                            {% else %}
+                                {{ equipo.responsable or '-' }}
+                            {% endif %}
+                        </td>
                         <td>{{ equipo.frecuencia_mantencion or '-' }}</td>
                         <td>{{ equipo.proxima_mantencion or '-' }}</td>
                         <td style="text-align: center;">

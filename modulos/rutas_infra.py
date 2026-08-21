@@ -421,7 +421,7 @@ def exportar_inventario():
     ws = wb.active
     ws.title = "Inventario"
     
-    headers = ['ID', 'Tipo', 'Marca', 'Modelo', 'N/S', 'Estado', 'Asignado A']
+    headers = ['ID', 'Código', 'Nombre', 'Marca', 'Modelo', 'Serie', 'Área', 'Responsable', 'Estado', 'Frec. Mantención', 'Próxima Mantención', 'Alerta']
     ws.append(headers)
     
     header_font = Font(bold=True, color="FFFFFF")
@@ -433,13 +433,80 @@ def exportar_inventario():
     for eq in equipos:
         ws.append([
             eq.id,
-            eq.tipo_equipo,
-            eq.marca,
-            eq.modelo,
-            eq.numero_serie,
-            eq.estado,
-            eq.usuario_asignado.nombre if eq.usuario_asignado else 'Sin Asignar'
+            eq.codigo or '',
+            eq.nombre or '',
+            eq.marca or '',
+            eq.modelo or '',
+            eq.serie or '',
+            eq.area or '',
+            eq.responsable or 'Sin Asignar',
+            eq.estado or '',
+            eq.frecuencia_mantencion or '',
+            eq.proxima_mantencion or '',
+            eq.estado_alerta
         ])
+    
+    # Ajustar ancho de columnas automáticamente
+    for col in ws.columns:
+        max_length = 0
+        col_letter = col[0].column_letter
+        for cell in col:
+            try:
+                if cell.value and len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except Exception:
+                pass
+        ws.column_dimensions[col_letter].width = min(max_length + 3, 40)
+    
+    # === Hoja 2: Responsables con más de un equipo ===
+    from collections import defaultdict
+    responsable_equipos = defaultdict(list)
+    for eq in equipos:
+        resp = (eq.responsable or '').strip()
+        if resp:
+            responsable_equipos[resp].append(eq)
+    
+    # Filtrar solo los que tienen más de 1 equipo
+    multi_responsables = {r: eqs for r, eqs in responsable_equipos.items() if len(eqs) > 1}
+    
+    ws2 = wb.create_sheet(title="Usuarios Múltiples Equipos")
+    ws2_headers = ['Responsable', 'Cant. Equipos', 'ID Equipo', 'Código', 'Nombre Equipo', 'Marca', 'Modelo', 'Estado']
+    ws2.append(ws2_headers)
+    for cell in ws2[1]:
+        cell.font = header_font
+        cell.fill = header_fill
+    
+    highlight_fill = PatternFill(start_color="FFF3CD", end_color="FFF3CD", fill_type="solid")
+    for resp_nombre in sorted(multi_responsables.keys()):
+        eqs = multi_responsables[resp_nombre]
+        for i, eq in enumerate(eqs):
+            row = [
+                resp_nombre if i == 0 else '',
+                len(eqs) if i == 0 else '',
+                eq.id,
+                eq.codigo or '',
+                eq.nombre or '',
+                eq.marca or '',
+                eq.modelo or '',
+                eq.estado or ''
+            ]
+            ws2.append(row)
+            # Resaltar la fila
+            for cell in ws2[ws2.max_row]:
+                cell.fill = highlight_fill
+        # Fila vacía separadora entre responsables
+        ws2.append([])
+    
+    for col in ws2.columns:
+        max_length = 0
+        col_letter = col[0].column_letter
+        for cell in col:
+            try:
+                if cell.value and len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except Exception:
+                pass
+        ws2.column_dimensions[col_letter].width = min(max_length + 3, 40)
         
     output = BytesIO()
     wb.save(output)

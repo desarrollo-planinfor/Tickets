@@ -66,40 +66,13 @@
         }
 
         th {
-            position: sticky;
-            top: 175px;
-            background: #1f2937;
-            z-index: 90;
             text-align: left;
             padding: 12px 15px;
             color: #9ca3af;
             font-weight: 600;
             font-size: 0.85rem;
             text-transform: uppercase;
-            transition: all 0.4s ease;
-        }
-
-        th::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            width: 100%;
             border-bottom: 2px solid #374151;
-            transition: all 0.4s ease;
-        }
-        
-        /* Animación cuando los encabezados están flotando */
-        thead.is-stuck th {
-            background: rgba(26, 35, 50, 0.75);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            color: #e2e8f0; /* Texto más brillante */
-        }
-        
-        thead.is-stuck th::after {
-            border-bottom: 2px solid rgba(130, 195, 65, 0.4); /* Línea verde sutil brillante */
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
         }
 
         td {
@@ -344,14 +317,6 @@
                     { threshold: [1], rootMargin: "-101px 0px 0px 0px" }
                 );
                 observer.observe(stickyEl);
-            }
-            const theadEl = document.querySelector('#hallazgos-results thead');
-            if (theadEl) {
-                const theadObserver = new IntersectionObserver(
-                    ([e]) => theadEl.classList.toggle('is-stuck', e.intersectionRatio < 1),
-                    { threshold: [1], rootMargin: "-176px 0px 0px 0px" }
-                );
-                theadObserver.observe(theadEl);
             }
         }
 

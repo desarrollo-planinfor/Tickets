@@ -60,7 +60,7 @@
         th { background: #111827; color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.75rem; }
         td { color: #d1d5db; }
         tbody tr:hover { background: rgba(255,255,255,0.02); }
-        .empty-state { text-align: center; padding: 40px; color: #6b7280; }
+        .empty-state { text-align: center; padding: 40px; color: #9ca3af; }
         .empty-state svg { margin-bottom: 12px; opacity: 0.4; }
         .empty-state p { margin: 0; font-size: 0.9rem; }
         /* Alertas */
@@ -100,7 +100,7 @@
         <!-- Ficha resumida del equipo -->
         <div class="equipo-ficha">
             <div class="equipo-info">
-                <h2 class="equipo-nombre">{{ equipo.nombre or 'Sin nombre' }} <span style="color: #6b7280; font-weight: 400; font-size: 0.85rem;">({{ equipo.codigo or 'S/N' }})</span></h2>
+                <h2 class="equipo-nombre">{{ equipo.nombre or 'Sin nombre' }} <span style="color: #9ca3af; font-weight: 400; font-size: 0.85rem;">({{ equipo.codigo or 'S/N' }})</span></h2>
                 <div class="equipo-detalle">
                     <span>{{ equipo.marca or '-' }}</span> · {{ equipo.modelo or '-' }} · Área: <span>{{ equipo.area or '-' }}</span> · Responsable: <span>{{ equipo.responsable or '-' }}</span>
                 </div>
@@ -261,11 +261,11 @@
                             {% if detalles_text %}
                                 {{ detalles_text | replace('\n', '<br>') | safe }}
                             {% else %}
-                                <span style="color: #6b7280;">-</span>
+                                <span style="color: #9ca3af;">-</span>
                             {% endif %}
                         </td>
                         <td style="max-width: 250px;">{{ obs_text or '-' }}</td>
-                        <td style="font-size: 0.8rem; color: #6b7280;">{{ registro.registrado_por or '-' }}</td>
+                        <td style="font-size: 0.8rem; color: #9ca3af;">{{ registro.registrado_por or '-' }}</td>
                         <td>
                             <a href="{{ url_for('equipos.descargar_pdf_mantencion', id=registro.id) }}" class="btn btn-secondary" style="padding: 6px 10px; font-size: 0.8rem;" title="Descargar Ficha PDF">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 18 15 15"></polyline></svg>

@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         body { margin: 0; font-family: 'Outfit', sans-serif; background: #111827; color: #f3f4f6; }
         .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
@@ -29,7 +30,7 @@
         .form-group.full-width { grid-column: 1 / -1; }
         
         .form-label { font-size: 0.9rem; font-weight: 500; color: #d1d5db; }
-        .form-input, .form-select, .form-textarea { width: 100%; box-sizing: border-box; background: #374151; border: 1px solid #4b5563; color: #f3f4f6; padding: 10px 12px; border-radius: 8px; font-size: 0.95rem; font-family: 'Outfit', sans-serif; transition: border-color 0.2s; }
+        .form-input, .form-select, .form-textarea { width: 100%; box-sizing: border-box; background: var(--bg-input); border: 1px solid var(--border-strong); color: #f3f4f6; padding: 10px 12px; border-radius: 8px; font-size: 0.95rem; font-family: 'Outfit', sans-serif; transition: border-color 0.2s; }
         .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: #82C341; }
         .form-input:disabled, .form-select:disabled, .form-textarea:disabled { background: #1f2937; color: #9ca3af; cursor: not-allowed; }
         .form-textarea { resize: vertical; min-height: 100px; }
@@ -41,6 +42,15 @@
         .btn-secondary:hover { background: #4b5563; }
         
         .section-title { font-size: 1.1rem; font-weight: 600; color: #82C341; margin: 30px 0 15px 0; border-bottom: 1px dashed #374151; padding-bottom: 8px; }
+
+        /* Pantallas angostas. .form-grid es una grilla dura de 1fr 1fr: a 375px
+           deja columnas de ~152px, inservibles para campos de formulario. */
+        @media (max-width: 720px) {
+            .container { padding: 20px 14px; }
+            .form-grid { grid-template-columns: 1fr; gap: 16px; }
+            .tabs-header { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .tab-btn { padding: 12px 14px; white-space: nowrap; }
+        }
     </style>
 </head>
 <body>
@@ -88,13 +98,17 @@
                             <input type="text" class="form-input" value="{{ ac.codigo if ac else 'Automático' }}" disabled>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Origen</label>
-                            <select name="origen" class="form-select">
-                                <option value="Manual" {% if not ac or ac.origen == 'Manual' %}selected{% endif %}>Manual</option>
-                                <option value="Evaluación de Evento" {% if ac and ac.origen == 'Evaluación de Evento' %}selected{% endif %}>Evaluación de Evento</option>
-                                <option value="Auditoría Interna" {% if ac and ac.origen == 'Auditoría Interna' %}selected{% endif %}>Auditoría Interna</option>
-                                <option value="Auditoría Externa" {% if ac and ac.origen == 'Auditoría Externa' %}selected{% endif %}>Auditoría Externa</option>
-                                <option value="Revisión por la Dirección" {% if ac and ac.origen == 'Revisión por la Dirección' %}selected{% endif %}>Revisión por la Dirección</option>
+                            {# form_data trae lo cargado cuando el guardado falla, para no
+                               devolver el formulario en blanco. Prevalece sobre la AC guardada. #}
+                            {% set fd = form_data or {} %}
+                            <label class="form-label" for="ac-origen">Origen</label>
+                            <select name="origen" id="ac-origen" class="form-select">
+                                {% set org = fd.get('origen') or (ac.origen if ac else 'Manual') %}
+                                <option value="Manual" {% if org == 'Manual' %}selected{% endif %}>Manual</option>
+                                <option value="Evaluación de Evento" {% if org == 'Evaluación de Evento' %}selected{% endif %}>Evaluación de Evento</option>
+                                <option value="Auditoría Interna" {% if org == 'Auditoría Interna' %}selected{% endif %}>Auditoría Interna</option>
+                                <option value="Auditoría Externa" {% if org == 'Auditoría Externa' %}selected{% endif %}>Auditoría Externa</option>
+                                <option value="Revisión por la Dirección" {% if org == 'Revisión por la Dirección' %}selected{% endif %}>Revisión por la Dirección</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -102,68 +116,68 @@
                             <input type="text" class="form-input" value="{{ ac.evento.codigo if ac and ac.evento else '--' }}" disabled>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Fecha de Registro <span style="font-size: 0.8rem; color: #9ca3af; font-weight: 400;">(Modificable temporalmente)</span></label>
-                            <input type="text" name="fecha_registro" class="form-input datepicker" placeholder="YYYY-MM-DD" value="{{ ac.fecha_registro.strftime('%Y-%m-%d') if ac and ac.fecha_registro else '' }}">
+                            <label class="form-label" for="ac-fecha-reg">Fecha de Registro <span style="font-size: 0.8rem; color: #9ca3af; font-weight: 400;">(Modificable temporalmente)</span></label>
+                            <input type="text" name="fecha_registro" id="ac-fecha-reg" class="form-input datepicker" placeholder="AAAA-MM-DD" value="{{ fd.get('fecha_registro') or (ac.fecha_registro.strftime('%Y-%m-%d') if ac and ac.fecha_registro else '') }}">
                         </div>
                     </div>
 
                     <div class="section-title">Información de la Acción</div>
                     <div class="form-grid">
                         <div class="form-group">
-                            <label class="form-label">Área</label>
-                            <select name="area_id" class="form-select" onchange="autoSelectResponsable(this)">
+                            <label class="form-label" for="ac-area">Área</label>
+                            <select name="area_id" id="ac-area" class="form-select" onchange="autoSelectResponsable(this)">
                                 <option value="" data-jefe-id="">Seleccionar Área</option>
                                 {% for area in areas %}
-                                <option value="{{ area.id }}" data-jefe-id="{{ area.jefe_id if area.jefe_id else '' }}" {% if ac and ac.area_id == area.id %}selected{% endif %}>{{ area.nombre }}</option>
+                                <option value="{{ area.id }}" data-jefe-id="{{ area.jefe_id if area.jefe_id else '' }}" {% if fd.get('area_id') == area.id|string or (not fd and ac and ac.area_id == area.id) %}selected{% endif %}>{{ area.nombre }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Responsable</label>
-                            <select name="responsable_id" class="form-select" onchange="autoSelectAreaFromResponsable(this)">
+                            <label class="form-label" for="ac-responsable">Responsable</label>
+                            <select name="responsable_id" id="ac-responsable" class="form-select" onchange="autoSelectAreaFromResponsable(this)">
                                 <option value="">Seleccionar Responsable</option>
                                 {% for user in usuarios %}
-                                <option value="{{ user.id }}" {% if ac and ac.responsable_id == user.id %}selected{% endif %}>{{ user.nombre }}</option>
+                                <option value="{{ user.id }}" {% if fd.get('responsable_id') == user.id|string or (not fd and ac and ac.responsable_id == user.id) %}selected{% endif %}>{{ user.nombre }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Sistema Normativo</label>
-                            <select name="sistema_normativo_id" class="form-select">
+                            <label class="form-label" for="ac-sistema">Sistema Normativo</label>
+                            <select name="sistema_normativo_id" id="ac-sistema" class="form-select">
                                 <option value="">Seleccionar Sistema</option>
                                 {% for sn in sistemas %}
-                                <option value="{{ sn.id }}" {% if ac and ac.sistema_normativo_id == sn.id %}selected{% endif %}>{{ sn.nombre }}</option>
+                                <option value="{{ sn.id }}" {% if fd.get('sistema_normativo_id') == sn.id|string or (not fd and ac and ac.sistema_normativo_id == sn.id) %}selected{% endif %}>{{ sn.nombre }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Clasificación</label>
-                            <select name="clasificacion_id" class="form-select">
+                            <label class="form-label" for="ac-clasificacion">Clasificación</label>
+                            <select name="clasificacion_id" id="ac-clasificacion" class="form-select">
                                 <option value="">Seleccionar Clasificación</option>
                                 {% for c in clasificaciones %}
-                                <option value="{{ c.id }}" {% if ac and ac.clasificacion_id == c.id %}selected{% endif %}>{{ c.nombre }}</option>
+                                <option value="{{ c.id }}" {% if fd.get('clasificacion_id') == c.id|string or (not fd and ac and ac.clasificacion_id == c.id) %}selected{% endif %}>{{ c.nombre }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Fecha Límite</label>
-                            <input type="text" name="fecha_plazo" class="form-input datepicker" placeholder="YYYY-MM-DD" value="{{ ac.fecha_plazo.strftime('%Y-%m-%d') if ac and ac.fecha_plazo else '' }}">
+                            <label class="form-label" for="ac-plazo">Fecha Límite</label>
+                            <input type="text" name="fecha_plazo" id="ac-plazo" class="form-input datepicker" placeholder="AAAA-MM-DD" value="{{ fd.get('fecha_plazo') or (ac.fecha_plazo.strftime('%Y-%m-%d') if ac and ac.fecha_plazo else '') }}">
                         </div>
                     </div>
 
                     <div class="section-title">Detalles</div>
                     <div class="form-grid">
                         <div class="form-group full-width">
-                            <label class="form-label">Descripción del Problema</label>
-                            <textarea name="descripcion" class="form-textarea">{{ ac.descripcion if ac else '' }}</textarea>
+                            <label class="form-label" for="ac-descripcion">Descripción del Problema</label>
+                            <textarea name="descripcion" id="ac-descripcion" class="form-textarea">{{ fd.get('descripcion') or (ac.descripcion if ac else '') }}</textarea>
                         </div>
                         <div class="form-group full-width">
-                            <label class="form-label">Acción de Contención (Inmediata)</label>
-                            <textarea name="accion_contencion" class="form-textarea">{{ ac.accion_contencion if ac else '' }}</textarea>
+                            <label class="form-label" for="ac-contencion">Acción de Contención (Inmediata)</label>
+                            <textarea name="accion_contencion" id="ac-contencion" class="form-textarea">{{ fd.get('accion_contencion') or (ac.accion_contencion if ac else '') }}</textarea>
                         </div>
                         <div class="form-group full-width">
-                            <label class="form-label">Consulta a los Trabajadores</label>
-                            <textarea name="consulta_trabajador" class="form-textarea">{{ ac.consulta_trabajador if ac else '' }}</textarea>
+                            <label class="form-label" for="ac-consulta">Consulta a los Trabajadores</label>
+                            <textarea name="consulta_trabajador" id="ac-consulta" class="form-textarea">{{ fd.get('consulta_trabajador') or (ac.consulta_trabajador if ac else '') }}</textarea>
                         </div>
                     </div>
 
@@ -496,12 +510,12 @@
                                     <span style="font-size: 0.85rem; color: #9ca3af;">{{ h.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
                                 </div>
                                 <p style="margin: 0 0 5px 0; font-size: 0.9rem; color: #d1d5db;">{{ h.detalles }}</p>
-                                <div style="font-size: 0.8rem; color: #6b7280;">Usuario: <span style="color: #9ca3af;">{{ h.usuario }}</span></div>
+                                <div style="font-size: 0.8rem; color: #9ca3af;">Usuario: <span style="color: #9ca3af;">{{ h.usuario }}</span></div>
                             </div>
                             {% endfor %}
                         </div>
                     {% else %}
-                        <div style="padding:40px; text-align:center; color:#6b7280; border:1px solid #374151; border-radius:8px;">
+                        <div style="padding:40px; text-align:center; color:#9ca3af; border:1px solid #374151; border-radius:8px;">
                             Sin historial aún
                         </div>
                     {% endif %}

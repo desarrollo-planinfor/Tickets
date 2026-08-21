@@ -60,9 +60,59 @@
         }
         .filter-select:focus { outline: none; border-color: #82C341; }
 
+        /* --- Pestañas Eventos / Acciones Correctivas --- */
+        .dash-tabs {
+            display: flex;
+            gap: 6px;
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 10px;
+            padding: 5px;
+            margin-bottom: 16px;
+        }
+        .dash-tab {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            padding: 11px 16px;
+            border: none;
+            border-radius: 7px;
+            background: transparent;
+            color: #9ca3af;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            cursor: pointer;
+            transition: background 160ms ease, color 160ms ease;
+        }
+        .dash-tab:hover { color: #e5e7eb; background: rgba(55, 65, 81, 0.45); }
+        .dash-tab[aria-selected="true"] {
+            background: #1f2937;
+            color: #f3f4f6;
+            box-shadow: inset 0 0 0 1px rgba(130, 195, 65, 0.35);
+        }
+        .dash-tab .tab-count {
+            display: inline-block;
+            min-width: 22px;
+            padding: 1px 7px;
+            border-radius: 999px;
+            background: #374151;
+            color: #d1d5db;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+        .dash-tab[aria-selected="true"] .tab-count {
+            background: rgba(130, 195, 65, 0.16);
+            color: #82C341;
+        }
+        .dash-panel[hidden] { display: none; }
+
         .kpi-row {
             display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 10px;
             margin-bottom: 14px;
         }
@@ -75,11 +125,11 @@
             padding: 14px 14px 12px;
             transition: border-color 160ms ease, background 160ms ease, transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
         }
-        .kpi:hover {
+        a.kpi:hover {
             border-color: rgba(130, 195, 65, 0.45);
             background: rgba(130, 195, 65, 0.05);
         }
-        .kpi:active { transform: scale(0.98); }
+        a.kpi:active { transform: scale(0.98); }
         .kpi-label {
             display: block;
             font-size: 0.7rem;
@@ -101,11 +151,19 @@
         .kpi-value.green { color: #34d399; }
         .kpi-value.red { color: #f87171; }
         .kpi-value.accent { color: #82C341; }
-        .kpi-meta { font-size: 0.75rem; color: #6b7280; }
+        .kpi-meta { font-size: 0.75rem; color: #9ca3af; }
 
+        /* Fila 1 de graficos: donut | donut | barras */
         .charts-row {
             display: grid;
-            grid-template-columns: 0.85fr 1.3fr 0.85fr;
+            grid-template-columns: 0.85fr 0.85fr 1.3fr;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        /* Fila 2 de graficos: donut | linea */
+        .charts-row-2 {
+            display: grid;
+            grid-template-columns: 0.85fr 2.15fr;
             gap: 12px;
             margin-bottom: 14px;
         }
@@ -116,6 +174,7 @@
             padding: 14px 16px;
             display: flex;
             flex-direction: column;
+            min-width: 0;
             min-height: 0;
         }
         .panel-head {
@@ -148,19 +207,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #6b7280;
+            color: #9ca3af;
             font-size: 0.85rem;
         }
 
-        .attention-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        .attention-row > .panel {
-            min-width: 0;
-            overflow: hidden;
-        }
+        .attention-row > .panel { overflow: hidden; }
         .table-scroll {
             overflow-x: auto;
             width: 100%;
@@ -195,13 +246,13 @@
             white-space: nowrap;
         }
         .att-table th:nth-child(1),
-        .att-table td:nth-child(1) { width: 28%; }
+        .att-table td:nth-child(1) { width: 16%; }
         .att-table th:nth-child(2),
         .att-table td:nth-child(2) { width: 30%; }
         .att-table th:nth-child(3),
-        .att-table td:nth-child(3) { width: 20%; }
+        .att-table td:nth-child(3) { width: 24%; }
         .att-table th:nth-child(4),
-        .att-table td:nth-child(4) { width: 22%; }
+        .att-table td:nth-child(4) { width: 30%; }
         .att-table tbody tr:last-child td { border-bottom: none; }
         .att-table tbody tr { cursor: pointer; transition: background 0.12s; }
         .att-table tbody tr:hover { background: rgba(55, 65, 81, 0.4); }
@@ -222,6 +273,7 @@
         }
         .badge-abierto { background: rgba(59, 130, 246, 0.12); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.25); }
         .badge-proceso { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); }
+        .badge-parcial { background: rgba(167, 139, 250, 0.12); color: #a78bfa; border: 1px solid rgba(167, 139, 250, 0.25); }
         .badge-cerrado { background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); }
         .badge-escalado { background: rgba(239, 68, 68, 0.12); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.25); }
         .badge-risk-high { background: rgba(239, 68, 68, 0.12); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.25); }
@@ -229,17 +281,17 @@
         .badge-risk-low { background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); }
         .empty-cell {
             text-align: center;
-            color: #6b7280;
+            color: #9ca3af;
             padding: 24px 10px !important;
         }
 
         @media (max-width: 1100px) {
-            .kpi-row { grid-template-columns: repeat(3, 1fr); }
-            .charts-row { grid-template-columns: 1fr; }
-            .attention-row { grid-template-columns: 1fr; }
+            .kpi-row { grid-template-columns: 1fr; }
+            .charts-row,
+            .charts-row-2 { grid-template-columns: 1fr; }
         }
         @media (max-width: 640px) {
-            .kpi-row { grid-template-columns: 1fr 1fr; }
+            .dash-tabs { flex-direction: column; }
         }
     </style>
 </head>
@@ -302,137 +354,216 @@
             </div>
         </form>
 
-        <div class="kpi-row">
-            <a class="kpi" href="{{ url_for('hallazgos.lista', filtro='Abiertos') }}">
-                <span class="kpi-label">Abiertos</span>
-                <div class="kpi-value blue">{{ ev_abiertos }}</div>
-                <div class="kpi-meta">Ver lista filtrada</div>
-            </a>
-            <a class="kpi" href="{{ url_for('hallazgos.lista', filtro='En Proceso') }}">
-                <span class="kpi-label">En proceso</span>
-                <div class="kpi-value amber">{{ ev_en_proceso }}</div>
-                <div class="kpi-meta">Ver lista filtrada</div>
-            </a>
-            <a class="kpi" href="{{ url_for('hallazgos.lista', filtro='Cerrados') }}">
-                <span class="kpi-label">Cerrados</span>
-                <div class="kpi-value green">{{ ev_cerrados }}</div>
-                <div class="kpi-meta">Ver lista filtrada</div>
-            </a>
-            <a class="kpi" href="{{ url_for('hallazgos.acciones_correctivas', filtro='Vencidas') }}">
-                <span class="kpi-label">AC vencidas</span>
-                <div class="kpi-value red">{{ ac_vencidas }}</div>
-                <div class="kpi-meta">Requieren atención</div>
-            </a>
-            <div class="kpi" style="cursor:default;">
-                <span class="kpi-label">Cierre eventos</span>
-                <div class="kpi-value accent">{{ tasa_cierre_eventos }}%</div>
-                <div class="kpi-meta">{{ total_eventos }} eventos en filtro</div>
-            </div>
+        <div class="dash-tabs" role="tablist">
+            <button type="button" class="dash-tab" role="tab" id="tab-eventos"
+                    aria-controls="panel-eventos" aria-selected="true" data-panel="panel-eventos">
+                Eventos <span class="tab-count">{{ total_eventos }}</span>
+            </button>
+            <button type="button" class="dash-tab" role="tab" id="tab-acciones"
+                    aria-controls="panel-acciones" aria-selected="false" data-panel="panel-acciones">
+                Acciones Correctivas <span class="tab-count">{{ total_ac }}</span>
+            </button>
         </div>
 
-        <div class="charts-row">
-            <div class="panel">
-                <div class="panel-head"><h2>Estado de eventos</h2></div>
-                <div class="chart-box"><canvas id="chartEvEstados"></canvas></div>
-            </div>
-            <div class="panel">
-                <div class="panel-head"><h2>Tendencia mensual</h2></div>
-                <div class="chart-box"><canvas id="chartTendencia"></canvas></div>
-            </div>
-            <div class="panel">
-                <div class="panel-head"><h2>Nivel de riesgo</h2></div>
-                <div class="chart-box"><canvas id="chartRiesgo"></canvas></div>
-            </div>
-        </div>
+        <!-- ================= EVENTOS ================= -->
+        <section class="dash-panel" id="panel-eventos" role="tabpanel" aria-labelledby="tab-eventos">
 
-        <div class="attention-row">
-            <div class="panel">
-                <div class="panel-head">
-                    <h2>Eventos que requieren atención</h2>
-                    <a class="panel-link" href="{{ url_for('hallazgos.lista', filtro='Abiertos') }}">Ver abiertos</a>
+            <div class="kpi-row">
+                <div class="kpi">
+                    <span class="kpi-label">Eventos registrados</span>
+                    <div class="kpi-value">{{ total_eventos }}</div>
+                    <div class="kpi-meta">{{ ev_abiertos }} abiertos · {{ ev_en_proceso }} en proceso</div>
                 </div>
-                <div class="table-scroll">
-                    <table class="att-table">
-                        <thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Área</th>
-                                <th>Riesgo</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for ev in atencion_eventos %}
-                            {% set risk = (ev.impacto or 0) + (ev.recurrencia or 0) + (ev.potencialidad or 0) %}
-                            <tr onclick="window.location='{{ url_for('hallazgos.editar', id=ev.id) }}'">
-                                <td><a class="ev-link" href="{{ url_for('hallazgos.editar', id=ev.id) }}" onclick="event.stopPropagation()">{{ ev.codigo }}</a></td>
-                                <td class="muted">{{ ev.area.nombre if ev.area else '--' }}</td>
-                                <td>
-                                    {% if risk >= 9 %}
-                                    <span class="badge badge-risk-high">Alto ({{ risk }})</span>
-                                    {% elif risk >= 6 %}
-                                    <span class="badge badge-risk-med">Medio ({{ risk }})</span>
-                                    {% elif risk > 0 %}
-                                    <span class="badge badge-risk-low">Bajo ({{ risk }})</span>
-                                    {% else %}
-                                    <span class="muted">--</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if ev.evaluacion == 'Escalado' %}
-                                    <span class="badge badge-escalado">Escalado</span>
-                                    {% elif ev.estado == 'En Proceso' %}
-                                    <span class="badge badge-proceso">En Proceso</span>
-                                    {% else %}
-                                    <span class="badge badge-abierto">Abierto</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr><td colspan="4" class="empty-cell">No hay eventos pendientes</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="kpi">
+                    <span class="kpi-label">Tasa de cierre</span>
+                    <div class="kpi-value accent">{{ tasa_cierre_eventos }}%</div>
+                    <div class="kpi-meta">{{ ev_cerrados }} de {{ total_eventos }} cerrados</div>
+                </div>
+                <a class="kpi" href="{{ url_for('hallazgos.lista', filtro='Escalados') }}">
+                    <span class="kpi-label">Tasa de escalamiento</span>
+                    <div class="kpi-value red">{{ tasa_escalamiento }}%</div>
+                    <div class="kpi-meta">{{ eventos_escalados }} eventos escalados</div>
+                </a>
+            </div>
+
+            <div class="charts-row">
+                <div class="panel">
+                    <div class="panel-head"><h2>Estado de eventos</h2></div>
+                    <div class="chart-box"><canvas id="chartEvEstados"></canvas></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-head"><h2>Nivel de riesgo</h2></div>
+                    <div class="chart-box"><canvas id="chartRiesgo"></canvas></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-head"><h2>Eventos por área</h2></div>
+                    <div class="chart-box"><canvas id="chartEvArea"></canvas></div>
                 </div>
             </div>
 
-            <div class="panel">
-                <div class="panel-head">
-                    <h2>AC pendientes / vencidas</h2>
-                    <a class="panel-link" href="{{ url_for('hallazgos.acciones_correctivas', filtro='Abiertos') }}">Ver AC</a>
+            <div class="charts-row-2">
+                <div class="panel">
+                    <div class="panel-head"><h2>Tipos de evento</h2></div>
+                    <div class="chart-box"><canvas id="chartEvTipos"></canvas></div>
                 </div>
-                <div class="table-scroll">
-                    <table class="att-table">
-                        <thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Área</th>
-                                <th>Plazo</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for ac in ac_pendientes %}
-                            <tr onclick="window.location='{{ url_for('hallazgos.acciones_correctivas_editar', id=ac.id) }}'">
-                                <td><a class="ev-link" href="{{ url_for('hallazgos.acciones_correctivas_editar', id=ac.id) }}" onclick="event.stopPropagation()">{{ ac.codigo }}</a></td>
-                                <td class="muted">{{ ac.area }}</td>
-                                <td class="muted">{{ ac.fecha_plazo }}</td>
-                                <td>
-                                    {% if ac.estado_plazo == 'Vencido' %}
-                                    <span class="badge badge-risk-high">Vencida</span>
-                                    {% else %}
-                                    <span class="badge badge-risk-med">A tiempo</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr><td colspan="4" class="empty-cell">No hay acciones pendientes</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="panel">
+                    <div class="panel-head"><h2>Tendencia mensual de eventos</h2></div>
+                    <div class="chart-box"><canvas id="chartTendenciaEv"></canvas></div>
                 </div>
             </div>
-        </div>
+
+            <div class="attention-row">
+                <div class="panel">
+                    <div class="panel-head">
+                        <h2>Eventos abiertos y en proceso</h2>
+                        <a class="panel-link" href="{{ url_for('hallazgos.lista', filtro='Abiertos') }}">Ver abiertos</a>
+                    </div>
+                    <div class="table-scroll">
+                        <table class="att-table">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Área</th>
+                                    <th>Riesgo</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ev in atencion_eventos %}
+                                {% set risk = (ev.impacto or 0) + (ev.recurrencia or 0) + (ev.potencialidad or 0) %}
+                                <tr onclick="window.location='{{ url_for('hallazgos.editar', id=ev.id) }}'">
+                                    <td><a class="ev-link" href="{{ url_for('hallazgos.editar', id=ev.id) }}" onclick="event.stopPropagation()">{{ ev.codigo }}</a></td>
+                                    <td class="muted">{{ ev.area.nombre if ev.area else '--' }}</td>
+                                    <td>
+                                        {% if risk >= 9 %}
+                                        <span class="badge badge-risk-high">Alto ({{ risk }})</span>
+                                        {% elif risk >= 6 %}
+                                        <span class="badge badge-risk-med">Medio ({{ risk }})</span>
+                                        {% elif risk > 0 %}
+                                        <span class="badge badge-risk-low">Bajo ({{ risk }})</span>
+                                        {% else %}
+                                        <span class="muted">--</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if ev.evaluacion == 'Escalado' %}
+                                        <span class="badge badge-escalado">Escalado</span>
+                                        {% elif ev.estado == 'En Proceso' %}
+                                        <span class="badge badge-proceso">En Proceso</span>
+                                        {% else %}
+                                        <span class="badge badge-abierto">Abierto</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="4" class="empty-cell">No hay eventos pendientes</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ ACCIONES CORRECTIVAS ============ -->
+        <section class="dash-panel" id="panel-acciones" role="tabpanel" aria-labelledby="tab-acciones" hidden>
+
+            <div class="kpi-row">
+                <div class="kpi">
+                    <span class="kpi-label">Acciones registradas</span>
+                    <div class="kpi-value">{{ total_ac }}</div>
+                    <div class="kpi-meta">{{ ac_abiertas }} abiertas · {{ ac_en_proceso }} en proceso</div>
+                </div>
+                <div class="kpi">
+                    <span class="kpi-label">Tasa de cierre</span>
+                    <div class="kpi-value accent">{{ tasa_cierre_ac }}%</div>
+                    <div class="kpi-meta">{{ ac_cerradas }} de {{ total_ac }} cerradas</div>
+                </div>
+                <div class="kpi">
+                    <span class="kpi-label">Tasa de eficacia</span>
+                    <div class="kpi-value green">{{ tasa_eficacia }}%</div>
+                    <div class="kpi-meta">{{ ac_eficaces }} de {{ ac_cerradas }} cerradas sin nuevo ACR</div>
+                </div>
+            </div>
+
+            <div class="charts-row">
+                <div class="panel">
+                    <div class="panel-head"><h2>Estado de acciones</h2></div>
+                    <div class="chart-box"><canvas id="chartAcEstados"></canvas></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-head"><h2>Clasificación de las acciones</h2></div>
+                    <div class="chart-box"><canvas id="chartAcClasificacion"></canvas></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-head"><h2>Acciones por área</h2></div>
+                    <div class="chart-box"><canvas id="chartAcArea"></canvas></div>
+                </div>
+            </div>
+
+            <div class="charts-row-2">
+                <div class="panel">
+                    <div class="panel-head"><h2>Origen de las acciones</h2></div>
+                    <div class="chart-box"><canvas id="chartAcOrigen"></canvas></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-head"><h2>Tendencia mensual de acciones</h2></div>
+                    <div class="chart-box"><canvas id="chartTendenciaAc"></canvas></div>
+                </div>
+            </div>
+
+            <div class="attention-row">
+                <div class="panel">
+                    <div class="panel-head">
+                        <h2>
+                            Acciones abiertas, en proceso y cerradas parcial
+                            {% if ac_vencidas %}
+                            <span class="badge badge-risk-high" style="margin-left:6px;">{{ ac_vencidas }} vencidas</span>
+                            {% endif %}
+                        </h2>
+                        <a class="panel-link" href="{{ url_for('hallazgos.acciones_correctivas', filtro='Vencidas') }}">Ver AC</a>
+                    </div>
+                    <div class="table-scroll">
+                        <table class="att-table">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Área</th>
+                                    <th>Plazo</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ac in ac_pendientes %}
+                                <tr onclick="window.location='{{ url_for('hallazgos.acciones_correctivas_editar', id=ac.id) }}'">
+                                    <td><a class="ev-link" href="{{ url_for('hallazgos.acciones_correctivas_editar', id=ac.id) }}" onclick="event.stopPropagation()">{{ ac.codigo }}</a></td>
+                                    <td class="muted">{{ ac.area }}</td>
+                                    <td>
+                                        {% if ac.vencida %}
+                                        <span class="badge badge-risk-high">{{ ac.fecha_plazo }}</span>
+                                        {% else %}
+                                        <span class="muted">{{ ac.fecha_plazo }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if ac.estado == 'Cerrado Parcial' %}
+                                        <span class="badge badge-parcial">Cerrado Parcial</span>
+                                        {% elif ac.estado == 'En Proceso' %}
+                                        <span class="badge badge-proceso">En Proceso</span>
+                                        {% else %}
+                                        <span class="badge badge-abierto">Abierto</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="4" class="empty-cell">No hay acciones pendientes</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 
     <script>
@@ -440,6 +571,9 @@
         const font = 'Outfit, sans-serif';
         Chart.defaults.color = '#9ca3af';
         Chart.defaults.font.family = font;
+
+        const PALETA = ['#82C341', '#60a5fa', '#fbbf24', '#f87171', '#a78bfa',
+                        '#34d399', '#f472b6', '#38bdf8', '#fb923c', '#94a3b8'];
 
         function emptyChart(id, msg) {
             const el = document.getElementById(id);
@@ -461,14 +595,18 @@
             'Sin Evaluar': {{ url_for('hallazgos.lista', filtro='RiesgoSinEvaluar')|tojson }}
         };
 
-        function irAListaPorEstado(label) {
-            const url = LISTA_POR_ESTADO[label];
-            if (url) window.location.href = url;
-        }
+        const AC_POR_ESTADO = {
+            'Abierto': {{ url_for('hallazgos.acciones_correctivas', filtro='Abiertos')|tojson }},
+            'En Proceso': {{ url_for('hallazgos.acciones_correctivas', filtro='En Proceso')|tojson }},
+            'Cerrado Parcial': {{ url_for('hallazgos.acciones_correctivas', filtro='Cerrado Parcial')|tojson }},
+            'Cerrado': {{ url_for('hallazgos.acciones_correctivas', filtro='Cerrado (Eficaz)')|tojson }}
+        };
 
-        function irAListaPorRiesgo(label) {
-            const url = LISTA_POR_RIESGO[label];
-            if (url) window.location.href = url;
+        function irA(mapa) {
+            return function (label) {
+                const url = mapa[label];
+                if (url) window.location.href = url;
+            };
         }
 
         function makeDonut(canvasId, dataObj, colorMap, onSliceClick) {
@@ -479,16 +617,20 @@
                 return;
             }
             const canvas = document.getElementById(canvasId);
-            if (onSliceClick) {
-                canvas.style.cursor = 'pointer';
-            }
+            if (!canvas) return;
+            if (onSliceClick) canvas.style.cursor = 'pointer';
+            const colores = labels.map(function (l, i) {
+                if (colorMap && colorMap[l]) return colorMap[l];
+                if (colorMap) return '#6b7280';
+                return PALETA[i % PALETA.length];
+            });
             new Chart(canvas, {
                 type: 'doughnut',
                 data: {
                     labels,
                     datasets: [{
                         data: values,
-                        backgroundColor: labels.map(l => colorMap[l] || '#6b7280'),
+                        backgroundColor: colores,
                         borderWidth: 0,
                         hoverOffset: 5
                     }]
@@ -499,8 +641,7 @@
                     cutout: '68%',
                     onClick: function (evt, elements, chart) {
                         if (!onSliceClick || !elements.length) return;
-                        const idx = elements[0].index;
-                        onSliceClick(chart.data.labels[idx]);
+                        onSliceClick(chart.data.labels[elements[0].index]);
                     },
                     plugins: {
                         legend: {
@@ -519,60 +660,84 @@
             });
         }
 
-        makeDonut('chartEvEstados', DATA.ev_estados, {
-            'Abierto': '#60a5fa',
-            'En Proceso': '#fbbf24',
-            'Cerrado': '#34d399',
-            'Escalado': '#f87171'
-        }, irAListaPorEstado);
-
-        makeDonut('chartRiesgo', DATA.riesgo, {
-            'Alto (≥9)': '#f87171',
-            'Medio (6-8)': '#fbbf24',
-            'Bajo (3-5)': '#34d399',
-            'Sin Evaluar': '#6b7280'
-        }, irAListaPorRiesgo);
-
-        (function () {
-            const labels = DATA.tendencia_labels || [];
-            if (!labels.length) {
-                emptyChart('chartTendencia', 'Sin datos de tendencia');
+        function makeBar(canvasId, labels, values, color) {
+            if (!labels || !labels.length) {
+                emptyChart(canvasId, 'Sin datos por área');
                 return;
             }
-            const ctx = document.getElementById('chartTendencia').getContext('2d');
-            new Chart(ctx, {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            // Barras horizontales: los nombres de área son largos y en vertical
+            // se cortan o quedan rotados e ilegibles.
+            new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: color,
+                        borderRadius: 4,
+                        maxBarThickness: 22
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { title: items => labels[items[0].dataIndex] } }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: { color: '#9ca3af', precision: 0, font: { size: 10 } },
+                            grid: { color: 'rgba(55,65,81,0.45)' }
+                        },
+                        y: {
+                            ticks: {
+                                color: '#9ca3af',
+                                font: { size: 10 },
+                                autoSkip: false,
+                                callback: function (v) {
+                                    const t = this.getLabelForValue(v);
+                                    return t.length > 22 ? t.slice(0, 21) + '…' : t;
+                                }
+                            },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function makeLine(canvasId, label, valores, color, fondo) {
+            const labels = DATA.tendencia_labels || [];
+            if (!labels.length) {
+                emptyChart(canvasId, 'Sin datos de tendencia');
+                return;
+            }
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            new Chart(canvas.getContext('2d'), {
                 type: 'line',
                 data: {
                     labels,
-                    datasets: [
-                        {
-                            label: 'Eventos',
-                            data: DATA.tendencia_ev,
-                            borderColor: '#82C341',
-                            backgroundColor: 'rgba(130, 195, 65, 0.12)',
-                            tension: 0.35,
-                            fill: true,
-                            pointRadius: 3,
-                            pointBackgroundColor: '#82C341'
-                        },
-                        {
-                            label: 'AC',
-                            data: DATA.tendencia_ac,
-                            borderColor: '#60a5fa',
-                            backgroundColor: 'rgba(96, 165, 250, 0.1)',
-                            tension: 0.35,
-                            fill: true,
-                            pointRadius: 3,
-                            pointBackgroundColor: '#60a5fa'
-                        }
-                    ]
+                    datasets: [{
+                        label: label,
+                        data: valores,
+                        borderColor: color,
+                        backgroundColor: fondo,
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 3,
+                        pointBackgroundColor: color
+                    }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'top', labels: { boxWidth: 10, font: { size: 11 } } }
-                    },
+                    plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 11 } } } },
                     scales: {
                         x: {
                             ticks: { color: '#9ca3af', font: { size: 10 } },
@@ -586,7 +751,76 @@
                     }
                 }
             });
-        })();
+        }
+
+        // ---- Pestañas ----
+        // Chart.js no puede medir un canvas dentro de un contenedor con [hidden],
+        // por eso los graficos de un panel se construyen la primera vez que se muestra.
+        const CONSTRUCTORES = {
+            'panel-eventos': function () {
+                makeDonut('chartEvEstados', DATA.ev_estados, {
+                    'Abierto': '#60a5fa',
+                    'En Proceso': '#fbbf24',
+                    'Cerrado': '#34d399',
+                    'Escalado': '#f87171'
+                }, irA(LISTA_POR_ESTADO));
+
+                makeDonut('chartRiesgo', DATA.riesgo, {
+                    'Alto (≥9)': '#f87171',
+                    'Medio (6-8)': '#fbbf24',
+                    'Bajo (3-5)': '#34d399',
+                    'Sin Evaluar': '#6b7280'
+                }, irA(LISTA_POR_RIESGO));
+
+                makeBar('chartEvArea', DATA.ev_area_labels, DATA.ev_por_area, '#82C341');
+                makeDonut('chartEvTipos', DATA.ev_tipos, null, null);
+                makeLine('chartTendenciaEv', 'Eventos', DATA.tendencia_ev,
+                         '#82C341', 'rgba(130, 195, 65, 0.12)');
+            },
+            'panel-acciones': function () {
+                makeDonut('chartAcEstados', DATA.ac_estados, {
+                    'Abierto': '#60a5fa',
+                    'En Proceso': '#fbbf24',
+                    'Cerrado Parcial': '#a78bfa',
+                    'Cerrado': '#34d399'
+                }, irA(AC_POR_ESTADO));
+
+                makeDonut('chartAcClasificacion', DATA.ac_clasificaciones, null, null);
+                makeBar('chartAcArea', DATA.ac_area_labels, DATA.ac_por_area, '#60a5fa');
+                makeDonut('chartAcOrigen', DATA.ac_origenes, null, null);
+                makeLine('chartTendenciaAc', 'Acciones correctivas', DATA.tendencia_ac,
+                         '#60a5fa', 'rgba(96, 165, 250, 0.12)');
+            }
+        };
+
+        const construidos = {};
+        const tabs = Array.from(document.querySelectorAll('.dash-tab'));
+
+        function activarTab(panelId, guardar) {
+            tabs.forEach(function (t) {
+                const activo = t.dataset.panel === panelId;
+                t.setAttribute('aria-selected', activo ? 'true' : 'false');
+                document.getElementById(t.dataset.panel).hidden = !activo;
+            });
+            if (!construidos[panelId]) {
+                construidos[panelId] = true;
+                CONSTRUCTORES[panelId]();
+            }
+            if (guardar) {
+                try { sessionStorage.setItem('hallazgos_dash_tab', panelId); } catch (e) {}
+            }
+        }
+
+        tabs.forEach(function (t) {
+            t.addEventListener('click', function () { activarTab(t.dataset.panel, true); });
+        });
+
+        let inicial = 'panel-eventos';
+        try {
+            const guardada = sessionStorage.getItem('hallazgos_dash_tab');
+            if (guardada && CONSTRUCTORES[guardada]) inicial = guardada;
+        } catch (e) {}
+        activarTab(inicial, false);
     </script>
 </div><!-- /#hallazgos-soft-root -->
 </body>

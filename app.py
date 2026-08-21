@@ -299,7 +299,6 @@ from modulos.rutas_auth import auth_bp
 from modulos.rutas_tickets import tickets_bp
 from modulos.rutas_equipos import equipos_bp
 from modulos.rutas_infra import infra_bp
-from modulos.rutas_eventos_legacy import eventos_legacy_bp
 from modulos.rutas_hallazgos import hallazgos_bp
 
 app.register_blueprint(admin_bp)
@@ -307,7 +306,6 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(tickets_bp)
 app.register_blueprint(equipos_bp)
 app.register_blueprint(infra_bp)
-app.register_blueprint(eventos_legacy_bp)
 app.register_blueprint(hallazgos_bp, url_prefix='/eventos')
 
 if __name__ == '__main__':

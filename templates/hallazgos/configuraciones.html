@@ -1,4 +1,3 @@
-<div class="table-responsive">
 ﻿<!DOCTYPE html>
 <html lang="es">
 
@@ -10,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         body {
             margin: 0;
@@ -189,6 +189,13 @@
                 color: #e5e7eb;
             }
 
+            /* La celda de Estado contiene un badge con 10px de padding propio,
+               asi que su texto arranca 10px a la derecha del borde de la celda.
+               Las otras columnas son texto plano y alinean con ese borde, por lo
+               que el encabezado de Estado se veia corrido. Se compensa para que
+               el titulo quede a plomo con el texto del badge. */
+            .catalog-table th.col-estado { padding-left: 35px; }
+
             /* Footer / Add new */
             .catalog-footer {
                 padding: 20px 25px;
@@ -297,7 +304,11 @@
                 font-weight: 600;
                 display: inline-block;
                 text-align: center;
-                width: 60px;
+                /* min-width y no width: con box-sizing: border-box un width fijo
+                   de 60px deja solo 40px utiles y "Inactivo" (64.5px) se sale
+                   de la pastilla. Asi crece con el contenido y mantiene un piso
+                   para que las etiquetas cortas se vean parejas. */
+                min-width: 60px;
             }
 
             .badge-active {
@@ -353,7 +364,7 @@
                             <thead>
                                 <tr>
                                     <th>Nombre del Sistema</th>
-                                    <th style="width: 100px;">Estado</th>
+                                    <th class="col-estado" style="width: 110px;">Estado</th>
                                     <th style="width: 120px;">Acción</th>
                                 </tr>
                             </thead>
@@ -401,7 +412,7 @@
                             <thead>
                                 <tr>
                                     <th>Tipo de Evento</th>
-                                    <th style="width: 100px;">Estado</th>
+                                    <th class="col-estado" style="width: 110px;">Estado</th>
                                     <th style="width: 120px;">Acción</th>
                                 </tr>
                             </thead>
@@ -449,7 +460,7 @@
                             <thead>
                                 <tr>
                                     <th>Clasificación</th>
-                                    <th style="width: 100px;">Estado</th>
+                                    <th class="col-estado" style="width: 110px;">Estado</th>
                                     <th style="width: 120px;">Acción</th>
                                 </tr>
                             </thead>
@@ -499,7 +510,7 @@
                             <thead>
                                 <tr>
                                     <th>Origen</th>
-                                    <th style="width: 100px;">Estado</th>
+                                    <th class="col-estado" style="width: 110px;">Estado</th>
                                     <th style="width: 120px;">Acción</th>
                                 </tr>
                             </thead>
@@ -548,7 +559,7 @@
                                 <tr>
                                     <th>Nombre del Área</th>
                                     <th>Jefe de Área</th>
-                                    <th style="width: 100px;">Estado</th>
+                                    <th class="col-estado" style="width: 110px;">Estado</th>
                                     <th style="width: 120px;">Acción</th>
                                 </tr>
                             </thead>

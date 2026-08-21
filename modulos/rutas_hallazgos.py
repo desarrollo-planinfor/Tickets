@@ -1,8 +1,54 @@
-from flask import Blueprint, render_template, jsonify, request, redirect, url_for, flash, g, session
+from flask import Blueprint, render_template, jsonify, request, redirect, url_for, flash, g, session, current_app
 from functools import wraps
-from datetime import datetime
+from datetime import datetime, date
 
 hallazgos_bp = Blueprint('hallazgos', __name__, template_folder='templates')
+
+# Tabla 2 - Matriz de Evaluacion de Recurrencia.
+CLASIFICACION_RECURRENCIA = {
+    1: 'Aislado',
+    2: 'Esporádico',
+    3: 'Ocasional',
+    4: 'Frecuente',
+    5: 'Sistemático',
+}
+
+
+def nivel_recurrencia(count_1m, count_6m, count_12m):
+    """Nivel de recurrencia (1-5) segun la Tabla 2, contando eventos similares
+    del mismo tipo dentro de la misma area.
+
+    La Tabla 2 solo define los niveles 3, 4 y 5 sobre el ultimo mes, asi que un
+    problema cronico (varios eventos en 6 meses pero ninguno reciente) quedaba
+    topeado en nivel 2. Se evalua cada ventana por separado y se toma el nivel
+    mas alto; el ultimo mes esta contenido en los 6 meses, por lo que ambas
+    escalas son consistentes entre si.
+    """
+    if count_1m > 3:            # Sistematico
+        nivel_1m = 5
+    elif count_1m in (2, 3):    # Frecuente
+        nivel_1m = 4
+    elif count_1m == 1:         # Ocasional
+        nivel_1m = 3
+    else:
+        nivel_1m = 0
+
+    if count_6m > 6:
+        nivel_6m = 5
+    elif count_6m in (5, 6):
+        nivel_6m = 4
+    elif count_6m in (3, 4):
+        nivel_6m = 3
+    elif count_6m in (1, 2):    # Esporadico
+        nivel_6m = 2
+    else:
+        nivel_6m = 0
+
+    nivel = max(nivel_1m, nivel_6m)
+    if nivel == 0:
+        # Sin eventos en 6 meses: Aislado solo si tampoco hubo en 12 meses.
+        nivel = 1 if count_12m == 0 else 2
+    return nivel
 
 def local_login_required(f):
     """Decorator local para rutas que requieren autenticación sin causar imports circulares"""
@@ -25,7 +71,8 @@ def calcular_recurrencia():
     area_id = request.args.get('area_id', type=int)
     
     if not tipo_evento_id or not area_id:
-        return jsonify({'recurrencia': 1, 'count_12m': 0, 'count_6m': 0, 'count_1m': 0})
+        return jsonify({'recurrencia': 1, 'clasificacion': CLASIFICACION_RECURRENCIA[1],
+                        'count_12m': 0, 'count_6m': 0, 'count_1m': 0})
         
     ahora = datetime.now()
     hace_1m = ahora - timedelta(days=30)
@@ -40,21 +87,11 @@ def calcular_recurrencia():
     count_6m = query.filter(HallazgoEvento.fecha_registro >= hace_6m).count()
     count_12m = query.filter(HallazgoEvento.fecha_registro >= hace_12m).count()
     
-    if count_1m > 3:
-        nivel = 5
-    elif count_1m in [2, 3]:
-        nivel = 4
-    elif count_1m == 1:
-        nivel = 3
-    elif count_6m in [1, 2]:
-        nivel = 2
-    elif count_12m == 0:
-        nivel = 1
-    else:
-        nivel = 2
-        
+    nivel = nivel_recurrencia(count_1m, count_6m, count_12m)
+
     return jsonify({
         'recurrencia': nivel,
+        'clasificacion': CLASIFICACION_RECURRENCIA.get(nivel, ''),
         'count_1m': count_1m,
         'count_6m': count_6m,
         'count_12m': count_12m
@@ -63,10 +100,8 @@ def calcular_recurrencia():
 @hallazgos_bp.route('/')
 @local_login_required
 def dashboard():
-    from extensions import db
     from sqlalchemy.orm import joinedload
-    from models import ( HallazgoEvento, HallazgoAccionCorrectiva, Area,
-                     HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoACRIteracion)
+    from models import HallazgoEvento, HallazgoAccionCorrectiva, Area
     from sqlalchemy import func
     import json
 
@@ -83,6 +118,7 @@ def dashboard():
     )
     ac_query = HallazgoAccionCorrectiva.query.options(
         joinedload(HallazgoAccionCorrectiva.area),
+        joinedload(HallazgoAccionCorrectiva.clasificacion),
         joinedload(HallazgoAccionCorrectiva.responsable)
     )
 
@@ -98,105 +134,37 @@ def dashboard():
 
     eventos = ev_query.all()
     acciones = ac_query.all()
+    hoy = datetime.now().date()
+
+    def estado_ac(a):
+        """Normaliza el estado de una AC a las mismas 4 categorias que usa la lista."""
+        if a.estado_cierre == 'Parcial':
+            return 'Cerrado Parcial'
+        if a.estado == 'Cerrado':
+            return 'Cerrado'
+        if a.estado in ('En Proceso', 'En Revisión'):
+            return 'En Proceso'
+        return 'Abierto'
+
+    # ==================================================================
+    # BLOQUE 1 - EVENTOS
+    # ==================================================================
 
     # --- KPIs ---
     total_eventos = len(eventos)
-    total_ac = len(acciones)
     ev_abiertos = sum(1 for e in eventos if e.estado == 'Abierto')
     ev_en_proceso = sum(1 for e in eventos if e.estado == 'En Proceso')
     ev_cerrados = sum(1 for e in eventos if e.estado == 'Cerrado')
     eventos_escalados = sum(1 for e in eventos if e.evaluacion == 'Escalado')
     tasa_escalamiento = round((eventos_escalados / total_eventos * 100) if total_eventos > 0 else 0, 1)
-
     tasa_cierre_eventos = round((ev_cerrados / total_eventos * 100) if total_eventos > 0 else 0, 1)
 
-    ac_abiertas = sum(1 for a in acciones if a.estado == 'Abierto')
-    ac_cerradas = sum(1 for a in acciones if a.estado == 'Cerrado')
-    tasa_cierre_ac = round((ac_cerradas / total_ac * 100) if total_ac > 0 else 0, 1)
-    hoy = datetime.now().date()
-    ac_vencidas = sum(1 for a in acciones if a.fecha_plazo and a.estado == 'Abierto' and a.fecha_plazo < hoy)
-
-    # Acciones correctivas pendientes (vencidas primero)
-    ac_pendientes_atrasadas = []
-    for a in acciones:
-        if a.estado == 'Abierto':
-            es_vencida = bool(a.fecha_plazo and a.fecha_plazo < hoy)
-            ac_pendientes_atrasadas.append({
-                'id': a.id,
-                'codigo': a.codigo,
-                'area': a.area.nombre if a.area else '--',
-                'responsable': a.responsable.nombre if a.responsable else '--',
-                'fecha_plazo': a.fecha_plazo.strftime('%d/%m/%Y') if a.fecha_plazo else '--',
-                'estado_plazo': 'Vencido' if es_vencida else 'A tiempo',
-                '_sort': 0 if es_vencida else 1
-            })
-    ac_pendientes_atrasadas.sort(key=lambda x: (x['_sort'], x['fecha_plazo']))
-    ac_pendientes_atrasadas = ac_pendientes_atrasadas[:8]
-
-    # Eventos que requieren atención
-    atencion_eventos = []
-    for e in eventos:
-        if e.estado != 'Cerrado' and (e.estado in ('Abierto', 'En Proceso') or e.evaluacion == 'Escalado'):
-            score = (e.impacto or 0) + (e.recurrencia or 0) + (e.potencialidad or 0)
-            atencion_eventos.append(e)
-    atencion_eventos = sorted(
-        atencion_eventos,
-        key=lambda e: (
-            0 if e.evaluacion == 'Escalado' else 1,
-            0 if e.estado == 'Abierto' else 1,
-            -( (e.impacto or 0) + (e.recurrencia or 0) + (e.potencialidad or 0) )
-        )
-    )[:8]
-    # --- Estado de Eventos (Donut) ---
+    # --- Estado de eventos (Donut) ---
     ev_estados = {}
     for e in eventos:
-        st = e.estado
-        ev_estados[st] = ev_estados.get(st, 0) + 1
+        ev_estados[e.estado] = ev_estados.get(e.estado, 0) + 1
 
-    # --- Estado de AC (Donut) ---
-    ac_estados = {}
-    for a in acciones:
-        ac_estados[a.estado] = ac_estados.get(a.estado, 0) + 1
-
-    # --- Tipos de Evento (Donut) ---
-    ev_tipos = {}
-    for e in eventos:
-        nombre = e.tipo_evento.nombre if e.tipo_evento else 'Sin Tipo'
-        ev_tipos[nombre] = ev_tipos.get(nombre, 0) + 1
-
-    # --- Eventos y AC por Área (Bar) ---
-    areas_list = Area.query.filter_by(activa=True).all()
-    area_labels = []
-    ev_por_area = []
-    ac_por_area = []
-    for a in areas_list:
-        ev_c = sum(1 for e in eventos if e.area_id == a.id)
-        ac_c = sum(1 for ac in acciones if ac.area_id == a.id)
-        if ev_c > 0 or ac_c > 0:
-            area_labels.append(a.nombre)
-            ev_por_area.append(ev_c)
-            ac_por_area.append(ac_c)
-
-    # --- Por Sistema Normativo (Bar) ---
-    sistemas = HallazgoSistemaNormativo.query.filter_by(activo=True).all()
-    sn_labels = []
-    ev_por_sn = []
-    ac_por_sn = []
-    for s in sistemas:
-        ev_c = sum(1 for e in eventos if e.sistema_normativo_id == s.id)
-        ac_c = sum(1 for ac in acciones if ac.sistema_normativo_id == s.id)
-        if ev_c > 0 or ac_c > 0:
-            sn_labels.append(s.nombre)
-            ev_por_sn.append(ev_c)
-            ac_por_sn.append(ac_c)
-
-    # --- Metodología ACR (Donut) ---
-    metodo_counts = {}
-    iteraciones = HallazgoACRIteracion.query.filter(HallazgoACRIteracion.metodologia.isnot(None)).all()
-    for it in iteraciones:
-        metodo_counts[it.metodologia] = metodo_counts.get(it.metodologia, 0) + 1
-
-    # --- Nivel de Riesgo (Donut) ---
+    # --- Nivel de riesgo (Donut) ---
     riesgo = {'Alto (≥9)': 0, 'Medio (6-8)': 0, 'Bajo (3-5)': 0, 'Sin Evaluar': 0}
     for e in eventos:
         score = (e.impacto or 0) + (e.recurrencia or 0) + (e.potencialidad or 0)
@@ -209,7 +177,105 @@ def dashboard():
         else:
             riesgo['Sin Evaluar'] += 1
 
-    # --- Tendencia mensual (Line chart) ---
+    # --- Eventos por area (Barras) ---
+    areas_list = Area.query.filter_by(activa=True).all()
+    ev_area_labels = []
+    ev_por_area = []
+    for a in areas_list:
+        c = sum(1 for e in eventos if e.area_id == a.id)
+        if c > 0:
+            ev_area_labels.append(a.nombre)
+            ev_por_area.append(c)
+
+    # --- Tipos de evento (Donut) ---
+    ev_tipos = {}
+    for e in eventos:
+        nombre = e.tipo_evento.nombre if e.tipo_evento else 'Sin Tipo'
+        ev_tipos[nombre] = ev_tipos.get(nombre, 0) + 1
+
+    # --- Eventos abiertos y en proceso (Tabla) ---
+    atencion_eventos = sorted(
+        [e for e in eventos if e.estado in ('Abierto', 'En Proceso')],
+        key=lambda e: (
+            0 if e.evaluacion == 'Escalado' else 1,
+            0 if e.estado == 'Abierto' else 1,
+            -((e.impacto or 0) + (e.recurrencia or 0) + (e.potencialidad or 0))
+        )
+    )[:8]
+
+    # ==================================================================
+    # BLOQUE 2 - ACCIONES CORRECTIVAS
+    # ==================================================================
+
+    # --- KPIs ---
+    total_ac = len(acciones)
+    ac_abiertas = sum(1 for a in acciones if estado_ac(a) == 'Abierto')
+    ac_en_proceso = sum(1 for a in acciones if estado_ac(a) == 'En Proceso')
+    ac_parciales = sum(1 for a in acciones if estado_ac(a) == 'Cerrado Parcial')
+    ac_cerradas = sum(1 for a in acciones if estado_ac(a) == 'Cerrado')
+    tasa_cierre_ac = round((ac_cerradas / total_ac * 100) if total_ac > 0 else 0, 1)
+    ac_vencidas = sum(1 for a in acciones
+                      if a.fecha_plazo and a.fecha_plazo < hoy
+                      and estado_ac(a) in ('Abierto', 'En Proceso', 'Cerrado Parcial'))
+
+    # Tasa de eficacia: % de AC cerradas que no requirio un nuevo ACR
+    ac_eficaces = sum(1 for a in acciones
+                      if estado_ac(a) == 'Cerrado'
+                      and a.estado_cierre == 'Eficaz'
+                      and (a.iteracion_actual or 0) <= 1)
+    tasa_eficacia = round((ac_eficaces / ac_cerradas * 100) if ac_cerradas > 0 else 0, 1)
+
+    # --- Estado de acciones (Donut) ---
+    ac_estados = {}
+    for a in acciones:
+        st = estado_ac(a)
+        ac_estados[st] = ac_estados.get(st, 0) + 1
+
+    # --- Clasificacion de las acciones (Donut) ---
+    ac_clasificaciones = {}
+    for a in acciones:
+        nombre = a.clasificacion.nombre if a.clasificacion else 'Sin Clasificar'
+        ac_clasificaciones[nombre] = ac_clasificaciones.get(nombre, 0) + 1
+
+    # --- Acciones por area (Barras) ---
+    ac_area_labels = []
+    ac_por_area = []
+    for a in areas_list:
+        c = sum(1 for ac in acciones if ac.area_id == a.id)
+        if c > 0:
+            ac_area_labels.append(a.nombre)
+            ac_por_area.append(c)
+
+    # --- Origen de acciones (Donut) ---
+    ac_origenes = {}
+    for a in acciones:
+        nombre = a.origen or 'Sin Origen'
+        ac_origenes[nombre] = ac_origenes.get(nombre, 0) + 1
+
+    # --- AC abiertas / en proceso / cerrado parcial (Tabla) ---
+    fecha_lejana = date(hoy.year + 50, 1, 1)
+    ac_pendientes = []
+    for a in acciones:
+        st = estado_ac(a)
+        if st not in ('Abierto', 'En Proceso', 'Cerrado Parcial'):
+            continue
+        es_vencida = bool(a.fecha_plazo and a.fecha_plazo < hoy)
+        ac_pendientes.append({
+            'id': a.id,
+            'codigo': a.codigo,
+            'area': a.area.nombre if a.area else '--',
+            'responsable': a.responsable.nombre if a.responsable else '--',
+            'estado': st,
+            'fecha_plazo': a.fecha_plazo.strftime('%d/%m/%Y') if a.fecha_plazo else '--',
+            'vencida': es_vencida,
+            '_sort_plazo': a.fecha_plazo or fecha_lejana
+        })
+    ac_pendientes.sort(key=lambda x: (0 if x['vencida'] else 1, x['_sort_plazo']))
+    ac_pendientes = ac_pendientes[:8]
+
+    # ==================================================================
+    # Tendencia mensual (eje compartido, una serie por bloque)
+    # ==================================================================
     meses_data = {}
     for e in eventos:
         mes_key = e.fecha_registro.strftime('%Y-%m')
@@ -224,50 +290,77 @@ def dashboard():
     tendencia_ev = [meses_data[m]['eventos'] for m in meses_sorted]
     tendencia_ac = [meses_data[m]['ac'] for m in meses_sorted]
 
-    # --- Últimos 5 eventos ---
     default_years = [2024, 2025, 2026, 2027]
-    ultimos_eventos = HallazgoEvento.query.options(joinedload(HallazgoEvento.area), joinedload(HallazgoEvento.sistema_normativo), joinedload(HallazgoEvento.tipo_evento), joinedload(HallazgoEvento.responsable)).order_by(HallazgoEvento.fecha_registro.desc()).limit(5).all()
 
     chart_data = {
+        # Eventos
         'ev_estados': ev_estados,
         'riesgo': riesgo,
-        'area_labels': area_labels,
+        'ev_area_labels': ev_area_labels,
         'ev_por_area': ev_por_area,
-        'tendencia_labels': tendencia_labels,
+        'ev_tipos': ev_tipos,
         'tendencia_ev': tendencia_ev,
+        # Acciones correctivas
+        'ac_estados': ac_estados,
+        'ac_clasificaciones': ac_clasificaciones,
+        'ac_area_labels': ac_area_labels,
+        'ac_por_area': ac_por_area,
+        'ac_origenes': ac_origenes,
         'tendencia_ac': tendencia_ac,
+        # Comun
+        'tendencia_labels': tendencia_labels,
     }
 
     return render_template('hallazgos/dashboard.html',
+                           # Eventos
                            total_eventos=total_eventos,
                            ev_abiertos=ev_abiertos,
                            ev_en_proceso=ev_en_proceso,
                            ev_cerrados=ev_cerrados,
-                           acciones_correctivas=total_ac,
                            eventos_escalados=eventos_escalados,
                            tasa_escalamiento=tasa_escalamiento,
                            tasa_cierre_eventos=tasa_cierre_eventos,
-                           tasa_cierre_ac=tasa_cierre_ac,
+                           atencion_eventos=atencion_eventos,
+                           # Acciones correctivas
+                           total_ac=total_ac,
                            ac_abiertas=ac_abiertas,
+                           ac_en_proceso=ac_en_proceso,
+                           ac_parciales=ac_parciales,
                            ac_cerradas=ac_cerradas,
                            ac_vencidas=ac_vencidas,
+                           ac_eficaces=ac_eficaces,
+                           tasa_cierre_ac=tasa_cierre_ac,
+                           tasa_eficacia=tasa_eficacia,
+                           ac_pendientes=ac_pendientes,
+                           # Comun
                            chart_data=json.dumps(chart_data),
                            areas=areas_list,
                            filtro_mes=mes or '',
                            filtro_anio=anio or '',
                            filtro_area=area_id or '',
-                           years=default_years,
-                           ac_pendientes=ac_pendientes_atrasadas,
-                           atencion_eventos=atencion_eventos,
-                           ultimos_eventos=ultimos_eventos)
+                           years=default_years)
 
 @hallazgos_bp.route('/lista')
 @local_login_required
 def lista():
     from models import HallazgoEvento, Area, HallazgoSistemaNormativo, HallazgoTipoEvento
-    from sqlalchemy import func
+    from sqlalchemy import func, or_
+    from sqlalchemy.orm import joinedload
     filtro = request.args.get('filtro')
-    query = HallazgoEvento.query
+    q = (request.args.get('q') or '').strip()
+    page = request.args.get('page', 1, type=int)
+    query = HallazgoEvento.query.options(
+        joinedload(HallazgoEvento.area),
+        joinedload(HallazgoEvento.sistema_normativo),
+        joinedload(HallazgoEvento.tipo_evento),
+        joinedload(HallazgoEvento.responsable)
+    )
+    if q:
+        patron = '%%%s%%' % q
+        query = query.filter(or_(
+            HallazgoEvento.codigo.ilike(patron),
+            HallazgoEvento.descripcion.ilike(patron)
+        ))
     if filtro == 'Abiertos':
         query = query.filter_by(estado='Abierto')
     elif filtro == 'En Proceso':
@@ -291,16 +384,20 @@ def lista():
         else:
             query = query.filter(score == 0)
         
-    eventos = query.order_by(HallazgoEvento.fecha_registro.desc()).all()
-    
+    paginado = query.order_by(HallazgoEvento.fecha_registro.desc()).paginate(
+        page=page, per_page=15, error_out=False)
+
     # Conteos para el Resumen de Eventos
     abiertos = HallazgoEvento.query.filter_by(estado='Abierto').count()
     en_proceso = HallazgoEvento.query.filter_by(estado='En Proceso').count()
     cerrados = HallazgoEvento.query.filter_by(estado='Cerrado').count()
     escalados = HallazgoEvento.query.filter_by(evaluacion='Escalado').count()
-    
-    return render_template('hallazgos/lista.html', 
-                           eventos=eventos,
+
+    return render_template('hallazgos/lista.html',
+                           eventos=paginado.items,
+                           paginado=paginado,
+                           filtro=filtro or '',
+                           q=q,
                            abiertos=abiertos,
                            en_proceso=en_proceso,
                            cerrados=cerrados,
@@ -315,7 +412,9 @@ def nuevo():
     from sqlalchemy.orm import joinedload
     from models import Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoEvento
     from datetime import datetime
-    
+
+    datos_cargados = None
+
     if request.method == 'POST':
         try:
             todos_eventos = HallazgoEvento.query.all()
@@ -452,18 +551,22 @@ def nuevo():
             return redirect(url_for('hallazgos.dashboard'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error al registrar el evento: {str(e)}', 'error')
-        
+            current_app.logger.exception('Error al registrar evento')
+            flash('No se pudo guardar el evento. Los datos que cargaste siguen abajo: '
+                  'revisá los campos obligatorios y volvé a intentar.', 'error')
+            datos_cargados = request.form
+
     areas = Area.query.filter_by(activa=True).all()
     sistemas_normativos = HallazgoSistemaNormativo.query.filter_by(activo=True).all()
     tipos_evento = HallazgoTipoEvento.query.filter_by(activo=True).all()
     usuarios = Usuario.query.filter_by(activo=True).all()
     
-    return render_template('hallazgos/formulario.html', 
-                           areas=areas, 
-                           sistemas=sistemas_normativos, 
+    return render_template('hallazgos/formulario.html',
+                           areas=areas,
+                           sistemas=sistemas_normativos,
                            tipos=tipos_evento,
                            usuarios=usuarios,
+                           form_data=datos_cargados,
                            evento=None)
 
 @hallazgos_bp.route('/editar/<int:id>', methods=['GET', 'POST'])
@@ -474,7 +577,9 @@ def editar(id):
     from sqlalchemy.orm import joinedload
     from models import Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoEvento, HallazgoAccionCorrectiva
     evento = HallazgoEvento.query.get_or_404(id)
-    
+
+    datos_cargados = None
+
     if request.method == 'POST':
         try:
             # Procesar fecha personalizada
@@ -591,18 +696,22 @@ def editar(id):
             return redirect(url_for('hallazgos.lista'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error al actualizar el evento: {str(e)}', 'error')
-            
+            current_app.logger.exception('Error al actualizar evento %s', id)
+            flash('No se pudieron guardar los cambios. Los datos que cargaste siguen abajo: '
+                  'revisá los campos obligatorios y volvé a intentar.', 'error')
+            datos_cargados = request.form
+
     areas = Area.query.filter((Area.activa == True) | (Area.id == evento.area_id)).all()
     sistemas_normativos = HallazgoSistemaNormativo.query.filter((HallazgoSistemaNormativo.activo == True) | (HallazgoSistemaNormativo.id == evento.sistema_normativo_id)).all()
     tipos_evento = HallazgoTipoEvento.query.filter((HallazgoTipoEvento.activo == True) | (HallazgoTipoEvento.id == evento.tipo_evento_id)).all()
     usuarios = Usuario.query.filter((Usuario.activo == True) | (Usuario.id == evento.responsable_id)).all()
     
-    return render_template('hallazgos/formulario.html', 
-                           areas=areas, 
-                           sistemas=sistemas_normativos, 
-                           tipos=tipos_evento, 
+    return render_template('hallazgos/formulario.html',
+                           areas=areas,
+                           sistemas=sistemas_normativos,
+                           tipos=tipos_evento,
                            usuarios=usuarios,
+                           form_data=datos_cargados,
                            evento=evento)
 
 @hallazgos_bp.route('/eliminar/<int:id>', methods=['POST'])
@@ -648,9 +757,24 @@ def eliminar(id):
 @local_login_required
 def acciones_correctivas():
     from models import HallazgoAccionCorrectiva
+    from sqlalchemy import or_
+    from sqlalchemy.orm import joinedload
     filtro = request.args.get('filtro')
-    query = HallazgoAccionCorrectiva.query
-    
+    q = (request.args.get('q') or '').strip()
+    page = request.args.get('page', 1, type=int)
+    query = HallazgoAccionCorrectiva.query.options(
+        joinedload(HallazgoAccionCorrectiva.area),
+        joinedload(HallazgoAccionCorrectiva.responsable),
+        joinedload(HallazgoAccionCorrectiva.clasificacion)
+    )
+
+    if q:
+        patron = '%%%s%%' % q
+        query = query.filter(or_(
+            HallazgoAccionCorrectiva.codigo.ilike(patron),
+            HallazgoAccionCorrectiva.descripcion.ilike(patron)
+        ))
+
     if filtro == 'Abiertos':
         query = query.filter_by(estado='Abierto')
     elif filtro == 'En Proceso':
@@ -667,14 +791,23 @@ def acciones_correctivas():
             HallazgoAccionCorrectiva.fecha_plazo < hoy
         )
         
-    acciones = query.order_by(HallazgoAccionCorrectiva.fecha_registro.desc()).all()
-    
+    paginado = query.order_by(HallazgoAccionCorrectiva.fecha_registro.desc()).paginate(
+        page=page, per_page=15, error_out=False)
+
     abiertos = HallazgoAccionCorrectiva.query.filter_by(estado='Abierto').count()
     en_proceso = HallazgoAccionCorrectiva.query.filter(HallazgoAccionCorrectiva.estado.in_(['En Proceso', 'En Revisión']), HallazgoAccionCorrectiva.estado_cierre != 'Parcial').count()
     cerrado_parcial = HallazgoAccionCorrectiva.query.filter_by(estado_cierre='Parcial').count()
     cerrado_eficaz = HallazgoAccionCorrectiva.query.filter_by(estado='Cerrado').count()
-    
-    return render_template('hallazgos/acciones_correctivas.html', acciones=acciones, abiertos=abiertos, en_proceso=en_proceso, cerrado_parcial=cerrado_parcial, cerrado_eficaz=cerrado_eficaz)
+
+    return render_template('hallazgos/acciones_correctivas.html',
+                           acciones=paginado.items,
+                           paginado=paginado,
+                           filtro=filtro or '',
+                           q=q,
+                           abiertos=abiertos,
+                           en_proceso=en_proceso,
+                           cerrado_parcial=cerrado_parcial,
+                           cerrado_eficaz=cerrado_eficaz)
 
 @hallazgos_bp.route('/acciones_correctivas/nuevo', methods=['GET', 'POST'])
 @local_login_required
@@ -684,7 +817,9 @@ def acciones_correctivas_nuevo():
     from sqlalchemy.orm import joinedload
     from models import HallazgoAccionCorrectiva, Area, Usuario, HallazgoSistemaNormativo, HallazgoTipoEvento, HallazgoClasificacion
     from datetime import datetime
-    
+
+    datos_cargados = None
+
     if request.method == 'POST':
         try:
             todas_ac = HallazgoAccionCorrectiva.query.all()
@@ -766,8 +901,11 @@ def acciones_correctivas_nuevo():
             return redirect(url_for('hallazgos.acciones_correctivas'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error al registrar AC: {str(e)}', 'error')
-            
+            current_app.logger.exception('Error al registrar accion correctiva')
+            flash('No se pudo guardar la accion correctiva. Los datos que cargaste siguen '
+                  'abajo: revisa los campos obligatorios y volve a intentar.', 'error')
+            datos_cargados = request.form
+
     areas = Area.query.filter_by(activa=True).all()
     sistemas_normativos = HallazgoSistemaNormativo.query.filter_by(activo=True).all()
     tipos_evento = HallazgoTipoEvento.query.filter_by(activo=True).all()
@@ -776,6 +914,7 @@ def acciones_correctivas_nuevo():
     
     return render_template('hallazgos/formulario_ac.html', 
                            ac=None,
+                           form_data=datos_cargados,
                            areas=areas, 
                            sistemas=sistemas_normativos, 
                            tipos=tipos_evento, 

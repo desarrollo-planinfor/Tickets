@@ -8,12 +8,20 @@
 .ts-wrapper.single .ts-control:after { border-color: #9ca3af transparent transparent transparent !important; }
 .ts-wrapper.focus .ts-control { border-color: #82C341 !important; box-shadow: 0 0 0 2px rgba(130, 195, 65, 0.2) !important; }
 
+/* Paleta unica del sistema.
+   Antes estos tokens definian la familia "slate" (#0f172a / #1e293b / #334155)
+   mientras los templates escribian a mano la familia "gray" (#111827 / #1f2937 /
+   #374151). Convivian dos grises: slate tira a azul, gray es neutro. Se unifica
+   en gray, que es la que ya usaba el 90% del proyecto.
+   Al agregar estilos nuevos, usar var(--token) y no el hex. */
 :root {
-    --bg-main: #0f172a;
-    --bg-card: #1e293b;
-    --border: #334155;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
+    --bg-main: #111827;      /* fondo de pagina */
+    --bg-card: #1f2937;      /* tarjetas y paneles */
+    --bg-input: #111827;     /* campos: mas oscuro que la tarjeta; el placeholder pasa AA (6.99:1) */
+    --border: #374151;
+    --border-strong: #4b5563;
+    --text-main: #f3f4f6;
+    --text-muted: #9ca3af;   /* 5.78:1 sobre --bg-card: cumple WCAG AA */
     --accent: #82C341;
     --accent-hover: #90d648;
     --status-success: #10b981;
@@ -21,6 +29,11 @@
     --status-error: #ef4444;
     --status-info: #3b82f6;
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+    /* Escala corta. Antes convivian 20 radios y 34 tamanos de fuente. */
+    --radius-sm: 6px;
+    --radius: 8px;
+    --radius-lg: 12px;
 }
 
 *:focus-visible {
@@ -66,10 +79,18 @@ body { font-family: 'Outfit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; b
 .form-label, .form-group label { font-size: 0.8rem; color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
 .form-control, .form-group input[type="text"], .form-group input[type="email"], .form-group input[type="password"], .form-group select, .form-group textarea { background: #111827; border: 1px solid #4b5563; color: white; padding: 10px 15px; border-radius: 6px; font-size: 0.9rem; font-family: inherit; width: 100%; box-sizing: border-box; transition: all 0.2s; }
 .form-control:focus, .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #82C341; box-shadow: 0 0 0 2px rgba(130, 195, 65, 0.2); }
+/* El default del navegador da 2.24:1 sobre el fondo de los campos, muy por
+   debajo del minimo WCAG AA (4.5:1). Este gris es el mismo que ya se usa en
+   labels y texto secundario. */
+::placeholder { color: #9ca3af; opacity: 1; }
+::-webkit-input-placeholder { color: #9ca3af; opacity: 1; }
 
 /* Tabla Estándar */
 .table-container { background: #1f2937; border-radius: 6px; overflow-x: auto; border: 1px solid #374151; box-shadow: 0 1px 3px rgba(0,0,0,0.3); margin-bottom: 20px; }
-table { width: 100%; border-collapse: collapse; min-width: 1200px; }
+/* El ancho minimo de las tablas de datos lo define .table-responsive (800px),
+   que ademas aporta el overflow-x. No poner min-width aca: estiraba tablas de
+   3 columnas a 1200px y obligaba a scrollear dentro de la tarjeta sin motivo. */
+table { width: 100%; border-collapse: collapse; }
 th, td { padding: 14px 16px; text-align: left; font-size: 0.95rem; border-bottom: 1px solid #374151; }
 th { background: rgba(17, 24, 39, 0.5); color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.8rem; }
 td { color: #f3f4f6; }
@@ -533,7 +554,7 @@ input[type="password"]::-ms-clear {
     right: 16px;
     background: transparent;
     border: none;
-    color: #6b7280;
+    color: #9ca3af;
     cursor: pointer;
     padding: 4px;
     border-radius: 6px;
@@ -648,7 +669,7 @@ input[type="password"]::-ms-clear {
     overflow-y: auto;
 }
 .user-edit-chips-placeholder {
-    color: #6b7280;
+    color: #9ca3af;
     font-size: 0.82rem;
     font-style: italic;
     line-height: 1.2;

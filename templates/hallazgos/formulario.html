@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         body { margin: 0; font-family: 'Outfit', sans-serif; background: #111827; color: #f3f4f6; }
         .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
@@ -24,10 +25,10 @@
         .form-label { display: block; font-size: 0.9rem; font-weight: 500; color: #9ca3af; margin-bottom: 8px; }
         .form-label .required { color: #f87171; }
         
-        .form-input, .form-select, .form-textarea { width: 100%; padding: 12px 15px; background: #374151; border: 1px solid #4b5563; border-radius: 8px; color: #ffffff; font-family: 'Outfit', sans-serif; font-size: 0.95rem; box-sizing: border-box; transition: all 0.2s; }
+        .form-input, .form-select, .form-textarea { width: 100%; padding: 12px 15px; background: var(--bg-input); border: 1px solid var(--border-strong); border-radius: 8px; color: #ffffff; font-family: 'Outfit', sans-serif; font-size: 0.95rem; box-sizing: border-box; transition: all 0.2s; }
         .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: #82C341; box-shadow: 0 0 0 3px rgba(130, 195, 65, 0.15); }
         .form-textarea { resize: vertical; min-height: 100px; }
-        .form-input.readonly { background: #111827; border-color: #374151; color: #6b7280; cursor: not-allowed; }
+        .form-input.readonly { background: #111827; border-color: #374151; color: #9ca3af; cursor: not-allowed; }
         
         /* Tabs */
         .tabs-header { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 1px solid #374151; }
@@ -106,6 +107,26 @@
         .form-actions { display: flex; justify-content: flex-end; gap: 15px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #374151; }
         .file-upload-box { border: 2px dashed #4b5563; border-radius: 8px; padding: 40px; text-align: center; color: #9ca3af; cursor: pointer; transition: all 0.2s; }
         .file-upload-box:hover { border-color: #82C341; color: #82C341; background: rgba(130, 195, 65, 0.05); }
+
+        /* Pantallas angostas.
+           .form-grid ya colapsa solo (auto-fit + minmax), pero .likert-container
+           es una grilla dura de 1fr 1fr: a 375px cada columna queda en 152px y
+           los cinco botones necesitan 265px. Y .tabs-header es flex nowrap con
+           cuatro pestanas, que tampoco entran. */
+        @media (max-width: 720px) {
+            .container { padding: 20px 14px; }
+            .card { padding: 20px 16px; }
+            .likert-container { grid-template-columns: 1fr; gap: 22px; }
+            .tabs-header { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .tab-btn { padding: 12px 14px; font-size: 0.92rem; white-space: nowrap; }
+            .form-actions { flex-direction: column-reverse; }
+            .form-actions .btn { width: 100%; }
+        }
+        @media (max-width: 420px) {
+            /* Cinco botones de 45px + gaps no entran: que escalen con el ancho. */
+            .likert-group { gap: 6px; }
+            .likert-btn { width: 100%; max-width: 52px; height: 42px; }
+        }
     </style>
 </head>
 <body>
@@ -142,75 +163,79 @@
             {% endif %}
 
             <form method="POST" action="{{ url_for('hallazgos.editar', id=evento.id) if evento else url_for('hallazgos.nuevo') }}" id="form-hallazgo" enctype="multipart/form-data">
-                <input type="hidden" name="impacto" id="val-impacto" value="{{ evento.impacto or 0 if evento else 0 }}">
-                <input type="hidden" name="recurrencia" id="val-recurrencia" value="{{ evento.recurrencia or 0 if evento else 0 }}">
-                <input type="hidden" name="potencialidad" id="val-potencialidad" value="{{ evento.potencialidad or 0 if evento else 0 }}">
+                <input type="hidden" name="impacto" id="val-impacto" value="{{ (form_data or {}).get('impacto') or (evento.impacto or 0 if evento else 0) }}">
+                <input type="hidden" name="recurrencia" id="val-recurrencia" value="{{ (form_data or {}).get('recurrencia') or (evento.recurrencia or 0 if evento else 0) }}">
+                <input type="hidden" name="potencialidad" id="val-potencialidad" value="{{ (form_data or {}).get('potencialidad') or (evento.potencialidad or 0 if evento else 0) }}">
 
                 <!-- TAB 1: INFORMACIÓN -->
                 <div id="tab-info" class="tab-content active">
+                    {# form_data trae lo que el usuario habia cargado cuando el guardado
+                       falla, para no devolverle el formulario en blanco. Tiene prioridad
+                       sobre los valores del evento guardado. #}
+                    {% set fd = form_data or {} %}
                     <div class="section-title" style="margin-top:0">Registro Inicial</div>
                     <div class="form-grid">
                         <div class="form-group">
-                            <label class="form-label">ID Evento</label>
-                            <input class="form-input readonly" value="{{ evento.codigo if evento else 'Automático' }}" disabled>
+                            <label class="form-label" for="ev-codigo">ID Evento</label>
+                            <input id="ev-codigo" class="form-input readonly" value="{{ evento.codigo if evento else 'Automático' }}" disabled>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Fecha de Registro</label>
-                            <input type="text" name="fecha_registro" class="form-input datepicker" placeholder="YYYY-MM-DD" value="{{ evento.fecha_registro.strftime('%Y-%m-%d') if evento and evento.fecha_registro else now.strftime('%Y-%m-%d') if now else '' }}">
-                            <small style="color: #9ca3af; font-size: 0.75rem;">(Modificable temporalmente para agregar datos anteriores)</small>
+                            <label class="form-label" for="ev-fecha">Fecha de Registro</label>
+                            <input type="text" name="fecha_registro" id="ev-fecha" class="form-input datepicker" placeholder="YYYY-MM-DD" value="{{ fd.get('fecha_registro') or (evento.fecha_registro.strftime('%Y-%m-%d') if evento and evento.fecha_registro else (now.strftime('%Y-%m-%d') if now else '')) }}">
+                            <small style="color: #9ca3af; font-size: 0.75rem;">Formato AAAA-MM-DD. Se puede cambiar para cargar eventos anteriores.</small>
                         </div>
-                        
+
                         <div class="form-group">
-                            <label class="form-label">Área <span class="required">*</span></label>
-                            <select name="area_id" class="form-select" required onchange="checkRecurrence(); autoSelectResponsable(this)">
+                            <label class="form-label" for="ev-area">Área <span class="required">*</span></label>
+                            <select name="area_id" id="ev-area" class="form-select" required onchange="checkRecurrence(); autoSelectResponsable(this)">
                                 <option value="" data-jefe-id="">Seleccionar...</option>
                                 {% for area in areas %}
-                                <option value="{{ area.id }}" data-jefe-id="{{ area.jefe_id if area.jefe_id else '' }}" {% if evento and evento.area_id == area.id %}selected{% endif %}>{{ area.nombre }}</option>
+                                <option value="{{ area.id }}" data-jefe-id="{{ area.jefe_id if area.jefe_id else '' }}" {% if fd.get('area_id') == area.id|string or (not fd and evento and evento.area_id == area.id) %}selected{% endif %}>{{ area.nombre }}</option>
                                 {% endfor %}
                             </select>
                         </div>
-                        
+
                         <div class="form-group">
-                            <label class="form-label">Responsable <span class="required">*</span></label>
-                            <select name="responsable_id" class="form-select" required onchange="autoSelectAreaFromResponsable(this)">
+                            <label class="form-label" for="ev-responsable">Responsable <span class="required">*</span></label>
+                            <select name="responsable_id" id="ev-responsable" class="form-select" required onchange="autoSelectAreaFromResponsable(this)">
                                 <option value="">Seleccionar...</option>
                                 {% for u in usuarios %}
-                                <option value="{{ u.id }}" {% if evento and evento.responsable_id == u.id %}selected{% endif %}>{{ u.nombre }}</option>
+                                <option value="{{ u.id }}" {% if fd.get('responsable_id') == u.id|string or (not fd and evento and evento.responsable_id == u.id) %}selected{% endif %}>{{ u.nombre }}</option>
                                 {% endfor %}
                             </select>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">Sistema Normativo <span class="required">*</span></label>
-                            <select name="sistema_normativo_id" class="form-select" required>
+                            <label class="form-label" for="ev-sistema">Sistema Normativo <span class="required">*</span></label>
+                            <select name="sistema_normativo_id" id="ev-sistema" class="form-select" required>
                                 <option value="">Seleccionar...</option>
                                 {% for s in sistemas %}
-                                <option value="{{ s.id }}" {% if evento and evento.sistema_normativo_id == s.id %}selected{% endif %}>{{ s.nombre }}</option>
+                                <option value="{{ s.id }}" {% if fd.get('sistema_normativo_id') == s.id|string or (not fd and evento and evento.sistema_normativo_id == s.id) %}selected{% endif %}>{{ s.nombre }}</option>
                                 {% endfor %}
                             </select>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">Tipo de Evento</label>
+                            <label class="form-label" for="ev-type">Tipo de Evento</label>
                             <select name="tipo_evento_id" class="form-select" id="ev-type" onchange="checkRecurrence()">
                                 <option value="">Seleccionar...</option>
                                 {% for t in tipos %}
-                                <option value="{{ t.id }}" {% if evento and evento.tipo_evento_id == t.id %}selected{% endif %}>{{ t.nombre }}</option>
+                                <option value="{{ t.id }}" {% if fd.get('tipo_evento_id') == t.id|string or (not fd and evento and evento.tipo_evento_id == t.id) %}selected{% endif %}>{{ t.nombre }}</option>
                                 {% endfor %}
                             </select>
                         </div>
 
                         <div class="form-group full-width">
-                            <label class="form-label">Descripción <span class="required">*</span></label>
-                            <textarea name="descripcion" class="form-textarea" required placeholder="Describa el evento...">{{ evento.descripcion if evento else '' }}</textarea>
+                            <label class="form-label" for="ev-descripcion">Descripción <span class="required">*</span></label>
+                            <textarea name="descripcion" id="ev-descripcion" class="form-textarea" required placeholder="Describa el evento...">{{ fd.get('descripcion') or (evento.descripcion if evento else '') }}</textarea>
                         </div>
                     </div>
 
                     <div class="section-title">Tratamiento</div>
                     <div class="form-grid">
                         <div class="form-group full-width" style="margin-bottom: 25px;">
-                            <label class="form-label" style="text-transform: uppercase; font-size: 0.8rem; font-weight: 700;">Acción de Contención</label>
-                            <textarea name="accion_contencion" class="form-textarea" placeholder="Describa la acción de contención..." style="background: #111827;">{{ evento.accion_contencion if evento else '' }}</textarea>
+                            <label class="form-label" for="ev-contencion" style="text-transform: uppercase; font-size: 0.8rem; font-weight: 700;">Acción de Contención</label>
+                            <textarea name="accion_contencion" id="ev-contencion" class="form-textarea" placeholder="Describa la acción de contención..." style="background: #111827;">{{ fd.get('accion_contencion') or (evento.accion_contencion if evento else '') }}</textarea>
                         </div>
 
                         <!-- Likert Scales Compact Grid -->
@@ -356,12 +381,12 @@
                                     <span style="font-size: 0.85rem; color: #9ca3af;">{{ h.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
                                 </div>
                                 <p style="margin: 0 0 5px 0; font-size: 0.9rem; color: #d1d5db;">{{ h.detalles }}</p>
-                                <div style="font-size: 0.8rem; color: #6b7280;">Usuario: <span style="color: #9ca3af;">{{ h.usuario }}</span></div>
+                                <div style="font-size: 0.8rem; color: #9ca3af;">Usuario: <span style="color: #9ca3af;">{{ h.usuario }}</span></div>
                             </div>
                             {% endfor %}
                         </div>
                     {% else %}
-                        <div style="padding:40px; text-align:center; color:#6b7280; border:1px solid #374151; border-radius:8px;">
+                        <div style="padding:40px; text-align:center; color:#9ca3af; border:1px solid #374151; border-radius:8px;">
                             Sin historial aún
                         </div>
                     {% endif %}
@@ -384,9 +409,9 @@
                 0: "Calculada automáticamente según el histórico de eventos del mismo tipo.",
                 1: "Aislado: 0 eventos similares registrados en los últimos 12 meses.",
                 2: "Esporádico: 1 a 2 eventos similares registrados en los últimos 6 meses.",
-                3: "Ocasional: 1 evento similar registrado en el último mes.",
-                4: "Frecuente: 2 a 3 eventos similares registrados en el último mes.",
-                5: "Sistemático: Más de 3 eventos similares registrados en el último mes."
+                3: "Ocasional: 1 evento similar en el último mes, o 3 a 4 en los últimos 6 meses.",
+                4: "Frecuente: 2 a 3 eventos similares en el último mes, o 5 a 6 en los últimos 6 meses.",
+                5: "Sistemático: Más de 3 eventos similares en el último mes, o más de 6 en los últimos 6 meses."
             },
             potentiality: {
                 0: "Pasa el mouse sobre un número para ver su descripción.",
@@ -525,7 +550,8 @@
                 selectLikert('recurrence', data.recurrencia || 1);
                 
                 if (hint) {
-                    hint.textContent = `(Automático: Nivel ${data.recurrencia || 1} - 12m: ${data.count_12m || 0}, 6m: ${data.count_6m || 0}, 1m: ${data.count_1m || 0})`;
+                    const clasif = data.clasificacion ? ` ${data.clasificacion}` : '';
+                    hint.textContent = `(Automático: Nivel ${data.recurrencia || 1} -${clasif} — eventos similares en el área: ${data.count_1m || 0} en 1 mes, ${data.count_6m || 0} en 6 meses, ${data.count_12m || 0} en 12 meses)`;
                 }
             } catch (e) {
                 console.error("Error al calcular recurrencia", e);

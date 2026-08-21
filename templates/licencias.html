@@ -81,7 +81,7 @@
         .days-value.danger { color: #f87171; }
         .days-value.warning { color: #fbbf24; }
         .days-value.success { color: #34d399; }
-        .days-label { font-size: 0.72rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.03em; }
+        .days-label { font-size: 0.72rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.03em; }
         .progress-bar { width: 100%; height: 4px; background: #374151; border-radius: 2px; overflow: hidden; }
         .progress-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
         .progress-fill.danger { background: linear-gradient(90deg, #ef4444, #f87171); }
@@ -94,7 +94,7 @@
         .service-icon-software { background: rgba(168, 85, 247, 0.1); color: #c084fc; }
         .service-icon-saas { background: rgba(245, 158, 11, 0.1); color: #fbbf24; }
         .service-name { font-weight: 600; color: #ffffff; font-size: 0.9rem; line-height: 1.3; }
-        .service-obs { font-size: 0.78rem; color: #6b7280; font-weight: 400; margin-top: 2px; max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .service-obs { font-size: 0.78rem; color: #9ca3af; font-weight: 400; margin-top: 2px; max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         /* ===== Auto-renew indicator ===== */
         .renew-indicator { display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; color: #34d399; background: rgba(16, 185, 129, 0.08); padding: 2px 8px; border-radius: 10px; margin-top: 4px; }
         /* ===== Actions Cell ===== */
@@ -126,12 +126,12 @@
         .alert-error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; }
         /* ===== Empty State ===== */
         .empty-state { text-align: center; padding: 60px 20px; }
-        .empty-state-icon { width: 64px; height: 64px; border-radius: 16px; background: rgba(107, 114, 128, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: #6b7280; }
+        .empty-state-icon { width: 64px; height: 64px; border-radius: 16px; background: rgba(107, 114, 128, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: #9ca3af; }
         .empty-state-title { font-size: 1.1rem; font-weight: 600; color: #d1d5db; margin-bottom: 6px; }
-        .empty-state-text { font-size: 0.9rem; color: #6b7280; }
+        .empty-state-text { font-size: 0.9rem; color: #9ca3af; }
         /* ===== Date display ===== */
         .date-cell { white-space: nowrap; font-size: 0.85rem; color: #d1d5db; }
-        .date-cell .date-sub { font-size: 0.72rem; color: #6b7280; margin-top: 2px; }
+        .date-cell .date-sub { font-size: 0.72rem; color: #9ca3af; margin-top: 2px; }
         /* ===== Responsive ===== */
         @media (max-width: 768px) {
             .form-grid { grid-template-columns: 1fr; }
@@ -579,6 +579,37 @@
                 </div>
             </div>
         </div>
+
+        {% if paginado.pages > 1 %}
+        <div class="pagination">
+            {% if paginado.has_prev %}
+                <a href="{{ url_for('infra.licencias', page=paginado.prev_num, tab=current_tab, q=search_query or None) }}" class="page-item" aria-label="Página anterior">&laquo;</a>
+            {% else %}
+                <span class="page-item disabled">&laquo;</span>
+            {% endif %}
+
+            {% for page_num in paginado.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                    {% if paginado.page == page_num %}
+                        <span class="page-item active" aria-current="page">{{ page_num }}</span>
+                    {% else %}
+                        <a href="{{ url_for('infra.licencias', page=page_num, tab=current_tab, q=search_query or None) }}" class="page-item">{{ page_num }}</a>
+                    {% endif %}
+                {% else %}
+                    <span class="page-item disabled" style="background:transparent; border:none; padding: 0 5px;">…</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if paginado.has_next %}
+                <a href="{{ url_for('infra.licencias', page=paginado.next_num, tab=current_tab, q=search_query or None) }}" class="page-item" aria-label="Página siguiente">&raquo;</a>
+            {% else %}
+                <span class="page-item disabled">&raquo;</span>
+            {% endif %}
+        </div>
+        <p style="text-align:center; color:#9ca3af; font-size:0.82rem; margin-top:10px;">
+            {{ paginado.total }} licencia{{ 's' if paginado.total != 1 else '' }} · página {{ paginado.page }} de {{ paginado.pages }}
+        </p>
+        {% endif %}
         </div><!-- /#licencias-results -->
 
     </div>

@@ -121,7 +121,10 @@ def licencias():
             Licencia.responsable.ilike(f'%{search_query}%')
         )
     
-    licencias_list = query.order_by(Licencia.fecha_expiracion.asc()).all()
+    page = request.args.get('page', 1, type=int)
+    paginado = query.order_by(Licencia.fecha_expiracion.asc()).paginate(
+        page=page, per_page=15, error_out=False)
+    licencias_list = paginado.items
     
     # Estadísticas globales (sin filtro de tab/búsqueda)
     todas = Licencia.query.all()
@@ -150,6 +153,7 @@ def licencias():
     
     return render_template('licencias.html',
         licencias=licencias_list,
+        paginado=paginado,
         vista='licencias',
         stats=stats,
         current_tab=tab,

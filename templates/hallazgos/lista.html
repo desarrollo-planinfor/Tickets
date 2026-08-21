@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         body {
             margin: 0;
@@ -218,6 +219,30 @@
             </div>
         </div>
 
+        <div class="filters-card" style="padding: 16px 20px;">
+            <form method="GET" action="{{ url_for('hallazgos.lista') }}" class="filters-form">
+                {% if filtro %}<input type="hidden" name="filtro" value="{{ filtro }}">{% endif %}
+                <div class="form-group">
+                    <label class="form-label" for="buscar-evento">Buscar por código o descripción</label>
+                    <input type="search" name="q" id="buscar-evento" class="form-control"
+                           placeholder="EV-014, reclamo de cliente…" value="{{ q }}">
+                </div>
+                <div class="form-group" style="flex-direction: row; gap: 10px; align-items: end;">
+                    <button type="submit" class="btn-primary">Buscar</button>
+                    {% if q %}
+                    <a href="{{ url_for('hallazgos.lista', filtro=filtro or None) }}" class="btn-primary"
+                       style="background: #374151; color: #f3f4f6;">Limpiar</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        {% if q %}
+        <p style="color: #9ca3af; font-size: 0.9rem; margin: 0 0 14px;">
+            {{ paginado.total }} resultado{{ 's' if paginado.total != 1 else '' }} para <strong style="color:#f3f4f6;">"{{ q }}"</strong>
+        </p>
+        {% endif %}
+
         <div class="card">
             <div class="table-responsive table-swap">
             <table>
@@ -296,8 +321,17 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 30px; color: #6b7280;">
-                            No hay eventos registrados.
+                        <td colspan="8" style="text-align: center; padding: 30px; color: #9ca3af;">
+                            {% if q %}
+                                Ningún evento coincide con "{{ q }}".
+                                <a href="{{ url_for('hallazgos.lista', filtro=filtro or None) }}" style="color:#82C341;">Limpiar la búsqueda</a>
+                            {% elif filtro %}
+                                No hay eventos con este filtro.
+                                <a href="{{ url_for('hallazgos.lista') }}" style="color:#82C341;">Ver todos</a>
+                            {% else %}
+                                Todavía no hay eventos registrados.
+                                <a href="{{ url_for('hallazgos.nuevo') }}" style="color:#82C341;">Crear el primero</a>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -305,6 +339,37 @@
             </table>
             </div>
         </div>
+
+        {% if paginado.pages > 1 %}
+        <div class="pagination">
+            {% if paginado.has_prev %}
+                <a href="{{ url_for('hallazgos.lista', page=paginado.prev_num, filtro=filtro or None, q=q or None) }}" class="page-item" aria-label="Página anterior">&laquo;</a>
+            {% else %}
+                <span class="page-item disabled">&laquo;</span>
+            {% endif %}
+
+            {% for page_num in paginado.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                    {% if paginado.page == page_num %}
+                        <span class="page-item active" aria-current="page">{{ page_num }}</span>
+                    {% else %}
+                        <a href="{{ url_for('hallazgos.lista', page=page_num, filtro=filtro or None, q=q or None) }}" class="page-item">{{ page_num }}</a>
+                    {% endif %}
+                {% else %}
+                    <span class="page-item disabled" style="background:transparent; border:none; padding: 0 5px;">…</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if paginado.has_next %}
+                <a href="{{ url_for('hallazgos.lista', page=paginado.next_num, filtro=filtro or None, q=q or None) }}" class="page-item" aria-label="Página siguiente">&raquo;</a>
+            {% else %}
+                <span class="page-item disabled">&raquo;</span>
+            {% endif %}
+        </div>
+        <p style="text-align:center; color:#9ca3af; font-size:0.82rem; margin-top:10px;">
+            {{ paginado.total }} evento{{ 's' if paginado.total != 1 else '' }} en total · página {{ paginado.page }} de {{ paginado.pages }}
+        </p>
+        {% endif %}
         </div><!-- /#hallazgos-results -->
     </div>
     <script>

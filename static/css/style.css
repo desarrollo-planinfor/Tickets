@@ -197,8 +197,13 @@ input[type="password"]::-ms-clear {
             gap: 1rem;
         }
 
-        .ticket-card {
-            background: var(--card-bg);
+        /* Acotado a .ticket-list a proposito. Sin el contenedor, este display:grid
+           tambien alcanzaba a las tarjetas de panel_agente.html, que usan la misma
+           clase para un diseno vertical distinto: las metia en tres columnas y
+           dejaba .ticket-asunto en 0px de ancho, o sea que el asunto del ticket
+           desaparecia. --bg-card (no --card-bg, que no existe). */
+        .ticket-list .ticket-card {
+            background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 6px;
             padding: 1.25rem 1.5rem;
@@ -209,7 +214,7 @@ input[type="password"]::-ms-clear {
             transition: all 0.2s ease;
         }
 
-        .ticket-card:hover { border-color: rgba(148, 163, 184, 0.4); background: rgba(30, 41, 59, 1); }
+        .ticket-list .ticket-card:hover { border-color: rgba(148, 163, 184, 0.4); background: rgba(30, 41, 59, 1); }
 
         .ticket-id-badge {
             background: rgba(255, 255, 255, 0.05);

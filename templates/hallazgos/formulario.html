@@ -181,8 +181,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="ev-fecha">Fecha de Registro</label>
-                            <input type="text" name="fecha_registro" id="ev-fecha" class="form-input datepicker" placeholder="YYYY-MM-DD" value="{{ fd.get('fecha_registro') or (evento.fecha_registro.strftime('%Y-%m-%d') if evento and evento.fecha_registro else (now.strftime('%Y-%m-%d') if now else '')) }}">
-                            <small style="color: #9ca3af; font-size: 0.75rem;">Formato AAAA-MM-DD. Se puede cambiar para cargar eventos anteriores.</small>
+                            <input type="text" name="fecha_registro" id="ev-fecha" class="form-input readonly" readonly placeholder="YYYY-MM-DD" value="{{ fd.get('fecha_registro') or (evento.fecha_registro.strftime('%Y-%m-%d') if evento and evento.fecha_registro else (now.strftime('%Y-%m-%d') if now else '')) }}">
                         </div>
 
                         <div class="form-group">
@@ -697,11 +696,18 @@
                     const fileList = document.getElementById('file_list');
                     const hasEvidences = fileList ? fileList.children.length > 0 : false;
                     
-                    if (!hasEvidences) {
+                    const impactVal = parseInt(document.getElementById('val-impacto').value) || 0;
+                    const recurrenceVal = parseInt(document.getElementById('val-recurrencia').value) || 0;
+                    const potentialityVal = parseInt(document.getElementById('val-potencialidad').value) || 0;
+                    const riskVal = impactVal + recurrenceVal + potentialityVal;
+                    const isCritico = (impactVal === 5 || recurrenceVal === 5 || potentialityVal === 5);
+                    const isEscalado = (riskVal >= 9 || isCritico);
+                    
+                    if (!hasEvidences && isEscalado) {
                         e.preventDefault();
                         Swal.fire({
                             title: 'Evidencia Requerida',
-                            text: 'Debe adjuntar al menos un archivo de evidencia con datos completos.',
+                            text: 'Para eventos con nivel de riesgo Alto o Crítico, debe adjuntar al menos un archivo de evidencia.',
                             icon: 'warning',
                             background: '#1f2937',
                             color: '#ffffff'

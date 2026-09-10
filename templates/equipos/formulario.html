@@ -327,10 +327,62 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Responsable</label>
-                        <input type="text" name="responsable" class="form-control"
-                            value="{{ equipo.responsable if equipo else '' }}">
+                        <label class="form-label" for="responsable-select">Responsable</label>
+                        <div class="input-group">
+                            <select name="responsable" id="responsable-select" class="form-control"
+                                onchange="verificarResponsableOtro()">
+                                <option value="">Seleccione un responsable...</option>
+                                {% for r in responsables %}
+                                <option value="{{ r }}" {% if equipo and equipo.responsable==r %}selected{% endif %}>{{ r }}
+                                </option>
+                                {% endfor %}
+                                <option value="__otra__" id="opt-otro-responsable" style="display: none;">Otro</option>
+                            </select>
+                            <input type="text" name="nuevo_responsable" id="nuevo_responsable" class="form-control"
+                                style="display: none;" placeholder="Escriba el nuevo responsable">
+                            <button type="button" class="btn" id="btn-toggle-responsable"
+                                onclick="toggleNuevoResponsableBtn()" title="Añadir nuevo responsable">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
+                    <script>
+                        let modoNuevoResponsable = false;
+                        function verificarResponsableOtro() {
+                            var select = document.getElementById('responsable-select');
+                            if (select.value === '__otra__' && !modoNuevoResponsable) {
+                                toggleNuevoResponsableBtn();
+                            }
+                        }
+                        function toggleNuevoResponsableBtn() {
+                            modoNuevoResponsable = !modoNuevoResponsable;
+                            var select = document.getElementById('responsable-select');
+                            var input = document.getElementById('nuevo_responsable');
+                            var btn = document.getElementById('btn-toggle-responsable');
+
+                            if (modoNuevoResponsable) {
+                                select.style.display = 'none';
+                                select.value = '__otra__';
+                                input.style.display = 'block';
+                                input.required = true;
+                                input.focus();
+                                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+                                btn.title = "Volver a la lista";
+                            } else {
+                                select.style.display = 'block';
+                                select.value = '';
+                                input.style.display = 'none';
+                                input.required = false;
+                                input.value = '';
+                                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
+                                btn.title = "Añadir nuevo responsable";
+                            }
+                        }
+                    </script>
                     <div class="form-group">
                         <label class="form-label">Última Mantención</label>
                         <!-- Usaremos type="text" con flatpickr para formato dd/mm/aaaa -->
@@ -350,10 +402,14 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Próxima Mantención</label>
-                        <input type="text" name="proxima_mantencion" id="proxima_mantencion" class="form-control datepicker" placeholder="dd/mm/aaaa"
+                        <!-- Sin la clase datepicker a proposito: es un campo calculado y de
+                             solo lectura, no tiene sentido abrirle un calendario. Ademas
+                             flatpickr usa altInput, que esconde este input y muestra otro:
+                             escribirle .value no se veria. -->
+                        <input type="text" name="proxima_mantencion" id="proxima_mantencion" class="form-control"
                             data-original-date="{{ equipo.proxima_mantencion if equipo else '' }}" readonly
                             style="background: #374151; color: #9ca3af; cursor: not-allowed;"
-                            placeholder="Se calculará automáticamente">
+                            placeholder="Se calculará según la frecuencia">
                     </div>
 
                     <div class="form-group full-width">
@@ -502,20 +558,40 @@
                 return '';
             }
 
+            // Escribe una fecha en un campo que puede estar controlado por flatpickr.
+            // Con altInput:true flatpickr deja el <input> original en type=hidden y
+            // muestra otro distinto, asi que asignarle .value no se ve en pantalla:
+            // hay que pasar por su API. El segundo argumento en false evita disparar
+            // change y entrar en bucle con los listeners de mas abajo.
+            function setFecha(input, valor) {
+                if (input._flatpickr) {
+                    input._flatpickr.setDate(valor, false);
+                } else {
+                    input.value = valor;
+                }
+            }
+
             // Inicializar valores desde la base de datos si existen
             const origUltima = ultimaInput.getAttribute('data-original-date');
-            if (origUltima) ultimaInput.value = parseDateToISO(origUltima);
+            if (origUltima) setFecha(ultimaInput, parseDateToISO(origUltima));
 
+            // La proxima ya viene en dd/mm/aaaa desde la base y no usa flatpickr.
             const origProxima = proximaInput.getAttribute('data-original-date');
-            if (origProxima) proximaInput.value = parseDateToISO(origProxima);
+            if (origProxima) proximaInput.value = origProxima;
 
             function calcularProxima() {
+                // Si falta alguno de los dos datos, limpiar en vez de dejar
+                // colgado el calculo anterior, que ya no corresponde.
                 if (!ultimaInput.value || !frecuenciaSelect.value) {
+                    proximaInput.value = '';
                     return;
                 }
 
                 const isoDate = parseDateToISO(ultimaInput.value);
-                if (!isoDate) return;
+                if (!isoDate) {
+                    proximaInput.value = '';
+                    return;
+                }
 
                 const fechaUltima = new Date(isoDate + 'T12:00:00'); // Evitar timezone offset
                 let fechaProxima = new Date(fechaUltima);

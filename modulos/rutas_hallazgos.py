@@ -14,6 +14,25 @@ CLASIFICACION_RECURRENCIA = {
 }
 
 
+def parsear_fecha(texto):
+    """Acepta las dos formas en que el formulario puede mandar una fecha.
+
+    Los campos usan flatpickr con allowInput: true, asi que el navegador manda
+    'AAAA-MM-DD' cuando se elige del calendario pero 'DD/MM/AAAA' si el usuario
+    la escribe a mano. Parsear solo una de las dos hacia que la otra fallara en
+    silencio y se perdiera la fecha.
+    """
+    if not texto:
+        return None
+    texto = texto.strip()
+    for formato in ('%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y'):
+        try:
+            return datetime.strptime(texto, formato)
+        except ValueError:
+            continue
+    return None
+
+
 def nivel_recurrencia(count_1m, count_6m, count_12m):
     """Nivel de recurrencia (1-5) segun la Tabla 2, contando eventos similares
     del mismo tipo dentro de la misma area.
@@ -430,12 +449,7 @@ def nuevo():
             nuevo_codigo = f"EV-{max_num + 1:03d}"
             
             # Procesar fecha personalizada
-            fecha_reg = None
-            if request.form.get('fecha_registro'):
-                try:
-                    fecha_reg = datetime.strptime(request.form.get('fecha_registro'), '%Y-%m-%d')
-                except ValueError:
-                    pass
+            fecha_reg = parsear_fecha(request.form.get('fecha_registro'))
             
             nuevo_hallazgo = HallazgoEvento(
                 codigo=nuevo_codigo,
@@ -584,12 +598,9 @@ def editar(id):
         try:
             # Procesar fecha personalizada
             from datetime import datetime
-            if request.form.get('fecha_registro'):
-                try:
-                    fecha_reg = datetime.strptime(request.form.get('fecha_registro'), '%Y-%m-%d')
-                    evento.fecha_registro = fecha_reg
-                except ValueError:
-                    pass
+            fecha_reg = parsear_fecha(request.form.get('fecha_registro'))
+            if fecha_reg:
+                evento.fecha_registro = fecha_reg
                     
             evento.area_id = request.form.get('area_id') or None
             evento.responsable_id = request.form.get('responsable_id') or None
@@ -849,14 +860,13 @@ def acciones_correctivas_nuevo():
                 estado_cierre='Pendiente'
             )
             
-            if request.form.get('fecha_plazo'):
-                nueva_ac.fecha_plazo = datetime.strptime(request.form.get('fecha_plazo'), '%Y-%m-%d')
-                
-            if request.form.get('fecha_registro'):
-                try:
-                    nueva_ac.fecha_registro = datetime.strptime(request.form.get('fecha_registro'), '%Y-%m-%d')
-                except ValueError:
-                    pass
+            plazo = parsear_fecha(request.form.get('fecha_plazo'))
+            if plazo:
+                nueva_ac.fecha_plazo = plazo
+
+            registro = parsear_fecha(request.form.get('fecha_registro'))
+            if registro:
+                nueva_ac.fecha_registro = registro
             
             db.session.add(nueva_ac)
             db.session.flush()

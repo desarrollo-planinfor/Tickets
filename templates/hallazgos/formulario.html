@@ -181,7 +181,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="ev-fecha">Fecha de Registro</label>
-                            <input type="text" name="fecha_registro" id="ev-fecha" class="form-input readonly" readonly placeholder="YYYY-MM-DD" value="{{ fd.get('fecha_registro') or (evento.fecha_registro.strftime('%Y-%m-%d') if evento and evento.fecha_registro else (now.strftime('%Y-%m-%d') if now else '')) }}">
+                            <input type="text" name="fecha_registro" id="ev-fecha" class="form-input readonly" readonly placeholder="dd/mm/aaaa" value="{{ fd.get('fecha_registro') or (evento.fecha_registro.strftime('%d/%m/%Y') if evento and evento.fecha_registro else (now.strftime('%d/%m/%Y') if now else '')) }}">
                         </div>
 
                         <div class="form-group">

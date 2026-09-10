@@ -127,6 +127,10 @@ def nuevo_equipo():
         requerimiento = request.form.get('requerimiento')
         if requerimiento == '__otra__':
             requerimiento = request.form.get('nuevo_requerimiento')
+
+        responsable = request.form.get('responsable')
+        if responsable == '__otra__':
+            responsable = request.form.get('nuevo_responsable')
             
         equipo = EquipoMantencion(
             codigo=request.form.get('codigo'),
@@ -135,7 +139,7 @@ def nuevo_equipo():
             modelo=request.form.get('modelo'),
             serie=request.form.get('serie'),
             area=request.form.get('area'),
-            responsable=request.form.get('responsable'),
+            responsable=responsable,
             ultima_mantencion=normalizar_fecha(request.form.get('ultima_mantencion')),
             frecuencia_mantencion=request.form.get('frecuencia_mantencion'),
             proxima_mantencion=normalizar_fecha(request.form.get('proxima_mantencion')),
@@ -147,7 +151,6 @@ def nuevo_equipo():
         db.session.add(equipo)
         db.session.flush()
         
-        responsable = request.form.get('responsable')
         if responsable and responsable.strip():
             hist_resp = HistorialResponsable(
                 equipo_id=equipo.id,
@@ -164,9 +167,10 @@ def nuevo_equipo():
     nombres = [r[0] for r in db.session.query(EquipoMantencion.nombre).distinct().filter(EquipoMantencion.nombre != None, EquipoMantencion.nombre != '').all()]
     marcas = [r[0] for r in db.session.query(EquipoMantencion.marca).distinct().filter(EquipoMantencion.marca != None, EquipoMantencion.marca != '').all()]
     requerimientos = [r[0] for r in db.session.query(EquipoMantencion.requerimiento).distinct().filter(EquipoMantencion.requerimiento != None, EquipoMantencion.requerimiento != '').all()]
+    responsables = [r[0] for r in db.session.query(EquipoMantencion.responsable).distinct().filter(EquipoMantencion.responsable != None, EquipoMantencion.responsable != '').all()]
     areas_equipo = AreaEquipo.query.order_by(AreaEquipo.nombre).all()
     
-    return render_template('equipos/formulario.html', equipo=None, nombres=sorted(nombres), marcas=sorted(marcas), requerimientos=sorted(requerimientos), areas_equipo=areas_equipo)
+    return render_template('equipos/formulario.html', equipo=None, nombres=sorted(nombres), marcas=sorted(marcas), requerimientos=sorted(requerimientos), responsables=sorted(responsables), areas_equipo=areas_equipo)
 
 @equipos_bp.route('/equipos/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -189,9 +193,13 @@ def editar_equipo(id):
         requerimiento = request.form.get('requerimiento')
         if requerimiento == '__otra__':
             requerimiento = request.form.get('nuevo_requerimiento')
+
+        responsable = request.form.get('responsable')
+        if responsable == '__otra__':
+            responsable = request.form.get('nuevo_responsable')
             
         old_resp = (equipo.responsable or '').strip()
-        new_resp = (request.form.get('responsable') or '').strip()
+        new_resp = (responsable or '').strip()
         if old_resp != new_resp:
             active_hist = HistorialResponsable.query.filter_by(equipo_id=equipo.id, fecha_fin=None).first()
             if active_hist:
@@ -227,9 +235,10 @@ def editar_equipo(id):
     nombres = [r[0] for r in db.session.query(EquipoMantencion.nombre).distinct().filter(EquipoMantencion.nombre != None, EquipoMantencion.nombre != '').all()]
     marcas = [r[0] for r in db.session.query(EquipoMantencion.marca).distinct().filter(EquipoMantencion.marca != None, EquipoMantencion.marca != '').all()]
     requerimientos = [r[0] for r in db.session.query(EquipoMantencion.requerimiento).distinct().filter(EquipoMantencion.requerimiento != None, EquipoMantencion.requerimiento != '').all()]
+    responsables = [r[0] for r in db.session.query(EquipoMantencion.responsable).distinct().filter(EquipoMantencion.responsable != None, EquipoMantencion.responsable != '').all()]
     areas_equipo = AreaEquipo.query.order_by(AreaEquipo.nombre).all()
     
-    return render_template('equipos/formulario.html', equipo=equipo, nombres=sorted(nombres), marcas=sorted(marcas), requerimientos=sorted(requerimientos), areas_equipo=areas_equipo)
+    return render_template('equipos/formulario.html', equipo=equipo, nombres=sorted(nombres), marcas=sorted(marcas), requerimientos=sorted(requerimientos), responsables=sorted(responsables), areas_equipo=areas_equipo)
 
 @equipos_bp.route('/equipos/inactivar/<int:id>', methods=['POST'])
 @login_required

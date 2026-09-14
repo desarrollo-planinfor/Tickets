@@ -1,4 +1,3 @@
-<div class="table-responsive">
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -51,6 +50,105 @@
         .ticket-fecha { font-size: 0.75rem; color: #9ca3af; background: #111827; padding: 3px 8px; border-radius: 4px; border: 1px solid #374151; line-height: 1.4; text-align: right; max-width: 120px; }
         .ticket-asunto { font-weight: 500; color: #ffffff; margin-bottom: 10px; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .ticket-cliente { font-size: 0.85rem; color: #9ca3af; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* Descripcion desplegable (details/summary nativo: sin JS y accesible por teclado) */
+        .ticket-desc { margin: -8px 0 4px; }
+        .ticket-desc > summary {
+            cursor: pointer;
+            list-style: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 4px 0;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #82C341;
+            user-select: none;
+        }
+        .ticket-desc > summary::-webkit-details-marker { display: none; }
+        .ticket-desc > summary:hover { color: #90d648; }
+        .ticket-desc > summary::before {
+            content: '';
+            width: 0; height: 0;
+            border-left: 5px solid currentColor;
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+            transition: transform 160ms ease;
+        }
+        .ticket-desc[open] > summary::before { transform: rotate(90deg); }
+        .ticket-desc[open] > summary { margin-bottom: 2px; }
+        .desc-texto {
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.035);
+            border-left: 2px solid #374151;
+            border-radius: 0 6px 6px 0;
+            font-size: 0.85rem;
+            line-height: 1.55;
+            color: #d1d5db;
+            /* respeta los saltos de linea que escribio el cliente */
+            white-space: pre-wrap;
+            /* una URL larga sin espacios no debe estirar la tarjeta */
+            overflow-wrap: anywhere;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+        .desc-pie {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            font-size: 0.78rem;
+        }
+        .desc-adjuntos { display: inline-flex; align-items: center; gap: 5px; color: #9ca3af; }
+        .desc-link { color: #82C341; text-decoration: none; font-weight: 600; margin-left: auto; }
+        .desc-link:hover { text-decoration: underline; }
+
+        /* Aviso de autoguardado de prioridad / departamento.
+           Vive en su propia fila del formulario y crece con max-height, en vez de
+           flotar en absolute: asi nunca tapa el campo de hora que va debajo. */
+        .aviso-guardado {
+            display: flex;
+            /* flex-start y no center: el mensaje de error ocupa varios renglones
+               y el icono debe quedar a la altura del primero. */
+            align-items: flex-start;
+            gap: 6px;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            padding: 0 8px;
+            border-radius: 6px;
+            font-size: 0.74rem;
+            font-weight: 600;
+            line-height: 1.3;
+            transition: max-height 200ms ease, opacity 200ms ease, padding 200ms ease;
+        }
+        .aviso-guardado.visible {
+            /* Tope generoso: el alto real lo define el contenido. Con 34px el
+               mensaje de error, que ocupa tres renglones, quedaba cortado. */
+            max-height: 110px;
+            opacity: 1;
+            padding: 6px 8px;
+        }
+        .aviso-guardado > span { min-width: 0; }
+        .aviso-guardado.ok {
+            color: #82C341;
+            background: rgba(130, 195, 65, 0.1);
+            border-left: 2px solid #82C341;
+        }
+        .aviso-guardado.error {
+            color: #f87171;
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 2px solid #f87171;
+        }
+        .aviso-guardado svg { flex-shrink: 0; }
+        .aviso-guardado .valor { color: #f3f4f6; }
+        .aviso-guardado.error .valor { color: #fca5a5; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .aviso-guardado { transition: none; }
+        }
         /* Botones */
         .btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-family: inherit; }
         .btn:hover {  }
@@ -203,21 +301,44 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                                 {{ ticket.usuario.email }}
                             </div>
+
+                            {# Descripcion desplegable: el agente necesita leerla para decidir
+                               prioridad y departamento, que estan en esta misma tarjeta. Si
+                               tuviera que abrir el detalle completo perderia lo ya cargado. #}
+                            <details class="ticket-desc">
+                                <summary>Ver descripción</summary>
+                                <div class="desc-texto">{{ ticket.descripcion }}</div>
+                                <div class="desc-pie">
+                                    {% if ticket.adjuntos %}
+                                    <span class="desc-adjuntos">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                                        {{ ticket.adjuntos|length }} adjunto{{ 's' if ticket.adjuntos|length != 1 else '' }}
+                                    </span>
+                                    {% endif %}
+                                    <a href="{{ url_for('tickets.ver_ticket', ticket_id=ticket.id) }}" class="desc-link">Ver ticket completo</a>
+                                </div>
+                            </details>
+
                             <form method="POST" action="/agente/recibir/{{ ticket.id }}" style="margin-top: 16px; display: flex; flex-direction: column; gap: 10px; align-items: stretch;">
-                                <div style="display: flex; gap: 8px; width: 100%;">
-                                    <select name="prioridad" class="form-control" style="flex: 1; padding: 7px 8px; font-size: 0.82rem; min-width: 0;" required>
-                                        <option value="" disabled selected>Prioridad</option>
+                                <div class="fila-selects" style="display: flex; gap: 8px; width: 100%;">
+                                    <select name="prioridad" class="form-control js-autoguardar"
+                                        data-ticket="{{ ticket.id }}" data-campo="prioridad"
+                                        style="flex: 1; padding: 7px 8px; font-size: 0.82rem; min-width: 0;" required>
+                                        <option value="" disabled {% if not ticket.prioridad %}selected{% endif %}>Prioridad</option>
                                         <option value="Baja" {% if ticket.prioridad == 'Baja' %}selected{% endif %}>Baja</option>
                                         <option value="Media" {% if ticket.prioridad == 'Media' %}selected{% endif %}>Media</option>
                                         <option value="Alta" {% if ticket.prioridad == 'Alta' %}selected{% endif %}>Alta</option>
                                         <option value="Urgente" {% if ticket.prioridad == 'Urgente' %}selected{% endif %}>Urgente</option>
                                     </select>
-                                    <select name="departamento" class="form-control" style="flex: 1; padding: 7px 8px; font-size: 0.82rem; min-width: 0;" required>
-                                        <option value="" disabled selected>Depto.</option>
+                                    <select name="departamento" class="form-control js-autoguardar"
+                                        data-ticket="{{ ticket.id }}" data-campo="departamento"
+                                        style="flex: 1; padding: 7px 8px; font-size: 0.82rem; min-width: 0;" required>
+                                        <option value="" disabled {% if not ticket.departamento %}selected{% endif %}>Depto.</option>
                                         <option value="soporte" {% if ticket.departamento == 'soporte' %}selected{% endif %}>Soporte</option>
                                         <option value="desarrollo" {% if ticket.departamento == 'desarrollo' %}selected{% endif %}>Desarrollo</option>
                                     </select>
                                 </div>
+                                <div class="aviso-guardado" role="status" aria-live="polite"></div>
                                 <div style="display: flex; gap: 8px; width: 100%;">
                                     <input type="text" name="hora_atencion" class="datetimepicker form-control" placeholder="dd/mm/aaaa HH:MM" required style="flex: 1; padding: 7px 8px; font-size: 0.82rem; min-width: 0;">
                                     <button type="submit" class="btn btn-primary btn-sm" style="white-space: nowrap; flex-shrink: 0;">Recibir</button>
@@ -394,6 +515,92 @@
             const tipo = document.querySelector('input[name="tipo_cierre"]:checked').value;
             document.getElementById('estimacionDiv').style.display = tipo === 'estimado' ? 'block' : 'none';
         }
+    </script>
+
+    <script>
+        // Autoguardado de prioridad y departamento en los tickets pendientes.
+        // El select sigue dentro del form de Recibir, asi que el valor tambien
+        // viaja al recibir; esto solo evita tener que apretar Recibir para
+        // corregir una prioridad mientras se triajea la cola.
+        (function () {
+            const TILDE = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+            const ALERTA = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+
+            // Nombre legible del campo y su género, para que el mensaje concuerde:
+            // "Prioridad guardada" pero "Departamento guardado".
+            const ETIQUETA = {
+                prioridad:    { nombre: 'Prioridad',    participio: 'guardada', articulo: 'la' },
+                departamento: { nombre: 'Departamento', participio: 'guardado', articulo: 'el' }
+            };
+
+            function escapar(t) {
+                const d = document.createElement('div');
+                d.textContent = t;
+                return d.innerHTML;
+            }
+
+            function avisar(select, html, ok) {
+                // El contenedor es una fila propia del formulario, hermana de los selects.
+                const aviso = select.closest('form').querySelector('.aviso-guardado');
+                if (!aviso) return;
+                aviso.innerHTML = (ok ? TILDE : ALERTA) + '<span>' + html + '</span>';
+                aviso.classList.toggle('ok', ok);
+                aviso.classList.toggle('error', !ok);
+                aviso.classList.add('visible');
+                clearTimeout(aviso._t);
+                // El error queda más tiempo: hay algo que el agente tiene que hacer.
+                aviso._t = setTimeout(function () {
+                    aviso.classList.remove('visible');
+                }, ok ? 2600 : 6000);
+            }
+
+            // Texto que ve el usuario, no el value interno ('desarrollo' -> 'Desarrollo').
+            function etiquetaValor(select) {
+                const op = select.options[select.selectedIndex];
+                return op ? op.textContent.trim() : select.value;
+            }
+
+            document.querySelectorAll('.js-autoguardar').forEach(function (select) {
+                // Recordar el valor previo para poder revertir si el guardado falla.
+                select.dataset.previo = select.value;
+
+                select.addEventListener('change', async function () {
+                    const previo = select.dataset.previo;
+                    const campo = ETIQUETA[select.dataset.campo]
+                        || { nombre: 'Campo', participio: 'guardado', articulo: 'el' };
+                    select.disabled = true;
+                    try {
+                        const resp = await fetch('/agente/ticket/' + select.dataset.ticket + '/campo', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ campo: select.dataset.campo, valor: select.value })
+                        });
+                        // Si la sesion vencio, login_required redirige al login y
+                        // la respuesta es HTML, no JSON. Sin este chequeo el
+                        // error que veria el agente seria un fallo de parseo.
+                        const tipo = resp.headers.get('content-type') || '';
+                        if (resp.redirected || tipo.indexOf('application/json') === -1) {
+                            throw new Error('Sesión expirada, recargá la página');
+                        }
+                        const datos = await resp.json().catch(function () { return {}; });
+                        if (!resp.ok || !datos.ok) {
+                            throw new Error(datos.error || 'No se pudo guardar');
+                        }
+                        select.dataset.previo = select.value;
+                        avisar(select, campo.nombre + ' ' + campo.participio + ': <span class="valor">'
+                            + escapar(etiquetaValor(select)) + '</span>', true);
+                    } catch (e) {
+                        // Volver al valor anterior para no mostrar algo que no se guardo.
+                        select.value = previo;
+                        avisar(select, 'No se pudo guardar ' + campo.articulo + ' '
+                            + campo.nombre.toLowerCase() + ': ' + escapar(e.message)
+                            + '. Quedó en <span class="valor">' + escapar(etiquetaValor(select)) + '</span>', false);
+                    } finally {
+                        select.disabled = false;
+                    }
+                });
+            });
+        })();
     </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-﻿from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, g, send_file, Response, session
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, g, send_file, Response, session, current_app
 from datetime import datetime, timedelta, date
 from extensions import db
 
@@ -208,6 +208,60 @@ def recibir_ticket(ticket_id):
         db.session.rollback()
         flash(f'Error: {str(e)}', 'error')
         return redirect(url_for('tickets.panel_agente'))
+
+@tickets_bp.route('/agente/ticket/<int:ticket_id>/campo', methods=['POST'])
+@login_required
+def actualizar_campo_ticket(ticket_id):
+    """Guarda prioridad o departamento sin recibir el ticket.
+
+    El panel de agente la usa para persistir al vuelo mientras se triajea, para
+    no obligar a apretar Recibir solo para corregir una prioridad.
+    Solo se aceptan esos dos campos y sus valores conocidos: sin la lista blanca
+    esto seria un setter de atributos arbitrario sobre el modelo.
+    """
+    if g.usuario.rol not in ('admin', 'agente'):
+        return jsonify({'ok': False, 'error': 'Sin permiso para modificar tickets'}), 403
+
+    PERMITIDOS = {
+        'prioridad': {'Baja', 'Media', 'Alta', 'Urgente'},
+        'departamento': {'soporte', 'desarrollo'},
+    }
+
+    datos = request.get_json(silent=True) or {}
+    campo = datos.get('campo')
+    valor = (datos.get('valor') or '').strip()
+
+    if campo not in PERMITIDOS:
+        return jsonify({'ok': False, 'error': 'Campo no permitido'}), 400
+    if valor not in PERMITIDOS[campo]:
+        return jsonify({'ok': False, 'error': 'Valor no permitido'}), 400
+
+    ticket = db.session.get(Ticket, ticket_id)
+    if not ticket:
+        return jsonify({'ok': False, 'error': 'Ticket no encontrado'}), 404
+
+    anterior = getattr(ticket, campo)
+    if anterior == valor:
+        return jsonify({'ok': True, 'sin_cambios': True})
+
+    try:
+        setattr(ticket, campo, valor)
+        db.session.add(TicketLog(
+            ticket_id=ticket.id,
+            estado_anterior=ticket.estado,
+            estado_nuevo=ticket.estado,
+            descripcion='Actualización desde panel de agente: %s: %s -> %s' % (
+                campo.capitalize(), anterior or '(sin valor)', valor),
+            usuario_id=g.usuario.id
+        ))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception('Error al actualizar %s del ticket %s', campo, ticket_id)
+        return jsonify({'ok': False, 'error': 'No se pudo guardar el cambio'}), 500
+
+    return jsonify({'ok': True, 'campo': campo, 'valor': valor})
+
 
 @tickets_bp.route('/agente/atender/<int:ticket_id>')
 @login_required

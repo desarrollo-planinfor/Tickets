@@ -117,6 +117,13 @@ def crear_datos_iniciales():
                 db.session.commit()
             except Exception:
                 db.session.rollback()
+
+            # Agregar columna ciclo_renovacion a licencias si no existe
+            try:
+                db.session.execute(text("ALTER TABLE licencia ADD COLUMN ciclo_renovacion VARCHAR(20) DEFAULT 'Ninguno'"))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
                 
             # Poblar áreas iniciales (para usuarios)
             areas_iniciales = [
@@ -249,6 +256,7 @@ def crear_datos_iniciales():
                     fecha_inicio=None,
                     fecha_expiracion=_dt.date(2026, 8, 21),
                     renovacion_automatica=True,
+                    ciclo_renovacion='Mensual',
                     estado='Activo',
                     observaciones='Licencia SaaS - Renovación Mensual (día 21)'
                 ),
@@ -261,6 +269,7 @@ def crear_datos_iniciales():
                     fecha_inicio=None,
                     fecha_expiracion=_dt.date(2026, 8, 21),
                     renovacion_automatica=True,
+                    ciclo_renovacion='Mensual',
                     estado='Activo',
                     observaciones='Licencia SaaS - Renovación Mensual (día 21)'
                 ),
@@ -273,6 +282,7 @@ def crear_datos_iniciales():
                     fecha_inicio=None,
                     fecha_expiracion=_dt.date(2026, 8, 21),
                     renovacion_automatica=True,
+                    ciclo_renovacion='Mensual',
                     estado='Activo',
                     observaciones='Licencia SaaS - Renovación Mensual (día 21)'
                 ),
@@ -285,6 +295,7 @@ def crear_datos_iniciales():
                     fecha_inicio=None,
                     fecha_expiracion=_dt.date(2026, 8, 21),
                     renovacion_automatica=True,
+                    ciclo_renovacion='Mensual',
                     estado='Activo',
                     observaciones='Licencia SaaS - Renovación Mensual (día 21)'
                 )

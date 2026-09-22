@@ -100,6 +100,15 @@ def licencias():
     import datetime as _dt
     hoy = _dt.date.today()
     
+    # Auto-avanzar fechas de licencias con renovación automática activas
+    licencias_auto = Licencia.query.filter_by(renovacion_automatica=True, estado='Activo').all()
+    hubo_cambios = False
+    for lic_auto in licencias_auto:
+        if lic_auto.avanzar_fecha_renovacion():
+            hubo_cambios = True
+    if hubo_cambios:
+        db.session.commit()
+    
     tab = request.args.get('tab', 'todas').strip()
     search_query = request.args.get('q', '').strip()
     
@@ -190,6 +199,9 @@ def nueva_licencia():
             flash('La fecha de expiración es obligatoria.', 'error')
             return redirect(url_for('infra.licencias'))
 
+        es_renovacion_auto = request.form.get('renovacion_automatica') == 'on'
+        ciclo = request.form.get('ciclo_renovacion', 'Ninguno') if es_renovacion_auto else 'Ninguno'
+
         lic = Licencia(
             nombre_servicio=request.form.get('nombre_servicio'),
             tipo=request.form.get('tipo'),
@@ -198,7 +210,8 @@ def nueva_licencia():
             responsable=request.form.get('responsable'),
             fecha_inicio=f_inicio_obj,
             fecha_expiracion=f_exp_obj,
-            renovacion_automatica=request.form.get('renovacion_automatica') == 'on',
+            renovacion_automatica=es_renovacion_auto,
+            ciclo_renovacion=ciclo,
             estado=request.form.get('estado', 'Activo'),
             observaciones=request.form.get('observaciones')
         )
@@ -255,6 +268,7 @@ def editar_licencia(id):
         lic.fecha_inicio = f_inicio_obj
         lic.fecha_expiracion = f_exp_obj
         lic.renovacion_automatica = (request.form.get('renovacion_automatica') == 'on')
+        lic.ciclo_renovacion = request.form.get('ciclo_renovacion', 'Ninguno') if lic.renovacion_automatica else 'Ninguno'
         lic.estado = request.form.get('estado', 'Activo')
         lic.observaciones = request.form.get('observaciones')
 

@@ -322,9 +322,17 @@
                             </div>
                             <div class="form-group" style="justify-content: flex-end;">
                                 <div class="checkbox-wrapper" style="padding-top: 8px;">
-                                    <input type="checkbox" name="renovacion_automatica" id="renovacion_automatica">
+                                    <input type="checkbox" name="renovacion_automatica" id="renovacion_automatica" onchange="toggleCiclo('create')">
                                     <label for="renovacion_automatica">Renovación automática</label>
                                 </div>
+                            </div>
+                            <div class="form-group" id="ciclo_grupo_create" style="display:none;">
+                                <label class="form-label">Ciclo de Renovación</label>
+                                <select name="ciclo_renovacion" id="ciclo_renovacion" class="form-control">
+                                    <option value="Mensual">Mensual</option>
+                                    <option value="Trimestral">Trimestral</option>
+                                    <option value="Anual">Anual</option>
+                                </select>
                             </div>
                         </div>
                         <div style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 8px; border-top: 1px solid #374151;">
@@ -427,7 +435,9 @@
                                     </div>
                                     <div>
                                         <div class="service-name">{{ lic.nombre_servicio }}</div>
-                                        {% if lic.observaciones %}
+                                        {% if lic.renovacion_automatica and lic.ciclo_renovacion and lic.ciclo_renovacion != 'Ninguno' %}
+                                        <div class="service-obs" style="color:#60a5fa;" title="Licencia {{ lic.tipo }} - Renovación {{ lic.ciclo_renovacion }} (día {{ lic.fecha_expiracion.day }})">Licencia {{ lic.tipo }} - Renovación {{ lic.ciclo_renovacion }} (día {{ lic.fecha_expiracion.day }})</div>
+                                        {% elif lic.observaciones %}
                                         <div class="service-obs" title="{{ lic.observaciones }}">{{ lic.observaciones }}</div>
                                         {% endif %}
                                     </div>
@@ -548,6 +558,7 @@
                                             data-observaciones="{{ lic.observaciones or '' }}"
                                             data-estado="{{ lic.estado or 'Activo' }}"
                                             data-renovacion="{{ 'true' if lic.renovacion_automatica else 'false' }}"
+                                            data-ciclo="{{ lic.ciclo_renovacion or 'Ninguno' }}"
                                             onclick="openEditModal(this)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
                                     <form action="{{ url_for('infra.eliminar_licencia', id=lic.id) }}" method="POST" style="margin:0;" onsubmit="return confirmDelete(event, 'Se eliminará permanentemente la licencia <strong>{{ lic.nombre_servicio|e }}</strong>{% if lic.proveedor %} ({{ lic.proveedor|e }}){% endif %}.<br><br>Esta acción no se puede deshacer.', '¿Eliminar licencia?');">
                                         <button class="btn-icon-premium danger" type="submit" title="Eliminar licencia"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
@@ -671,9 +682,17 @@
                     </div>
                     <div class="form-group" style="justify-content: flex-end;">
                         <div class="checkbox-wrapper" style="padding-top: 8px;">
-                            <input type="checkbox" name="renovacion_automatica" id="edit_renovacion_automatica">
+                            <input type="checkbox" name="renovacion_automatica" id="edit_renovacion_automatica" onchange="toggleCiclo('edit')">
                             <label for="edit_renovacion_automatica">Renovación automática</label>
                         </div>
+                    </div>
+                    <div class="form-group" id="ciclo_grupo_edit" style="display:none;">
+                        <label class="form-label">Ciclo de Renovación</label>
+                        <select name="ciclo_renovacion" id="edit_ciclo_renovacion" class="form-control">
+                            <option value="Mensual">Mensual</option>
+                            <option value="Trimestral">Trimestral</option>
+                            <option value="Anual">Anual</option>
+                        </select>
                     </div>
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 16px; border-top: 1px solid #374151;">
@@ -773,7 +792,11 @@
             document.getElementById('edit_fecha_expiracion').value = btn.getAttribute('data-expiracion') || '';
             document.getElementById('edit_observaciones').value = btn.getAttribute('data-observaciones') || '';
             document.getElementById('edit_estado').value = btn.getAttribute('data-estado') || 'Activo';
-            document.getElementById('edit_renovacion_automatica').checked = (btn.getAttribute('data-renovacion') === 'true');
+            var esRenovacion = (btn.getAttribute('data-renovacion') === 'true');
+            document.getElementById('edit_renovacion_automatica').checked = esRenovacion;
+            var cicloVal = btn.getAttribute('data-ciclo') || 'Mensual';
+            document.getElementById('edit_ciclo_renovacion').value = cicloVal;
+            document.getElementById('ciclo_grupo_edit').style.display = esRenovacion ? '' : 'none';
             
             document.getElementById('editModal').style.display = 'flex';
         }
@@ -806,6 +829,16 @@
                 closeWarningModal();
             }
         });
+
+        function toggleCiclo(mode) {
+            if (mode === 'create') {
+                var chk = document.getElementById('renovacion_automatica');
+                document.getElementById('ciclo_grupo_create').style.display = chk.checked ? '' : 'none';
+            } else {
+                var chk = document.getElementById('edit_renovacion_automatica');
+                document.getElementById('ciclo_grupo_edit').style.display = chk.checked ? '' : 'none';
+            }
+        }
     </script>
 
     <script>

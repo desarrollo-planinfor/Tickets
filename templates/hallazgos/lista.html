@@ -8,7 +8,9 @@
     <title>Lista de Eventos - HUB Planinfor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         body {
@@ -50,7 +52,10 @@
         .btn-primary:hover {
             background: #90d648;
         }
-        .btn-primary:active { transform: scale(0.97); }
+
+        .btn-primary:active {
+            transform: scale(0.97);
+        }
 
         .card {
             background: #1f2937;
@@ -87,48 +92,59 @@
         tbody tr {
             transition: all 0.2s ease;
         }
+
         tbody:hover tr {
-            opacity: 0.4; /* Oscurecer filas inactivas */
+            opacity: 0.4;
+            /* Oscurecer filas inactivas */
         }
+
         tbody tr:hover {
-            opacity: 1; /* Iluminar fila activa */
+            opacity: 1;
+            /* Iluminar fila activa */
             background: rgba(255, 255, 255, 0.05);
             box-shadow: inset 4px 0 0 #82C341;
         }
-        
+
         /* Sticky summary bar style */
         .summary-sticky-bar {
             position: sticky;
-            top: 100px; /* Mayor separación del header */
+            top: 100px;
+            /* Mayor separación del header */
             z-index: 100;
             background: transparent;
             padding: 10px 0;
         }
-        
+
         .summary-box {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(26, 35, 50, 0.85); /* Fondo semitransparente */
-            backdrop-filter: blur(12px); /* Efecto de desenfoque de fondo (glassmorphism) */
+            background: rgba(26, 35, 50, 0.85);
+            /* Fondo semitransparente */
+            backdrop-filter: blur(12px);
+            /* Efecto de desenfoque de fondo (glassmorphism) */
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(45, 58, 77, 0.6);
             border-radius: 12px;
             padding: 15px 25px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Animación elástica suave */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* Animación elástica suave */
         }
-        
+
         /* Animación cuando el recuadro queda flotando (stuck) */
         .summary-box.is-stuck {
             background: rgba(26, 35, 50, 0.65);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-color: rgba(130, 195, 65, 0.5); /* Borde verde sutil */
-            box-shadow: 0 25px 40px -10px rgba(0, 0, 0, 0.5), 0 0 25px rgba(130, 195, 65, 0.15); /* Sombra 3D y resplandor */
-            transform: translateY(-4px) scale(0.985); /* Efecto de despegue */
+            border-color: rgba(130, 195, 65, 0.5);
+            /* Borde verde sutil */
+            box-shadow: 0 25px 40px -10px rgba(0, 0, 0, 0.5), 0 0 25px rgba(130, 195, 65, 0.15);
+            /* Sombra 3D y resplandor */
+            transform: translateY(-4px) scale(0.985);
+            /* Efecto de despegue */
         }
-        
+
         .summary-stats {
             display: flex;
             align-items: center;
@@ -137,7 +153,7 @@
             font-weight: 500;
             color: #9ca3af;
         }
-        
+
         .summary-title {
             text-transform: uppercase;
             font-weight: 700;
@@ -145,14 +161,14 @@
             color: #cbd5e1;
             margin-right: 10px;
         }
-        
+
         .summary-stat-item {
             display: flex;
             align-items: center;
             gap: 6px;
             color: #f3f4f6;
         }
-        
+
         .summary-stat-badge {
             background: #374151;
             padding: 4px 10px;
@@ -163,16 +179,31 @@
             min-width: 25px;
             text-align: center;
         }
-        
-        .summary-stat-badge.abiertos { background: rgba(59, 130, 246, 0.25); color: #93c5fd; }
-        .summary-stat-badge.proceso { background: rgba(245, 158, 11, 0.25); color: #fcd34d; }
-        .summary-stat-badge.cerrados { background: rgba(16, 185, 129, 0.25); color: #6ee7b7; }
-        .summary-stat-badge.escalados { background: rgba(239, 68, 68, 0.25); color: #fca5a5; }
-        
+
+        .summary-stat-badge.abiertos {
+            background: rgba(59, 130, 246, 0.25);
+            color: #93c5fd;
+        }
+
+        .summary-stat-badge.proceso {
+            background: rgba(245, 158, 11, 0.25);
+            color: #fcd34d;
+        }
+
+        .summary-stat-badge.cerrados {
+            background: rgba(16, 185, 129, 0.25);
+            color: #6ee7b7;
+        }
+
+        .summary-stat-badge.escalados {
+            background: rgba(239, 68, 68, 0.25);
+            color: #fca5a5;
+        }
+
         .summary-divider {
             color: #4b5563;
         }
-        
+
         .summary-divider-special {
             height: 20px;
             width: 2px;
@@ -186,252 +217,293 @@
     {% set vista = 'hallazgos' %}
     {% include 'header_unificado.html' %}
 
-<div id="hallazgos-soft-root">
+    <div id="hallazgos-soft-root">
 
-    <div class="container">
-        {% set sub_vista = 'lista' %}
-        {% include 'hallazgos/sub_nav.html' %}
+        <div class="container">
+            {% set sub_vista = 'lista' %}
+            {% include 'hallazgos/sub_nav.html' %}
 
-        <div class="page-title" style="margin-bottom: 10px;">
-            Lista de Eventos
-        </div>
-
-        <div id="hallazgos-results">
-        <div class="summary-sticky-bar">
-            <div class="summary-box">
-                <div class="summary-stats">
-                    <span class="summary-title">Resumen de Eventos:</span>
-                    <a href="{{ url_for('hallazgos.lista', filtro='Abiertos') }}" class="summary-stat-item" data-filtro="Abiertos" data-lv-ignore style="text-decoration:none;">Abiertos: <span class="summary-stat-badge abiertos">{{ abiertos }}</span></a>
-                    <span class="summary-divider">|</span>
-                    <a href="{{ url_for('hallazgos.lista', filtro='En Proceso') }}" class="summary-stat-item" data-filtro="En Proceso" data-lv-ignore style="text-decoration:none;">En Proceso: <span class="summary-stat-badge proceso">{{ en_proceso }}</span></a>
-                    <span class="summary-divider">|</span>
-                    <a href="{{ url_for('hallazgos.lista', filtro='Cerrados') }}" class="summary-stat-item" data-filtro="Cerrados" data-lv-ignore style="text-decoration:none;">Cerrados: <span class="summary-stat-badge cerrados">{{ cerrados }}</span></a>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    {% if request.args.get('filtro') %}
-                    <a href="{{ url_for('hallazgos.lista') }}" class="btn-primary hallazgos-clear-filter" data-lv-ignore style="background: #374151; color: #f3f4f6;">Quitar Filtro</a>
-                    {% endif %}
-                    <a href="{{ url_for('hallazgos.nuevo') }}" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        Crear Evento
-                    </a>
-                </div>
+            <div class="page-title" style="margin-bottom: 10px;">
+                Lista de Eventos
             </div>
-        </div>
 
-        <div class="filters-card" style="padding: 16px 20px;">
-            <form method="GET" action="{{ url_for('hallazgos.lista') }}" class="filters-form">
-                {% if filtro %}<input type="hidden" name="filtro" value="{{ filtro }}">{% endif %}
-                <div class="form-group">
-                    <label class="form-label" for="buscar-evento">Buscar por código o descripción</label>
-                    <input type="search" name="q" id="buscar-evento" class="form-control"
-                           placeholder="EV-014, reclamo de cliente…" value="{{ q }}">
+            <div id="hallazgos-results">
+                <div class="summary-sticky-bar">
+                    <div class="summary-box">
+                        <div class="summary-stats">
+                            <span class="summary-title">Resumen de Eventos:</span>
+                            <a href="{{ url_for('hallazgos.lista', filtro='Abiertos') }}" class="summary-stat-item"
+                                data-filtro="Abiertos" data-lv-ignore style="text-decoration:none;">Abiertos: <span
+                                    class="summary-stat-badge abiertos">{{ abiertos }}</span></a>
+                            <span class="summary-divider">|</span>
+                            <a href="{{ url_for('hallazgos.lista', filtro='En Proceso') }}" class="summary-stat-item"
+                                data-filtro="En Proceso" data-lv-ignore style="text-decoration:none;">En Proceso: <span
+                                    class="summary-stat-badge proceso">{{ en_proceso }}</span></a>
+                            <span class="summary-divider">|</span>
+                            <a href="{{ url_for('hallazgos.lista', filtro='Cerrados') }}" class="summary-stat-item"
+                                data-filtro="Cerrados" data-lv-ignore style="text-decoration:none;">Cerrados: <span
+                                    class="summary-stat-badge cerrados">{{ cerrados }}</span></a>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            {% if request.args.get('filtro') %}
+                            <a href="{{ url_for('hallazgos.lista') }}" class="btn-primary hallazgos-clear-filter"
+                                data-lv-ignore style="background: #374151; color: #f3f4f6;">Quitar Filtro</a>
+                            {% endif %}
+                            <a href="{{ url_for('hallazgos.nuevo') }}" class="btn-primary"
+                                style="display: inline-flex; align-items: center; gap: 8px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                Crear Evento
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group" style="flex-direction: row; gap: 10px; align-items: end;">
-                    <button type="submit" class="btn-primary">Buscar</button>
-                    {% if q %}
-                    <a href="{{ url_for('hallazgos.lista', filtro=filtro or None) }}" class="btn-primary"
-                       style="background: #374151; color: #f3f4f6;">Limpiar</a>
-                    {% endif %}
-                </div>
-            </form>
-        </div>
 
-        {% if q %}
-        <p style="color: #9ca3af; font-size: 0.9rem; margin: 0 0 14px;">
-            {{ paginado.total }} resultado{{ 's' if paginado.total != 1 else '' }} para <strong style="color:#f3f4f6;">"{{ q }}"</strong>
-        </p>
-        {% endif %}
-
-        <div class="card">
-            <div class="table-responsive table-swap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID Evento</th>
-                        <th>Fecha</th>
-                        <th>Área</th>
-                        <th>Sistema Normativo</th>
-                        <th>Tipo</th>
-                        <th>Escalado</th>
-                        <th>Acción Correctiva</th>
-                        <th>Estado</th>
-                        <th>Riesgo</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ev in eventos %}
-                    <tr>
-                        <td style="font-weight: 600;">
-                            <a href="{{ url_for('hallazgos.editar', id=ev.id) }}"
-                                style="color: #82C341; text-decoration: none;">{{ ev.codigo }}</a>
-                        </td>
-                        <td>{{ ev.fecha_registro.strftime('%d/%m/%Y') }}</td>
-                        <td>{{ ev.area.nombre if ev.area else '--' }}</td>
-                        <td>{{ ev.sistema_normativo.nombre if ev.sistema_normativo else '--' }}</td>
-                        <td>{{ ev.tipo_evento.nombre if ev.tipo_evento else '--' }}</td>
-                        <td>
-                            {% if ev.evaluacion == 'Escalado' %}
-                            <span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Sí</span>
-                            {% else %}
-                            <span style="background: rgba(107, 114, 128, 0.2); color: #9ca3af; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">No</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if ev.accion_correctiva_id %}
-                            <a href="{{ url_for('hallazgos.acciones_correctivas_editar', id=ev.accion_correctiva_id) }}" style="color: #60a5fa; text-decoration: none; font-weight: 600;">{{ ev.accion_correctiva.codigo if ev.accion_correctiva else ev.accion_correctiva_id }}</a>
-                            {% else %}
-                            <span style="color:#9ca3af;">--</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if ev.estado == 'Abierto' %}
-                            <span
-                                style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Abierto</span>
-                            {% elif ev.estado == 'En Proceso' %}
-                            <span
-                                style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">En Proceso</span>
-
-                            {% elif ev.estado == 'Cerrado' %}
-                            <span
-                                style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Cerrado</span>
-                            {% else %}
-                            <span
-                                style="background: rgba(107, 114, 128, 0.2); color: #9ca3af; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">{{ ev.estado }}</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% set risk = (ev.impacto or 0) + (ev.recurrencia or 0) + (ev.potencialidad or 0) %}
-                            {% if risk >= 9 %}
-                            <span style="color: #ef4444; font-weight: 600;">Alto ({{ risk }})</span>
-                            {% elif risk >= 6 %}
-                            <span style="color: #f59e0b; font-weight: 600;">Medio ({{ risk }})</span>
-                            {% elif risk > 0 %}
-                            <span style="color: #10b981; font-weight: 600;">Bajo ({{ risk }})</span>
-                            {% else %}
-                            <span style="color: #9ca3af;">Sin Evaluar</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <form action="{{ url_for('hallazgos.eliminar', id=ev.id) }}" method="POST" style="display:inline;" onsubmit="return confirmDelete(event, 'Se eliminará el evento <strong>{{ ev.codigo|e }}</strong> y todos sus datos asociados (evidencias, historial, etc.).<br><br>Esta acción no se puede deshacer.', '¿Eliminar evento?');">
-                                <button class="btn-icon-premium danger" type="submit" title="Eliminar Evento"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="8" style="text-align: center; padding: 30px; color: #9ca3af;">
+                <div class="filters-card" style="padding: 16px 20px;">
+                    <form method="GET" action="{{ url_for('hallazgos.lista') }}" class="filters-form">
+                        {% if filtro %}<input type="hidden" name="filtro" value="{{ filtro }}">{% endif %}
+                        <div class="form-group">
+                            <label class="form-label" for="buscar-evento">Buscar por código o descripción</label>
+                            <input type="search" name="q" id="buscar-evento" class="form-control"
+                                placeholder="EV-014, reclamo de cliente…" value="{{ q }}">
+                        </div>
+                        <div class="form-group" style="flex-direction: row; gap: 10px; align-items: end;">
+                            <button type="submit" class="btn-primary">Buscar</button>
                             {% if q %}
-                                Ningún evento coincide con "{{ q }}".
-                                <a href="{{ url_for('hallazgos.lista', filtro=filtro or None) }}" style="color:#82C341;">Limpiar la búsqueda</a>
-                            {% elif filtro %}
-                                No hay eventos con este filtro.
-                                <a href="{{ url_for('hallazgos.lista') }}" style="color:#82C341;">Ver todos</a>
-                            {% else %}
-                                Todavía no hay eventos registrados.
-                                <a href="{{ url_for('hallazgos.nuevo') }}" style="color:#82C341;">Crear el primero</a>
+                            <a href="{{ url_for('hallazgos.lista', filtro=filtro or None) }}" class="btn-primary"
+                                style="background: #374151; color: #f3f4f6;">Limpiar</a>
                             {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            </div>
-        </div>
+                        </div>
+                    </form>
+                </div>
 
-        {% if paginado.pages > 1 %}
-        <div class="pagination">
-            {% if paginado.has_prev %}
-                <a href="{{ url_for('hallazgos.lista', page=paginado.prev_num, filtro=filtro or None, q=q or None) }}" class="page-item" aria-label="Página anterior">&laquo;</a>
-            {% else %}
-                <span class="page-item disabled">&laquo;</span>
-            {% endif %}
-
-            {% for page_num in paginado.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-                {% if page_num %}
-                    {% if paginado.page == page_num %}
-                        <span class="page-item active" aria-current="page">{{ page_num }}</span>
-                    {% else %}
-                        <a href="{{ url_for('hallazgos.lista', page=page_num, filtro=filtro or None, q=q or None) }}" class="page-item">{{ page_num }}</a>
-                    {% endif %}
-                {% else %}
-                    <span class="page-item disabled" style="background:transparent; border:none; padding: 0 5px;">…</span>
+                {% if q %}
+                <p style="color: #9ca3af; font-size: 0.9rem; margin: 0 0 14px;">
+                    {{ paginado.total }} resultado{{ 's' if paginado.total != 1 else '' }} para <strong
+                        style="color:#f3f4f6;">"{{ q }}"</strong>
+                </p>
                 {% endif %}
-            {% endfor %}
 
-            {% if paginado.has_next %}
-                <a href="{{ url_for('hallazgos.lista', page=paginado.next_num, filtro=filtro or None, q=q or None) }}" class="page-item" aria-label="Página siguiente">&raquo;</a>
-            {% else %}
-                <span class="page-item disabled">&raquo;</span>
-            {% endif %}
+                <div class="card">
+                    <div class="table-responsive table-swap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID Evento</th>
+                                    <th>Fecha</th>
+                                    <th>Área</th>
+                                    <th>Sistema Normativo</th>
+                                    <th>Tipo</th>
+                                    <th>Escalado</th>
+                                    <th>Acción Correctiva</th>
+                                    <th>Estado</th>
+                                    <th>Riesgo</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ev in eventos %}
+                                <tr>
+                                    <td style="font-weight: 600;">
+                                        <a href="{{ url_for('hallazgos.editar', id=ev.id) }}"
+                                            style="color: #82C341; text-decoration: none;">{{ ev.codigo }}</a>
+                                    </td>
+                                    <td>{{ ev.fecha_registro.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ ev.area.nombre if ev.area else '--' }}</td>
+                                    <td>{{ ev.sistema_normativo.nombre if ev.sistema_normativo else '--' }}</td>
+                                    <td>{{ ev.tipo_evento.nombre if ev.tipo_evento else '--' }}</td>
+                                    <td>
+                                        {% if ev.evaluacion == 'Escalado' %}
+                                        <span
+                                            style="background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Sí</span>
+                                        {% else %}
+                                        <span
+                                            style="background: rgba(24, 99, 250, 0.2); color: #9ca3af; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">No</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if ev.accion_correctiva_id %}
+                                        <a href="{{ url_for('hallazgos.acciones_correctivas_editar', id=ev.accion_correctiva_id) }}"
+                                            style="color: #60a5fa; text-decoration: none; font-weight: 600;">{{
+                                            ev.accion_correctiva.codigo if ev.accion_correctiva else
+                                            ev.accion_correctiva_id }}</a>
+                                        {% else %}
+                                        <span style="color:#9ca3af;">--</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if ev.estado == 'Abierto' %}
+                                        <span
+                                            style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Abierto</span>
+                                        {% elif ev.estado == 'En Proceso' %}
+                                        <span
+                                            style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">En
+                                            Proceso</span>
+
+                                        {% elif ev.estado == 'Cerrado' %}
+                                        <span
+                                            style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Cerrado</span>
+                                        {% else %}
+                                        <span
+                                            style="background: rgba(107, 114, 128, 0.2); color: #9ca3af; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">{{
+                                            ev.estado }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% set risk = (ev.impacto or 0) + (ev.recurrencia or 0) + (ev.potencialidad or
+                                        0) %}
+                                        {% if risk >= 9 %}
+                                        <span style="color: #ef4444; font-weight: 600;">Alto ({{ risk }})</span>
+                                        {% elif risk >= 6 %}
+                                        <span style="color: #f59e0b; font-weight: 600;">Medio ({{ risk }})</span>
+                                        {% elif risk > 0 %}
+                                        <span style="color: #10b981; font-weight: 600;">Bajo ({{ risk }})</span>
+                                        {% else %}
+                                        <span style="color: #9ca3af;">Sin Evaluar</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <form action="{{ url_for('hallazgos.eliminar', id=ev.id) }}" method="POST"
+                                            style="display:inline;"
+                                            onsubmit="return confirmDelete(event, 'Se eliminará el evento <strong>{{ ev.codigo|e }}</strong> y todos sus datos asociados (evidencias, historial, etc.).<br><br>Esta acción no se puede deshacer.', '¿Eliminar evento?');">
+                                            <button class="btn-icon-premium danger" type="submit"
+                                                title="Eliminar Evento"><svg xmlns="http://www.w3.org/2000/svg"
+                                                    width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                    stroke-linejoin="round">
+                                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                                    <path
+                                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                                    </path>
+                                                </svg></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="8" style="text-align: center; padding: 30px; color: #9ca3af;">
+                                        {% if q %}
+                                        Ningún evento coincide con "{{ q }}".
+                                        <a href="{{ url_for('hallazgos.lista', filtro=filtro or None) }}"
+                                            style="color:#82C341;">Limpiar la búsqueda</a>
+                                        {% elif filtro %}
+                                        No hay eventos con este filtro.
+                                        <a href="{{ url_for('hallazgos.lista') }}" style="color:#82C341;">Ver todos</a>
+                                        {% else %}
+                                        Todavía no hay eventos registrados.
+                                        <a href="{{ url_for('hallazgos.nuevo') }}" style="color:#82C341;">Crear el
+                                            primero</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {% if paginado.pages > 1 %}
+                <div class="pagination">
+                    {% if paginado.has_prev %}
+                    <a href="{{ url_for('hallazgos.lista', page=paginado.prev_num, filtro=filtro or None, q=q or None) }}"
+                        class="page-item" aria-label="Página anterior">&laquo;</a>
+                    {% else %}
+                    <span class="page-item disabled">&laquo;</span>
+                    {% endif %}
+
+                    {% for page_num in paginado.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2)
+                    %}
+                    {% if page_num %}
+                    {% if paginado.page == page_num %}
+                    <span class="page-item active" aria-current="page">{{ page_num }}</span>
+                    {% else %}
+                    <a href="{{ url_for('hallazgos.lista', page=page_num, filtro=filtro or None, q=q or None) }}"
+                        class="page-item">{{ page_num }}</a>
+                    {% endif %}
+                    {% else %}
+                    <span class="page-item disabled"
+                        style="background:transparent; border:none; padding: 0 5px;">…</span>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if paginado.has_next %}
+                    <a href="{{ url_for('hallazgos.lista', page=paginado.next_num, filtro=filtro or None, q=q or None) }}"
+                        class="page-item" aria-label="Página siguiente">&raquo;</a>
+                    {% else %}
+                    <span class="page-item disabled">&raquo;</span>
+                    {% endif %}
+                </div>
+                <p style="text-align:center; color:#9ca3af; font-size:0.82rem; margin-top:10px;">
+                    {{ paginado.total }} evento{{ 's' if paginado.total != 1 else '' }} en total · página {{
+                    paginado.page }} de {{ paginado.pages }}
+                </p>
+                {% endif %}
+            </div><!-- /#hallazgos-results -->
         </div>
-        <p style="text-align:center; color:#9ca3af; font-size:0.82rem; margin-top:10px;">
-            {{ paginado.total }} evento{{ 's' if paginado.total != 1 else '' }} en total · página {{ paginado.page }} de {{ paginado.pages }}
-        </p>
-        {% endif %}
-        </div><!-- /#hallazgos-results -->
-    </div>
-    <script>
-        function bindHallazgosSticky() {
-            const stickyEl = document.querySelector('#hallazgos-results .summary-sticky-bar');
-            const summaryBox = document.querySelector('#hallazgos-results .summary-box');
-            if (stickyEl && summaryBox) {
-                const observer = new IntersectionObserver(
-                    ([e]) => summaryBox.classList.toggle('is-stuck', e.intersectionRatio < 1),
-                    { threshold: [1], rootMargin: "-101px 0px 0px 0px" }
-                );
-                observer.observe(stickyEl);
-            }
-        }
-
-        if (document.readyState === 'loading') {
-            document.addEventListener("DOMContentLoaded", bindHallazgosSticky);
-        } else {
-            bindHallazgosSticky();
-        }
-
-        (function softHallazgosFiltros() {
-            if (window.__softHallazgosFiltrosBound) return;
-            window.__softHallazgosFiltrosBound = true;
-            var busy = false;
-            async function loadResults(url, push) {
-                if (busy) return;
-                busy = true;
-                var panel = document.getElementById('hallazgos-results');
-                try {
-                    var res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
-                    if (!res.ok) throw new Error('HTTP ' + res.status);
-                    var html = await res.text();
-                    var doc = new DOMParser().parseFromString(html, 'text/html');
-                    var next = doc.getElementById('hallazgos-results');
-                    if (!panel || !next) { window.location.href = url; return; }
-                    panel.replaceWith(next);
-                    if (push) history.pushState({ hallazgosSoft: true }, '', url);
-                    if (typeof bindHallazgosSticky === 'function') bindHallazgosSticky();
-                } catch (e) {
-                    window.location.href = url;
-                } finally {
-                    busy = false;
+        <script>
+            function bindHallazgosSticky() {
+                const stickyEl = document.querySelector('#hallazgos-results .summary-sticky-bar');
+                const summaryBox = document.querySelector('#hallazgos-results .summary-box');
+                if (stickyEl && summaryBox) {
+                    const observer = new IntersectionObserver(
+                        ([e]) => summaryBox.classList.toggle('is-stuck', e.intersectionRatio < 1),
+                        { threshold: [1], rootMargin: "-101px 0px 0px 0px" }
+                    );
+                    observer.observe(stickyEl);
                 }
             }
-            document.addEventListener('click', function (e) {
-                var a = e.target.closest && e.target.closest('#hallazgos-results .summary-stat-item, #hallazgos-results .hallazgos-clear-filter');
-                if (!a) return;
-                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-                e.preventDefault();
-                e.stopPropagation();
-                if (a.href === location.href) return;
-                loadResults(a.href, true);
-            }, true);
-            window.addEventListener('popstate', function () {
-                if (!document.getElementById('hallazgos-results')) return;
-                if (history.state && history.state.softPage) return;
-                loadResults(location.href, false);
-            });
-        })();
-    </script>
-</div><!-- /#hallazgos-soft-root -->
+
+            if (document.readyState === 'loading') {
+                document.addEventListener("DOMContentLoaded", bindHallazgosSticky);
+            } else {
+                bindHallazgosSticky();
+            }
+
+            (function softHallazgosFiltros() {
+                if (window.__softHallazgosFiltrosBound) return;
+                window.__softHallazgosFiltrosBound = true;
+                var busy = false;
+                async function loadResults(url, push) {
+                    if (busy) return;
+                    busy = true;
+                    var panel = document.getElementById('hallazgos-results');
+                    try {
+                        var res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        var html = await res.text();
+                        var doc = new DOMParser().parseFromString(html, 'text/html');
+                        var next = doc.getElementById('hallazgos-results');
+                        if (!panel || !next) { window.location.href = url; return; }
+                        panel.replaceWith(next);
+                        if (push) history.pushState({ hallazgosSoft: true }, '', url);
+                        if (typeof bindHallazgosSticky === 'function') bindHallazgosSticky();
+                    } catch (e) {
+                        window.location.href = url;
+                    } finally {
+                        busy = false;
+                    }
+                }
+                document.addEventListener('click', function (e) {
+                    var a = e.target.closest && e.target.closest('#hallazgos-results .summary-stat-item, #hallazgos-results .hallazgos-clear-filter');
+                    if (!a) return;
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (a.href === location.href) return;
+                    loadResults(a.href, true);
+                }, true);
+                window.addEventListener('popstate', function () {
+                    if (!document.getElementById('hallazgos-results')) return;
+                    if (history.state && history.state.softPage) return;
+                    loadResults(location.href, false);
+                });
+            })();
+        </script>
+    </div><!-- /#hallazgos-soft-root -->
 </body>
 
 </html>

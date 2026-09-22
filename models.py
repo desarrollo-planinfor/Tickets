@@ -258,6 +258,7 @@ class Licencia(db.Model):
     fecha_inicio = db.Column(db.Date, nullable=True) # Emisión/Compra
     fecha_expiracion = db.Column(db.Date, nullable=False) # Expiración/Renovación
     renovacion_automatica = db.Column(db.Boolean, default=False)
+    ciclo_renovacion = db.Column(db.String(20), default='Ninguno') # 'Mensual', 'Trimestral', 'Anual', 'Ninguno'
     estado = db.Column(db.String(50), default='Activo')
     observaciones = db.Column(db.Text, nullable=True)
     fecha_creacion = db.Column(db.DateTime, default=datetime.now, index=True)
@@ -279,6 +280,61 @@ class Licencia(db.Model):
             return 'Amarillo'
         else:
             return 'Verde'
+
+    def avanzar_fecha_renovacion(self):
+        """Avanza fecha_expiracion al siguiente período mientras esté vencida.
+        Solo actúa si renovacion_automatica=True, estado='Activo' y ciclo != 'Ninguno'.
+        Retorna True si se modificó la fecha."""
+        import datetime as _dt
+        from calendar import monthrange
+
+        if not self.renovacion_automatica or self.estado != 'Activo':
+            return False
+        if not self.fecha_expiracion:
+            return False
+
+        ciclo = (self.ciclo_renovacion or 'Ninguno').strip()
+        if ciclo == 'Ninguno':
+            return False
+
+        hoy = _dt.date.today()
+        modificado = False
+
+        while self.fecha_expiracion < hoy:
+            fecha = self.fecha_expiracion
+            dia_original = fecha.day
+
+            if ciclo == 'Mensual':
+                mes = fecha.month + 1
+                anio = fecha.year
+                if mes > 12:
+                    mes = 1
+                    anio += 1
+                max_dia = monthrange(anio, mes)[1]
+                self.fecha_expiracion = _dt.date(anio, mes, min(dia_original, max_dia))
+
+            elif ciclo == 'Trimestral':
+                mes = fecha.month + 3
+                anio = fecha.year
+                while mes > 12:
+                    mes -= 12
+                    anio += 1
+                max_dia = monthrange(anio, mes)[1]
+                self.fecha_expiracion = _dt.date(anio, mes, min(dia_original, max_dia))
+
+            elif ciclo == 'Anual':
+                anio = fecha.year + 1
+                mes = fecha.month
+                max_dia = monthrange(anio, mes)[1]
+                self.fecha_expiracion = _dt.date(anio, mes, min(dia_original, max_dia))
+            else:
+                break
+
+            # Actualizar fecha_inicio al período anterior
+            self.fecha_inicio = fecha
+            modificado = True
+
+        return modificado
 
 # ==================== MODELOS SISTEMA DE EVENTOS ====================
 

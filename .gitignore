@@ -15,3 +15,9 @@ resolve.py
 seed_eventos.py
 test*.py
 static/uploads/
+
+# Herramientas de desarrollo con IA (solo locales)
+.agents/
+.claude/
+skills-lock.json
+test_out.txt

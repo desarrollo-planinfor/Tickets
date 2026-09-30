@@ -440,17 +440,23 @@ def historial_equipo(id):
         # Recalcular próxima mantención según frecuencia
         freq = (equipo.frecuencia_mantencion or '').strip().lower()
         if freq:
-            from dateutil.relativedelta import relativedelta
+            from calendar import monthrange
+
+            def sumar_meses(fecha, meses):
+                total = fecha.month - 1 + meses
+                anio, mes = fecha.year + total // 12, total % 12 + 1
+                return fecha.replace(year=anio, month=mes, day=min(fecha.day, monthrange(anio, mes)[1]))
+
             if 'anual' in freq:
-                prox = fecha_realizada + relativedelta(years=1)
+                prox = sumar_meses(fecha_realizada, 12)
             elif 'semestral' in freq:
-                prox = fecha_realizada + relativedelta(months=6)
+                prox = sumar_meses(fecha_realizada, 6)
             elif 'trimestral' in freq:
-                prox = fecha_realizada + relativedelta(months=3)
+                prox = sumar_meses(fecha_realizada, 3)
             elif 'mensual' in freq:
-                prox = fecha_realizada + relativedelta(months=1)
+                prox = sumar_meses(fecha_realizada, 1)
             elif 'bimestral' in freq:
-                prox = fecha_realizada + relativedelta(months=2)
+                prox = sumar_meses(fecha_realizada, 2)
             else:
                 prox = None
             

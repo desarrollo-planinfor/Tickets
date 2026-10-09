@@ -409,11 +409,13 @@
     </script>
 
     {% if equipos_alerta_7_dias %}
-    <div id="mantenimientoModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+    <div id="mantenimientoModal" role="alertdialog" aria-labelledby="tituloAlertaMantencion"
+        data-firma="{{ equipos_alerta_7_dias | map(attribute='equipo.id') | sort | join(',') }}"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 9999; display: flex; align-items: center; justify-content: center;">
         <div style="background: #1e293b; border: 1px solid #ef4444; border-radius: 16px; padding: 30px; max-width: 500px; width: 90%; box-shadow: 0 10px 50px rgba(239,68,68,0.2);">
             <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                <h2 style="margin: 0; font-size: 1.5rem; color: #f8fafc;">¡Mantenimientos Críticos!</h2>
+                <h2 id="tituloAlertaMantencion" style="margin: 0; font-size: 1.5rem; color: #f8fafc;">¡Mantenimientos Críticos!</h2>
             </div>
             <p style="color: #cbd5e1; margin-bottom: 20px; font-size: 0.95rem; line-height: 1.5;">Los siguientes equipos requieren mantenimiento en los próximos 7 días o ya están vencidos:</p>
             <ul style="list-style: none; padding: 0; margin: 0 0 25px 0; max-height: 250px; overflow-y: auto;">
@@ -433,11 +435,50 @@
                 </li>
                 {% endfor %}
             </ul>
-            <button onclick="document.getElementById('mantenimientoModal').style.display='none'" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1rem; justify-content: center; background: #ef4444; box-shadow: 0 4px 12px rgba(239,68,68, 0.3);">
+            <button type="button" id="cerrarAlertaMantencion" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1rem; justify-content: center; background: #ef4444; box-shadow: 0 4px 12px rgba(239,68,68, 0.3);">
                 Entendido, cerrar alerta
             </button>
         </div>
     </div>
+    <script>
+        // La alerta se mostraba en cada carga, o sea tambien al filtrar o paginar.
+        // Se recuerda el cierre por sesion, pero atado a QUE equipos estaban
+        // criticos: si entra uno nuevo cambia la firma y la alerta vuelve, que es
+        // justamente lo que esta alerta existe para avisar.
+        // El script va pegado al modal (no en DOMContentLoaded) para que el que ya
+        // fue cerrado desaparezca antes del primer pintado, sin parpadeo.
+        (function () {
+            var modal = document.getElementById('mantenimientoModal');
+            if (!modal) return;
+            var CLAVE = 'alertaMantencionVista';
+            var firma = modal.getAttribute('data-firma') || '';
+
+            function recordar() {
+                try { sessionStorage.setItem(CLAVE, firma); } catch (e) { /* modo privado */ }
+            }
+            function cerrar() {
+                recordar();
+                modal.remove();
+                document.removeEventListener('keydown', alEscape);
+            }
+            function alEscape(e) {
+                if (e.key === 'Escape') cerrar();
+            }
+
+            var vista = null;
+            try { vista = sessionStorage.getItem(CLAVE); } catch (e) { /* modo privado */ }
+            if (vista === firma) {
+                modal.remove();
+                return;
+            }
+
+            document.getElementById('cerrarAlertaMantencion').addEventListener('click', cerrar);
+            // Clic en el fondo oscuro, fuera del cuadro.
+            modal.addEventListener('click', function (e) { if (e.target === modal) cerrar(); });
+            document.addEventListener('keydown', alEscape);
+            document.getElementById('cerrarAlertaMantencion').focus();
+        })();
+    </script>
     {% endif %}
 
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
